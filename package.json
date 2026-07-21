@@ -1,0 +1,27 @@
+{
+  "name": "ableton-live-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local MCP stdio server for controlling Ableton Live through a local bridge.",
+  "bin": {
+    "ableton-live-mcp": "./src/server.js"
+  },
+  "scripts": {
+    "bridge": "node bridge/server.js",
+    "doctor": "node src/doctor.js",
+    "doctor:test": "node scripts/check-doctor-diagnostics.mjs",
+    "install:ableton-remote-script": "bash scripts/install-ableton-remote-script.sh",
+    "start": "node src/server.js",
+    "smoke": "node test/smoke.mjs",
+    "smoke:bridge": "node test/bridge-smoke-report.mjs",
+    "smoke:live:readonly": "node test/live-smoke-readonly.mjs",
+    "smoke:live:safe-write": "node test/live-smoke-safe-write.mjs",
+    "smoke:live:destructive": "node test/live-smoke-suite.mjs destructive",
+    "test": "node test/deterministic.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

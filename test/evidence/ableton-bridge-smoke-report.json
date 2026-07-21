@@ -1,0 +1,440 @@
+{
+  "task": "ableton-bridge-real-smoke-20260716",
+  "generatedAt": "2026-07-16T23:04:49.881Z",
+  "environment": {
+    "bridgeUrl": "http://127.0.0.1:61290",
+    "dryRun": false,
+    "node": "v26.0.0",
+    "bridgeAdapter": "DevelopmentAbletonAdapter"
+  },
+  "calls": [
+    {
+      "name": "initialize",
+      "request": {
+        "protocolVersion": "2024-11-05",
+        "capabilities": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "protocolVersion": "2024-11-05",
+          "capabilities": {
+            "tools": {}
+          },
+          "serverInfo": {
+            "name": "ableton-live-mcp",
+            "version": "0.1.0"
+          }
+        }
+      }
+    },
+    {
+      "name": "ableton_get_status",
+      "request": {
+        "name": "ableton_get_status",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "tempo": 124,
+                "playing": false,
+                "tracks": [
+                  {
+                    "index": 0,
+                    "name": "Piano",
+                    "type": "midi"
+                  },
+                  {
+                    "index": 1,
+                    "name": "Drums",
+                    "type": "midi"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "tempo": 124,
+        "playing": false,
+        "tracks": [
+          {
+            "index": 0,
+            "name": "Piano",
+            "type": "midi"
+          },
+          {
+            "index": 1,
+            "name": "Drums",
+            "type": "midi"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ableton_get_project",
+      "request": {
+        "name": "ableton_get_project",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "tempo": 124,
+                "timeSignature": "4/4",
+                "tracks": [
+                  {
+                    "index": 0,
+                    "name": "Piano",
+                    "type": "midi",
+                    "volumeDb": -6,
+                    "devices": [
+                      {
+                        "index": 0,
+                        "name": "Wavetable",
+                        "kind": "instrument"
+                      }
+                    ],
+                    "clips": [
+                      {
+                        "slot": 0,
+                        "name": "Verse",
+                        "lengthBeats": 16
+                      }
+                    ]
+                  },
+                  {
+                    "index": 1,
+                    "name": "Drums",
+                    "type": "midi",
+                    "volumeDb": -3,
+                    "devices": [
+                      {
+                        "index": 0,
+                        "name": "Drum Rack",
+                        "kind": "rack"
+                      }
+                    ],
+                    "clips": []
+                  }
+                ],
+                "locators": [
+                  {
+                    "beat": 0,
+                    "name": "Intro"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "tempo": 124,
+        "timeSignature": "4/4",
+        "tracks": [
+          {
+            "index": 0,
+            "name": "Piano",
+            "type": "midi",
+            "volumeDb": -6,
+            "devices": [
+              {
+                "index": 0,
+                "name": "Wavetable",
+                "kind": "instrument"
+              }
+            ],
+            "clips": [
+              {
+                "slot": 0,
+                "name": "Verse",
+                "lengthBeats": 16
+              }
+            ]
+          },
+          {
+            "index": 1,
+            "name": "Drums",
+            "type": "midi",
+            "volumeDb": -3,
+            "devices": [
+              {
+                "index": 0,
+                "name": "Drum Rack",
+                "kind": "rack"
+              }
+            ],
+            "clips": []
+          }
+        ],
+        "locators": [
+          {
+            "beat": 0,
+            "name": "Intro"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ableton_set_tempo",
+      "request": {
+        "name": "ableton_set_tempo",
+        "arguments": {
+          "bpm": 132
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "tempo": 132
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "tempo": 132
+      }
+    },
+    {
+      "name": "ableton_start_transport",
+      "request": {
+        "name": "ableton_start_transport",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "playing": true
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "playing": true
+      }
+    },
+    {
+      "name": "ableton_get_status",
+      "request": {
+        "name": "ableton_get_status",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "tempo": 132,
+                "playing": true,
+                "tracks": [
+                  {
+                    "index": 0,
+                    "name": "Piano",
+                    "type": "midi"
+                  },
+                  {
+                    "index": 1,
+                    "name": "Drums",
+                    "type": "midi"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "tempo": 132,
+        "playing": true,
+        "tracks": [
+          {
+            "index": 0,
+            "name": "Piano",
+            "type": "midi"
+          },
+          {
+            "index": 1,
+            "name": "Drums",
+            "type": "midi"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ableton_list_plugins",
+      "request": {
+        "name": "ableton_list_plugins",
+        "arguments": {
+          "kind": "instrument",
+          "query": "table"
+        }
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 7,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "plugins": [
+                  {
+                    "name": "Wavetable",
+                    "kind": "instrument",
+                    "type": "instrument",
+                    "tags": [
+                      "synth"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "plugins": [
+          {
+            "name": "Wavetable",
+            "kind": "instrument",
+            "type": "instrument",
+            "tags": [
+              "synth"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "ableton_stop_transport",
+      "request": {
+        "name": "ableton_stop_transport",
+        "arguments": {}
+      },
+      "response": {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "textJson": {
+                "ok": true,
+                "playing": false
+              }
+            }
+          ]
+        }
+      },
+      "parsedContent": {
+        "ok": true,
+        "playing": false
+      }
+    }
+  ],
+  "observations": {
+    "initialStatus": {
+      "tempo": 124,
+      "playing": false,
+      "tracks": [
+        {
+          "index": 0,
+          "name": "Piano",
+          "type": "midi"
+        },
+        {
+          "index": 1,
+          "name": "Drums",
+          "type": "midi"
+        }
+      ]
+    },
+    "projectSummary": {
+      "timeSignature": "4/4",
+      "trackCount": 2,
+      "firstDevice": "Wavetable"
+    },
+    "stateChange": {
+      "tempoBefore": 124,
+      "tempoAfter": 132,
+      "playingBefore": false,
+      "playingAfterStart": true,
+      "playingAfterStop": false
+    },
+    "pluginFilter": {
+      "request": {
+        "kind": "instrument",
+        "query": "table"
+      },
+      "returnedNames": [
+        "Wavetable"
+      ]
+    }
+  },
+  "acceptanceCriteria": [
+    {
+      "criterion": "A non-dry-run smoke test exercises the MCP server through the HTTP bridge.",
+      "result": "pass",
+      "evidence": "MCP server started without ABLETON_MCP_DRY_RUN and used ABLETON_BRIDGE_URL pointing to the local bridge."
+    },
+    {
+      "criterion": "Evidence captures request/response shape and observable bridge state changes.",
+      "result": "pass",
+      "evidence": "This report includes each JSON-RPC request, MCP response content, and tempo/transport state transitions."
+    },
+    {
+      "criterion": "Any Ableton-unavailable constraint is documented with a deterministic local substitute and owner for live verification.",
+      "result": "deferred-external",
+      "evidence": "deferredExternalVerification documents the deterministic adapter substitute and live Ableton follow-up owner."
+    }
+  ],
+  "deferredExternalVerification": {
+    "system": "Ableton Live real adapter",
+    "owner": "qa + developer with Ableton Live environment",
+    "status": "deferred",
+    "rationale": "This workspace has a deterministic local bridge adapter but no running Ableton Live adapter. The smoke proves MCP-to-HTTP bridge behavior without ABLETON_MCP_DRY_RUN; live DAW verification must run when Ableton and the real adapter are available.",
+    "followUpTask": "Implement or attach real Ableton adapter, then rerun this smoke against that adapter."
+  },
+  "stderr": []
+}

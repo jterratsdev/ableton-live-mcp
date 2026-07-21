@@ -1,0 +1,23 @@
+{
+  "id": "ADVISORY-CONVERSION",
+  "title": "Convert advisory findings into a project task",
+  "ownerRole": "product_owner",
+  "goal": "Convert advisory findings into a project delivery task",
+  "scope": "Advisory findings, decisions, role guides, and conversion path",
+  "acceptanceCriteria": [
+    "Target project is confirmed",
+    "Backlog item and scope are approved",
+    "Risks and assumptions are reviewed",
+    "Evidence from advisory artifacts is linked"
+  ],
+  "assumptions": [
+    "Target project repository is confirmed before conversion."
+  ],
+  "risks": [
+    "Advisory findings may require project-owner validation."
+  ],
+  "paths": [
+    ".agent-workflow/advisory"
+  ],
+  "testStrategy": "Review advisory artifacts and attach project evidence."
+}

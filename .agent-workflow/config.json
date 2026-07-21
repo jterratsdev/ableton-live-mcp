@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "providers": {
+    "defaults": {
+      "provider": "none",
+      "model": "not-configured",
+      "fallbacks": [],
+      "maxTokens": 0,
+      "maxCostUsd": 0,
+      "timeoutMs": 30000,
+      "retries": 0,
+      "requiredCapabilities": []
+    },
+    "byRole": {},
+    "profiles": {}
+  },
+  "telemetry": {
+    "enabled": false,
+    "level": "off",
+    "policyVersion": "telemetry-consent-v1",
+    "actor": "system"
+  },
+  "notifications": {},
+  "providerPolicy": {
+    "allowedProviders": [],
+    "blockedProviders": [],
+    "allowVendorFallbackWithoutApproval": false
+  },
+  "runtimePolicy": {
+    "defaults": {
+      "executor": "generic-runtime"
+    },
+    "byRole": {},
+    "byTask": {},
+    "delegation": {
+      "mode": "runtime-native",
+      "allowDirectProviderApi": false,
+      "guardrails": {
+        "maxConcurrentDelegates": 3,
+        "maxDelegationDepth": 1,
+        "maxSpawnsPerTask": 3,
+        "spawnBudgetTokens": 6000,
+        "contextBudgetTokens": 3000,
+        "timeoutMs": 600000,
+        "staleClaimTtlMs": 1800000,
+        "allowNestedDelegation": false,
+        "limitAction": "queue",
+        "handoffMaxChars": 4000
+      }
+    }
+  },
+  "budgets": {
+    "defaults": {},
+    "byRole": {},
+    "byTask": {}
+  },
+  "workflow": {
+    "phaseExecutionMode": "auto",
+    "playbooksDir": ".agent-workflow/playbooks",
+    "phasePlaybooks": {}
+  },
+  "tools": {
+    "node": {
+      "command": "node",
+      "args": [],
+      "cwd": ".",
+      "allowedRoles": [
+        "developer",
+        "qa",
+        "parent"
+      ],
+      "timeoutMs": 30000,
+      "evidence": "command",
+      "risk": "low"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "playwright",
+        "test"
+      ],
+      "cwd": ".",
+      "allowedRoles": [
+        "qa",
+        "developer"
+      ],
+      "timeoutMs": 120000,
+      "evidence": "trace",
+      "risk": "medium"
+    },
+    "python": {
+      "enabled": false,
+      "command": "python3",
+      "args": [],
+      "cwd": ".",
+      "allowedRoles": [],
+      "timeoutMs": 30000,
+      "evidence": "command",
+      "risk": "medium"
+    }
+  },
+  "staticAnalysis": {
+    "preCommit": {
+      "required": true,
+      "checks": [
+        "format",
+        "lint",
+        "typecheck",
+        "secret-scan",
+        "staged-files"
+      ],
+      "disallowNoVerifyWithoutApproval": true
+    },
+    "ci": {
+      "checks": [
+        "format",
+        "lint",
+        "typecheck",
+        "test",
+        "sast",
+        "dependency-scan"
+      ]
+    }
+  },
+  "mode": "advisory",
+  "workspaceClassification": {
+    "root": "/Users/polux/dev/ableton-mcp",
+    "normalizedRoot": "/Users/polux/dev/ableton-mcp",
+    "kind": "advisory",
+    "signals": [
+      "explicit-advisory-mode"
+    ],
+    "reasons": [
+      "advisory mode requested"
+    ],
+    "writePolicy": "allow",
+    "recommendedAction": "Create advisory workflow artifacts without root instruction files.",
+    "confidence": "medium",
+    "supportedTargets": [
+      "generic",
+      "claude",
+      "cursor",
+      "codex",
+      "vscode",
+      "windsurf"
+    ]
+  }
+}

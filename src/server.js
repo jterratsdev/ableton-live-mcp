@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
 import readline from "node:readline";
 import { AbletonBridge } from "./bridge.js";
 import { createDispatch, rpcError, tools, validateToolInput } from "./tools.js";
 
 const SERVER_NAME = "ableton-live-mcp";
-const SERVER_VERSION = "0.1.0";
+const SERVER_VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 const PROTOCOL_VERSION = "2024-11-05";
 
 const bridge = new AbletonBridge();

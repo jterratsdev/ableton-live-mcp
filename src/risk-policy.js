@@ -54,6 +54,8 @@ const HTTP_ENDPOINT_RISKS = Object.freeze({
   "POST /signature": safeWrite("Change song time signature."),
   "POST /transport/start": safeWrite("Change playback state."),
   "POST /transport/stop": safeWrite("Change playback state."),
+  "POST /clips/launch": safeWrite("Launch a Session View clip."),
+  "POST /scenes/launch": safeWrite("Launch a Session View scene."),
   "POST /tracks/midi": safeWrite("Create a MIDI track."),
   "POST /tracks/duplicate": safeWrite("Duplicate an existing track."),
   "POST /tracks/freeze": safeWrite("Freeze a track while preserving an unfreeze path."),
@@ -98,8 +100,16 @@ const MCP_TOOL_RISKS = Object.freeze({
   ableton_rollback_snapshot: tool("POST /project/rollback"),
   ableton_list_plugins: tool("GET /plugins"),
   ableton_search_browser: tool("GET /browser/search"),
+  ableton_diagnose_plugins: {
+    ...read("Compare local plugin bundles against Ableton's plugin/browser index without mutating Live state."),
+    endpoint: null
+  },
   ableton_analyze_audio: tool("POST /analysis/audio"),
   ableton_get_production_report: tool("GET /production/report"),
+  ableton_diagnose_playback: {
+    ...read("Diagnose silent playback without mutating Live state."),
+    endpoint: null
+  },
   ableton_get_bridge_observability: {
     ...read("Read local bridge diagnostics, endpoint support, and stale-runtime metadata."),
     endpoint: null
@@ -145,6 +155,8 @@ const MCP_TOOL_RISKS = Object.freeze({
   ableton_consolidate_clip: tool("POST /clips/consolidate"),
   ableton_delete_clip: tool("DELETE /clips/midi"),
   ableton_get_clip_notes: tool("GET /clips/notes"),
+  ableton_launch_clip: tool("POST /clips/launch"),
+  ableton_launch_scene: tool("POST /scenes/launch"),
   ableton_humanize_clip: tool("POST /clips/humanize"),
   ableton_quantize_clip: tool("POST /clips/quantize"),
   ableton_apply_groove: tool("POST /groove/apply"),

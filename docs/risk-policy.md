@@ -53,8 +53,10 @@ classification.
 - `ableton_get_arrangement`
 - `ableton_list_plugins`
 - `ableton_search_browser`
+- `ableton_diagnose_plugins`
 - `ableton_analyze_audio`
 - `ableton_get_production_report`
+- `ableton_diagnose_playback`
 - `ableton_list_returns`
 - `ableton_list_buses`
 - `ableton_get_meters`
@@ -68,6 +70,8 @@ classification.
 - `ableton_set_signature`
 - `ableton_start_transport`
 - `ableton_stop_transport`
+- `ableton_launch_clip`
+- `ableton_launch_scene`
 - `ableton_create_midi_track`
 - `ableton_duplicate_track`
 - `ableton_freeze_track`
@@ -134,6 +138,8 @@ classification.
 - `POST /signature`
 - `POST /transport/start`
 - `POST /transport/stop`
+- `POST /clips/launch`
+- `POST /scenes/launch`
 - `POST /tracks/midi`
 - `POST /tracks/duplicate`
 - `POST /tracks/freeze`

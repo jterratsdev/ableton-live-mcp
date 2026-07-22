@@ -101,9 +101,15 @@ Goal: pick and load sounds from the user's available devices rather than
 guessing names.
 
 1. Read the current track roles from `ableton_get_project`.
+   If `mixerContract.safeForAutomatedMixing` is not `true`, stop before writing
+   mixer values and reinstall/restart the Ableton Remote Script. Legacy
+   responses can expose raw Live values as `volumeDb`.
 2. Search available devices with `ableton_list_plugins` and
    `ableton_search_browser`. Use `kind` and `query` filters to narrow the
-   selection.
+   selection. If expected VST/AU plugins are installed on disk but absent from
+   Ableton's results, use `ableton_diagnose_plugins` before attempting to load
+   them; it compares disk plugin bundles with Ableton's index and recommends a
+   safe rescan path when needed.
 3. Use `ableton_match_preset_intent` for musical requests such as realistic
    violin, concert piano, classical guitar, flute, or concert hall mastering,
    then verify the chosen query exists in the user's browser.
@@ -111,7 +117,8 @@ guessing names.
    query, and rationale. For general device placement, call
    `ableton_load_device`.
 5. Inspect parameters with `ableton_get_device_parameters` before changing a
-   device.
+   device. Use `target: "track"`, `target: "return"`, or `target: "master"`
+   to address the intended device chain.
 6. Use `ableton_set_device_parameter` only for known parameters and bounded
    values.
 7. Use `ableton_reorder_device` when chain order matters. Use
@@ -146,14 +153,18 @@ meter feedback.
 
 1. Inspect `ableton_get_project`, `ableton_get_meters`, `ableton_list_returns`,
    and `ableton_list_buses`.
-2. Create a snapshot before mix changes.
-3. Use `ableton_modify_track` for track name, color, volume, pan, mute, solo,
+2. If transport is running but meters are silent, call
+   `ableton_diagnose_playback`. When the set relies on Session View clips, use
+   `ableton_launch_clip` or `ableton_launch_scene` explicitly before making
+   meter-guided mix decisions.
+3. Create a snapshot before mix changes.
+4. Use `ableton_modify_track` for track name, color, volume, pan, mute, solo,
    arm, routing, and sends.
-4. Use `ableton_create_return_track` and `ableton_modify_return` for return
+5. Use `ableton_create_return_track` and `ableton_modify_return` for return
    setup. Use `ableton_delete_return_track` only after destructive approval.
-5. Use `ableton_modify_master` for master volume, pan, cue volume, mute, or solo.
-6. Re-read meters and routing after each batch of changes.
-7. If committing a track is necessary, use `ableton_freeze_track` first. Use
+6. Use `ableton_modify_master` for master volume, pan, cue volume, mute, or solo.
+7. Re-read meters and routing after each batch of changes.
+8. If committing a track is necessary, use `ableton_freeze_track` first. Use
    `ableton_flatten_track` only after destructive approval and only when the
    active bridge exposes real flatten support.
 
@@ -164,6 +175,10 @@ Do not copy `volumeRaw`, `cueVolumeRaw`, or `sendsRaw` values from
 `ableton_get_project` into write fields. Writes use real dB values:
 `volumeDb`, `cueVolumeDb`, and send values are dB targets, while raw readback is
 only diagnostic Live parameter state.
+After every mixer write, inspect `writeVerification`. Continue an automated pass
+only when the observed display value is within tolerance; otherwise apply one
+bounded correction or stop for manual calibration. Use the default `0.5 dB`
+tolerance unless the session has been calibrated more tightly.
 
 ## Mastering Workflow
 
@@ -175,7 +190,12 @@ explicit.
 2. Search available master devices with `ableton_search_browser` or
    `ableton_list_plugins`.
 3. Load master devices with `ableton_load_master_device`, or apply a structured
-   chain with `ableton_apply_mastering_chain`.
+   chain with `ableton_apply_mastering_chain`. The default `mode` is
+   `replace_matching`, which removes existing matching master devices before
+   loading the requested chain. Use `append` only when deliberate stacking is
+   wanted.
+   If the master already has duplicated processing, use `mode: "replace_all"`
+   after taking a snapshot and explicit approval.
 4. Use `ableton_modify_master` for bounded master mixer changes.
 5. If an audio artifact already exists, run `ableton_analyze_audio` with an
    absolute path to check LUFS, true peak, RMS, crest factor, and clipping.

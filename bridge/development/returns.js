@@ -1,6 +1,6 @@
 import { BridgeRequestError } from "../errors.js";
 import { clone, requireNonNegativeInteger } from "./utils.js";
-import { applyReturnPatch } from "./mixer.js";
+import { applyReturnPatch, mixerWriteVerification, mixerWriteWarnings } from "./mixer.js";
 
 export function listReturns(state) {
   return { ok: true, count: state.returns.length, returns: clone(state.returns) };
@@ -39,7 +39,8 @@ export function createReturn(state, payload = {}) {
 export function modifyReturn(state, payload) {
   const returnTrack = getReturnTrack(state, requireNonNegativeInteger(payload.returnIndex, "returnIndex"));
   const applied = applyReturnPatch(returnTrack, payload);
-  return { ok: true, return: clone(returnTrack), applied };
+  const writeVerification = mixerWriteVerification(returnTrack, payload, applied);
+  return { ok: true, return: clone(returnTrack), applied, writeVerification, warnings: mixerWriteWarnings(writeVerification) };
 }
 
 export function deleteReturn(state, payload = {}) {

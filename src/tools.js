@@ -8,6 +8,8 @@ import {
 import { getWorkflowPlan, listWorkflowPlans } from "./workflow-plans.js";
 import { collectInstalledFileMetadata, createBridgeObservabilitySnapshot } from "../bridge/observability.js";
 import { matchPresetIntent } from "../bridge/presets/matcher.js";
+import { diagnosePlugins } from "./plugin-diagnostics.js";
+import { diagnosePlayback } from "./playback-diagnostics.js";
 
 export const tools = [
   tool("ableton_get_status", "Read Ableton Live transport and session status.", {}),
@@ -28,10 +30,23 @@ export const tools = [
     query: stringProp("Optional text filter."),
     limit: { type: "integer", minimum: 1, maximum: 50 }
   }),
+  tool("ableton_diagnose_plugins", "Compare plugins installed on disk against Ableton's indexed plugin/browser results and recommend rescan actions.", {
+    query: stringProp("Single plugin search term, such as Valhalla, Youlean, or Kotelnikov."),
+    queries: {
+      type: "array",
+      items: stringProp("Plugin search term.")
+    },
+    pluginDirectories: {
+      type: "array",
+      items: stringProp("Additional absolute plugin directory to scan.")
+    },
+    includeDefaultDirectories: { type: "boolean" }
+  }),
   tool("ableton_analyze_audio", "Analyze a rendered audio file for LUFS, true peak, RMS, crest factor, and clipping.", {
     path: stringProp("Absolute local path to a rendered audio file.")
   }, ["path"]),
   tool("ableton_get_production_report", "Summarize tracks, buses, devices, meters, arrangement, and production risks.", {}),
+  tool("ableton_diagnose_playback", "Diagnose silent playback from transport, Session clips, Arrangement clips, meters, routing, mute, and solo state.", {}),
   tool("ableton_get_bridge_observability", "Read local bridge version, endpoint support, stale-runtime, and installed-file diagnostics.", {
     runtimeStartedAt: stringProp("Optional runtime start timestamp for stale runtime diagnosis."),
     livePid: nonNegativeInteger(),
@@ -88,6 +103,7 @@ export const tools = [
     name: { type: "string" },
     color: { type: "string" },
     volumeDb: { type: "number", minimum: -70, maximum: 12 },
+    verifyToleranceDb: { type: "number", minimum: 0, maximum: 12 },
     pan: { type: "number", minimum: -1, maximum: 1 },
     muted: { type: "boolean" },
     solo: { type: "boolean" },
@@ -105,6 +121,7 @@ export const tools = [
     returnIndex: nonNegativeInteger(),
     name: { type: "string" },
     volumeDb: { type: "number", minimum: -70, maximum: 12 },
+    verifyToleranceDb: { type: "number", minimum: 0, maximum: 12 },
     pan: { type: "number", minimum: -1, maximum: 1 },
     muted: { type: "boolean" },
     solo: { type: "boolean" }
@@ -116,6 +133,7 @@ export const tools = [
   tool("ableton_get_meters", "Read observable output meters for tracks, return tracks, and the master channel.", {}),
   tool("ableton_modify_master", "Modify master mixer state such as volume, pan, or cue volume.", {
     volumeDb: { type: "number", minimum: -70, maximum: 12 },
+    verifyToleranceDb: { type: "number", minimum: 0, maximum: 12 },
     pan: { type: "number", minimum: -1, maximum: 1 },
     cueVolumeDb: { type: "number", minimum: -70, maximum: 12 },
     muted: { type: "boolean" },
@@ -150,6 +168,13 @@ export const tools = [
     trackIndex: nonNegativeInteger(),
     clipSlotIndex: nonNegativeInteger()
   }, ["trackIndex", "clipSlotIndex"]),
+  tool("ableton_launch_clip", "Launch a Session View clip so transport can produce audible playback.", {
+    trackIndex: nonNegativeInteger(),
+    clipSlotIndex: nonNegativeInteger()
+  }, ["trackIndex", "clipSlotIndex"]),
+  tool("ableton_launch_scene", "Launch a Session View scene by clip slot index.", {
+    sceneIndex: nonNegativeInteger()
+  }, ["sceneIndex"]),
   tool("ableton_humanize_clip", "Apply deterministic MIDI note humanization to an existing editable clip.", {
     trackIndex: nonNegativeInteger(),
     clipSlotIndex: nonNegativeInteger(),
@@ -197,18 +222,24 @@ export const tools = [
     rationale: stringProp("Short reason for the selection.")
   }, ["trackIndex", "role", "query"]),
   tool("ableton_set_device_parameter", "Set a device/plugin parameter on a track.", {
+    location: deviceLocationSchema(),
+    target: enumProp(["track", "return", "master"], "Device chain target."),
     trackIndex: nonNegativeInteger(),
+    returnIndex: nonNegativeInteger(),
     deviceIndex: nonNegativeInteger(),
     deviceName: { type: "string" },
     parameter: { type: "string" },
     value: {},
     normalizedValue: { type: "number", minimum: 0, maximum: 1 }
-  }, ["trackIndex", "parameter"]),
-  tool("ableton_get_device_parameters", "List parameters exposed by devices on a track before changing them.", {
+  }, ["parameter"]),
+  tool("ableton_get_device_parameters", "List parameters exposed by devices on a track, return, or master chain before changing them.", {
+    location: deviceLocationSchema(),
+    target: enumProp(["track", "return", "master"], "Device chain target."),
     trackIndex: nonNegativeInteger(),
+    returnIndex: nonNegativeInteger(),
     deviceIndex: nonNegativeInteger(),
     deviceName: { type: "string" }
-  }, ["trackIndex"]),
+  }),
   tool("ableton_reorder_device", "Move a device within a track, return, or master device chain.", {
     location: deviceLocationSchema(),
     deviceIndex: nonNegativeInteger(),
@@ -240,7 +271,8 @@ export const tools = [
         device: { type: "string" },
         settings: { type: "object", additionalProperties: true }
       }, ["device"])
-    }
+    },
+    mode: enumProp(["replace_matching", "replace_all", "append"], "Master-chain application mode. Defaults to replace_matching.")
   }),
   tool("ableton_export_render", "Export a master render, selected tracks, all tracks, or stems.", {
     outputPath: stringProp("Absolute output file path or directory for stems."),
@@ -300,14 +332,16 @@ export const tools = [
 export function createDispatch(bridge) {
   return {
     ableton_get_status: () => bridge.invoke("get_status"),
-    ableton_get_project: () => bridge.invoke("get_project"),
+    ableton_get_project: async () => annotateProjectMixerContract(await bridge.invoke("get_project")),
     ableton_get_arrangement: () => bridge.invoke("get_arrangement"),
     ableton_create_snapshot: (args) => bridge.invoke("create_snapshot", args),
     ableton_rollback_snapshot: (args) => bridge.invoke("rollback_snapshot", args),
     ableton_list_plugins: (args) => bridge.invoke("list_plugins", args),
     ableton_search_browser: (args) => bridge.invoke("search_browser", args),
+    ableton_diagnose_plugins: (args) => diagnosePlugins(bridge, args),
     ableton_analyze_audio: (args) => bridge.invoke("analyze_audio", args),
-    ableton_get_production_report: () => bridge.invoke("get_production_report"),
+    ableton_get_production_report: async () => annotateProductionReport(await bridge.invoke("get_production_report")),
+    ableton_diagnose_playback: () => diagnosePlayback(bridge),
     ableton_get_bridge_observability: (args) => getBridgeObservability(args),
     ableton_evaluate_action_risk: (args) => evaluateRisk(args),
     ableton_list_risk_policy: () => ({
@@ -360,17 +394,15 @@ export function createDispatch(bridge) {
       trackIndex: args.trackIndex,
       clipSlotIndex: args.clipSlotIndex
     }),
+    ableton_launch_clip: (args) => bridge.invoke("launch_clip", args),
+    ableton_launch_scene: (args) => bridge.invoke("launch_scene", args),
     ableton_humanize_clip: (args) => bridge.invoke("humanize_clip", args),
     ableton_quantize_clip: (args) => bridge.invoke("quantize_clip", args),
     ableton_apply_groove: (args) => bridge.invoke("apply_groove", args),
     ableton_import_midi: (args) => importMidi(bridge, args),
     ableton_load_device: (args) => bridge.invoke("load_device", args),
     ableton_load_master_device: (args) => bridge.invoke("load_master_device", args),
-    ableton_get_device_parameters: (args) => bridge.invoke("get_device_parameters", {
-      trackIndex: args.trackIndex,
-      deviceIndex: args.deviceIndex,
-      deviceName: args.deviceName
-    }),
+    ableton_get_device_parameters: (args) => bridge.invoke("get_device_parameters", deviceParameterArgs(args)),
     ableton_reorder_device: (args) => bridge.invoke("reorder_device", args),
     ableton_delete_device: (args) => bridge.invoke("delete_device", args),
     ableton_select_vst_for_midi: (args) => bridge.invoke("load_device", {
@@ -407,6 +439,20 @@ export function validateToolInput(toolName, args) {
 
   if (toolName === "ableton_search_browser" && args.limit !== undefined) {
     requireIntegerInRange(args.limit, "limit", 1, 50);
+  }
+
+  if (toolName === "ableton_diagnose_plugins") {
+    if (args.queries !== undefined && !Array.isArray(args.queries)) {
+      throw rpcError(-32602, "queries must be an array");
+    }
+    if (args.pluginDirectories !== undefined && !Array.isArray(args.pluginDirectories)) {
+      throw rpcError(-32602, "pluginDirectories must be an array");
+    }
+    for (const [index, directory] of (args.pluginDirectories ?? []).entries()) {
+      if (isBlank(directory) || !String(directory).startsWith("/")) {
+        throw rpcError(-32602, `pluginDirectories[${index}] must be an absolute local directory path`);
+      }
+    }
   }
 
   if (toolName === "ableton_analyze_audio") {
@@ -464,9 +510,13 @@ export function validateToolInput(toolName, args) {
     validateConsolidateClipArgs(args);
   }
 
-  if (["ableton_delete_clip", "ableton_get_clip_notes", "ableton_humanize_clip", "ableton_quantize_clip", "ableton_apply_groove"].includes(toolName)) {
+  if (["ableton_delete_clip", "ableton_get_clip_notes", "ableton_launch_clip", "ableton_humanize_clip", "ableton_quantize_clip", "ableton_apply_groove"].includes(toolName)) {
     requireTrackIndex(args);
     requireNonNegativeInteger(args.clipSlotIndex, "clipSlotIndex");
+  }
+
+  if (toolName === "ableton_launch_scene") {
+    requireNonNegativeInteger(args.sceneIndex, "sceneIndex");
   }
 
   if (toolName === "ableton_humanize_clip") {
@@ -505,7 +555,7 @@ export function validateToolInput(toolName, args) {
     throw rpcError(-32602, "path must point to a .mid or .midi file");
   }
 
-  if (["ableton_modify_track", "ableton_duplicate_track", "ableton_freeze_track", "ableton_flatten_track", "ableton_load_device", "ableton_select_vst_for_midi", "ableton_set_device_parameter", "ableton_get_device_parameters"].includes(toolName)) {
+  if (["ableton_modify_track", "ableton_duplicate_track", "ableton_freeze_track", "ableton_flatten_track", "ableton_load_device", "ableton_select_vst_for_midi"].includes(toolName)) {
     requireTrackIndex(args);
   }
 
@@ -539,6 +589,10 @@ export function validateToolInput(toolName, args) {
 
   if (toolName === "ableton_set_device_parameter" && isBlank(args.parameter)) {
     throw rpcError(-32602, "parameter must be a non-empty string");
+  }
+
+  if (["ableton_set_device_parameter", "ableton_get_device_parameters"].includes(toolName)) {
+    validateDeviceParameterTarget(args);
   }
 
   if (toolName === "ableton_delete_device") {
@@ -591,6 +645,10 @@ export function validateToolInput(toolName, args) {
     }
   }
 
+  if (toolName === "ableton_apply_mastering_chain" && args.mode !== undefined && !["replace_matching", "replace_all", "append"].includes(args.mode)) {
+    throw rpcError(-32602, "mode must be replace_matching, replace_all, or append");
+  }
+
   if (toolName === "ableton_insert_arrangement_clip") {
     validateArrangementInsertArgs(args);
   }
@@ -601,6 +659,74 @@ export function validateToolInput(toolName, args) {
       throw rpcError(-32602, "name must be a non-empty string");
     }
   }
+}
+
+function annotateProjectMixerContract(project) {
+  if (!project || typeof project !== "object" || project.mixerContract) {
+    return project;
+  }
+  const tracks = Array.isArray(project.tracks) ? project.tracks : [];
+  const legacyVolumeDbTracks = tracks.filter((track) => (
+    track &&
+    typeof track.volumeDb === "number" &&
+    track.volumeRaw === undefined &&
+    track.volumeDisplay === undefined &&
+    track.volumeDb >= 0 &&
+    track.volumeDb <= 1
+  ));
+  const legacySendsTracks = tracks.filter((track) => track?.sends && track.sendsRaw === undefined && track.sendsDb === undefined);
+  return {
+    ...project,
+    mixerContract: {
+      version: "unknown",
+      safeForAutomatedMixing: false,
+      legacyRawVolumeDbSuspected: legacyVolumeDbTracks.length > 0,
+      legacyRawSendsSuspected: legacySendsTracks.length > 0,
+      message: "This bridge did not report mixerContract. Treat volumeDb and sends readback as unsafe for automated write reuse until the Ableton Remote Script is reinstalled and restarted."
+    },
+    mixerWarnings: [
+      ...(project.mixerWarnings ?? []),
+      "Unsafe mixer readback contract: do not copy volumeDb or sends from this /project response into write endpoints."
+    ]
+  };
+}
+
+function annotateProductionReport(report) {
+  if (!report || typeof report !== "object") {
+    return report;
+  }
+  const project = report.project ? annotateProjectMixerContract(report.project) : report.project;
+  const mixerContract = report.mixerContract ?? project?.mixerContract ?? {
+    version: "unknown",
+    safeForAutomatedMixing: false,
+    message: "This production report did not include mixerContract. Read /project and verify safeForAutomatedMixing before automated mixer writes."
+  };
+  const productionWarnings = [
+    ...(report.productionWarnings ?? []),
+    ...(mixerContract.safeForAutomatedMixing === true ? [] : ["Unsafe or unknown mixer readback contract in production report."])
+  ];
+  return {
+    ...report,
+    ...(project ? { project } : {}),
+    mixerContract,
+    endpointSupport: report.endpointSupport ?? createBridgeObservabilitySnapshot().endpointSupport,
+    ...(productionWarnings.length > 0 ? { productionWarnings } : {})
+  };
+}
+
+function deviceParameterArgs(args = {}) {
+  const location = args.location ?? {
+    target: args.target ?? (args.returnIndex !== undefined ? "return" : args.trackIndex !== undefined ? "track" : undefined),
+    trackIndex: args.trackIndex,
+    returnIndex: args.returnIndex
+  };
+  return {
+    target: location.target,
+    trackIndex: location.trackIndex,
+    returnIndex: location.returnIndex,
+    deviceIndex: args.deviceIndex,
+    deviceName: args.deviceName
+  };
 }
 
 async function getBridgeObservability(args = {}) {
@@ -732,6 +858,9 @@ function validateMixerArgs(args, options = {}) {
   if (options.allowCueVolume && args.cueVolumeDb !== undefined) {
     requireNumberInRange(args.cueVolumeDb, "cueVolumeDb", -70, 12);
   }
+  if (args.verifyToleranceDb !== undefined) {
+    requireNumberInRange(args.verifyToleranceDb, "verifyToleranceDb", 0, 12);
+  }
 }
 
 function validateMidiNote(note, index) {
@@ -818,6 +947,38 @@ function validateDeviceChainArgs(args) {
   }
   if (args.location.target === "return") {
     requireNonNegativeInteger(args.location.returnIndex, "returnIndex");
+  }
+}
+
+function validateDeviceParameterTarget(args) {
+  if (args.location !== undefined) {
+    validateDeviceChainArgs(args);
+    if (args.location.target === "track") {
+      requireNonNegativeInteger(args.location.trackIndex, "trackIndex");
+    }
+    if (args.location.target === "return") {
+      requireNonNegativeInteger(args.location.returnIndex, "returnIndex");
+    }
+  } else {
+    const target = args.target ?? (args.returnIndex !== undefined ? "return" : args.trackIndex !== undefined ? "track" : "track");
+    if (!["track", "return", "master"].includes(target)) {
+      throw rpcError(-32602, "target must be track, return, or master");
+    }
+    if (target === "track") {
+      requireNonNegativeInteger(args.trackIndex, "trackIndex");
+    }
+    if (target === "return") {
+      requireNonNegativeInteger(args.returnIndex, "returnIndex");
+    }
+  }
+  if (args.trackIndex !== undefined) {
+    requireNonNegativeInteger(args.trackIndex, "trackIndex");
+  }
+  if (args.returnIndex !== undefined) {
+    requireNonNegativeInteger(args.returnIndex, "returnIndex");
+  }
+  if (args.deviceIndex !== undefined) {
+    requireNonNegativeInteger(args.deviceIndex, "deviceIndex");
   }
 }
 

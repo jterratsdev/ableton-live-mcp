@@ -3,9 +3,11 @@ import { BridgeRequestError } from "../errors.js";
 import { analyzeAudioFile } from "./audio-analysis.js";
 import { arrangementSnapshot } from "./arrangement.js";
 import { exportDevelopmentRender } from "./render.js";
-import { clone, isValidLoudness, isValidTruePeak, requireNonNegativeInteger } from "./utils.js";
+import { clone, isValidLoudness, isValidTruePeak, normalize, requireNonNegativeInteger } from "./utils.js";
 import { meterSnapshot } from "./metering.js";
 import { matchesPlugin } from "./plugins.js";
+import { createMixerContract } from "../mixer-contract.js";
+import { endpointSupportSummary } from "../observability.js";
 
 export async function bounceTracks(state, payload = {}) {
   const scope = payload.scope ?? "stems";
@@ -48,6 +50,8 @@ export function productionSessionReport(state) {
   return {
     ok: true,
     generatedAt: new Date().toISOString(),
+    mixerContract: createMixerContract(),
+    endpointSupport: endpointSupportSummary(),
     summary: {
       tempo: state.tempo,
       timeSignature: state.timeSignature,
@@ -79,6 +83,11 @@ export function productionSessionReport(state) {
       master: masterMeter
     },
     arrangement,
+    masteringPolicy: {
+      defaultApplyMode: "replace_matching",
+      duplicateSafeMode: "replace_all",
+      appendRequiresIntent: true
+    },
     risks
   };
 }
@@ -156,8 +165,14 @@ export function applyMasteringChain(state, payload = {}) {
   }
 
   const chain = Array.isArray(payload.chain) ? payload.chain : [];
+  const mode = payload.mode ?? "replace_matching";
+  if (!["replace_matching", "replace_all", "append"].includes(mode)) {
+    throw new BridgeRequestError("mode must be replace_matching, replace_all, or append");
+  }
   const loadedDevices = [];
+  const removedDevices = [];
   const warnings = [];
+  const selectedSteps = [];
   for (const step of chain) {
     if (!step || typeof step.device !== "string" || step.device.trim() === "") {
       warnings.push("Skipped mastering step without device name");
@@ -168,6 +183,29 @@ export function applyMasteringChain(state, payload = {}) {
       warnings.push(`No matching audio effect found for mastering device: ${step.device}`);
       continue;
     }
+    selectedSteps.push({ step, plugin });
+  }
+  if (selectedSteps.length === 0) {
+    throw new BridgeRequestError(`No mastering devices were loaded. ${warnings.join("; ")}`.trim(), 404);
+  }
+
+  if (mode === "replace_all") {
+    removedDevices.push(...state.master.devices.map(clone));
+    state.master.devices = [];
+  } else if (mode === "replace_matching") {
+    const selectedNames = new Set(selectedSteps.flatMap(({ step, plugin }) => [step.device, plugin.name]).map(normalize));
+    const kept = [];
+    for (const device of state.master.devices) {
+      if (selectedNames.has(normalize(device.name))) {
+        removedDevices.push(clone(device));
+      } else {
+        kept.push(device);
+      }
+    }
+    state.master.devices = kept;
+  }
+
+  for (const { step, plugin } of selectedSteps) {
     const device = {
       index: state.master.devices.length,
       name: plugin.name,
@@ -177,15 +215,16 @@ export function applyMasteringChain(state, payload = {}) {
     state.master.devices.push(device);
     loadedDevices.push(clone(device));
   }
-  if (loadedDevices.length === 0) {
-    throw new BridgeRequestError(`No mastering devices were loaded. ${warnings.join("; ")}`.trim(), 404);
-  }
-
-  state.masteringChain = { ...clone(payload), loadedDevices };
+  state.master.devices.forEach((device, index) => {
+    device.index = index;
+  });
+  state.masteringChain = { ...clone(payload), mode, loadedDevices, removedDevices };
   return {
     ok: true,
     mastering: clone(state.masteringChain),
+    mode,
     loadedDevices,
+    removedDevices,
     warnings
   };
 }

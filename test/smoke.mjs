@@ -46,8 +46,10 @@ try {
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_freeze_track"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_flatten_track"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_search_browser"));
+  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_diagnose_plugins"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_analyze_audio"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_production_report"));
+  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_diagnose_playback"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_bridge_observability"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_evaluate_action_risk"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_list_risk_policy"));
@@ -57,6 +59,8 @@ try {
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_consolidate_clip"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_delete_clip"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_clip_notes"));
+  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_launch_clip"));
+  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_launch_scene"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_humanize_clip"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_quantize_clip"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_apply_groove"));

@@ -40,6 +40,8 @@ ENDPOINT_SUPPORT = (
     {"method": "POST", "path": "/arrangement/locators", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Live cue point mutation support"}},
     {"method": "POST", "path": "/transport/start", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/transport/stop", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "POST", "path": "/clips/launch", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "POST", "path": "/scenes/launch", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/devices/load", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/devices/load-master", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/devices/parameters", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},

@@ -2607,5 +2607,476 @@
     "status": "done",
     "createdAt": "2026-07-21T00:25:23.469Z",
     "updatedAt": "2026-07-21T00:25:23.500Z"
+  },
+  {
+    "id": "ableton-npm-package-release-prep-20260721",
+    "title": "Prepare scoped npm package release",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Prepare the Ableton MCP for a first @jterrats npm package release without publishing.",
+    "acceptanceCriteria": [
+      "Package metadata is scoped to @jterrats and no longer private.",
+      "A formal CLI supports default MCP stdio plus doctor, install-remote-script, bridge, and help subcommands.",
+      "Package contents exclude internal workflow prompts, rules, skills, and local evidence while retaining runtime code, Remote Script, scripts, docs, and README."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "src",
+      "scripts",
+      "README.md",
+      "docs",
+      ".npmignore",
+      "LICENSE"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T15:27:16.232Z",
+    "updatedAt": "2026-07-21T15:31:00.247Z",
+    "testStrategy": "npm test, CLI help checks, and npm pack --dry-run with prepack validation.",
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-npm-package-release-prep-20260721-developer-39dd31",
+    "title": "[DEVELOPER] ableton-npm-package-release-prep-20260721",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T15:27:24.713Z",
+    "updatedAt": "2026-07-21T15:27:24.745Z"
+  },
+  {
+    "id": "ableton-safe-mixing-blockers-20260721",
+    "title": "Resolve blockers for safe automated mixing",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Remove ambiguity before automated mixing/mastering by detecting stale mixer contracts, preventing duplicate master chains, and exposing symmetric device parameter editing for tracks, returns, and master.",
+    "acceptanceCriteria": [
+      "Project readbacks make stale raw-as-dB mixer contracts detectable and documented so automation can refuse unsafe volumeDb reuse.",
+      "Mastering chain application can avoid or clean duplicate master devices before applying another chain.",
+      "Device parameter read/write surfaces support master and return devices, not only track devices."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T18:13:16.799Z",
+    "updatedAt": "2026-07-21T18:21:51.682Z",
+    "testStrategy": "npm test, Python py_compile for changed Remote Script files, npm pack --dry-run, and escalated doctor validation showing active Ableton runtime is still stale until reinstall.",
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-safe-mixing-blockers-20260721-developer-fde362",
+    "title": "[DEVELOPER] ableton-safe-mixing-blockers-20260721",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T18:13:26.405Z",
+    "updatedAt": "2026-07-21T18:13:26.437Z"
+  },
+  {
+    "id": "ableton-mixing-contract-polish-20260721",
+    "title": "Polish mixing contract reporting",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Clarify send readbacks, expose mixer contract/support in production reports, and document safe master chain replacement before automated mastering.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "src/tools.js",
+      "bridge/development-adapter.js",
+      "bridge/development/production-workflows.js",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T18:56:23.637Z",
+    "updatedAt": "2026-07-21T18:59:29.339Z"
+  },
+  {
+    "id": "ableton-mixing-contract-polish-20260721-developer-13d21a",
+    "title": "[DEVELOPER] ableton-mixing-contract-polish-20260721",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T18:56:36.940Z",
+    "updatedAt": "2026-07-21T18:56:36.972Z"
+  },
+  {
+    "id": "ableton-volume-write-verification-20260721",
+    "title": "Verify volume write targets against observed readback",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Make volumeDb writes explicit target operations with observed readback metadata, tolerance warnings, and documentation for closed-loop mixing automation.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "src/tools.js",
+      "bridge/development",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T20:03:10.759Z",
+    "updatedAt": "2026-07-21T20:08:13.784Z"
+  },
+  {
+    "id": "ableton-volume-write-verification-20260721-developer-ff7bef",
+    "title": "[DEVELOPER] ableton-volume-write-verification-20260721",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T20:03:25.174Z",
+    "updatedAt": "2026-07-21T20:03:25.202Z"
+  },
+  {
+    "id": "ableton-010-stable-release-prep-20260721",
+    "title": "Prepare Ableton MCP 0.1.0 stable release",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Move package from alpha to 0.1.0 release readiness with safer install guidance, release checks, documentation, and validation evidence without publishing.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "README.md",
+      "scripts",
+      "src",
+      "docs",
+      "test",
+      "ableton_remote_scripts"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T22:23:13.921Z",
+    "updatedAt": "2026-07-21T22:25:27.621Z"
+  },
+  {
+    "id": "ableton-010-stable-release-prep-20260721-release-13e49b",
+    "title": "[RELEASE] ableton-010-stable-release-prep-20260721",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T22:23:25.398Z",
+    "updatedAt": "2026-07-21T22:23:25.428Z"
+  },
+  {
+    "id": "ableton-installer-test-coverage-20260721",
+    "title": "Add installer test coverage",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "goal": "Verify the install-remote-script CLI against a fake Ableton app and cover installer help/guidance in deterministic tests.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "scripts",
+      "test",
+      "docs",
+      "package.json"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T22:26:25.048Z",
+    "updatedAt": "2026-07-21T22:27:22.018Z"
+  },
+  {
+    "id": "ableton-installer-test-coverage-20260721-qa-1a41a1",
+    "title": "[QA] ableton-installer-test-coverage-20260721",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-21T22:26:29.896Z",
+    "updatedAt": "2026-07-21T22:26:29.933Z"
+  },
+  {
+    "id": "ableton-plugin-diagnostics-20260722",
+    "title": "Diagnose disk plugins missing from Ableton index",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Expose a safe MCP diagnostic that compares installed VST/AU plugins on disk against Ableton-indexed plugins and browser search results, with rescan recommendations.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "src",
+      "bridge",
+      "docs",
+      "test",
+      "scripts",
+      "package.json"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T16:47:15.157Z",
+    "updatedAt": "2026-07-22T16:51:18.062Z"
+  },
+  {
+    "id": "ableton-plugin-diagnostics-20260722-developer-f4f3d4",
+    "title": "[DEVELOPER] ableton-plugin-diagnostics-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T16:47:29.795Z",
+    "updatedAt": "2026-07-22T16:47:29.828Z"
+  },
+  {
+    "id": "ableton-playback-diagnostics-20260722",
+    "title": "Add playback diagnostics and clip launch controls",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Expose read-only playback diagnostics that distinguish silent transport from missing/idle clips and add explicit clip/scene launch controls for Session View playback.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T16:57:23.650Z",
+    "updatedAt": "2026-07-22T17:05:40.057Z"
+  },
+  {
+    "id": "ableton-playback-diagnostics-20260722-developer-6d1892",
+    "title": "[DEVELOPER] ableton-playback-diagnostics-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T16:57:33.961Z",
+    "updatedAt": "2026-07-22T16:57:33.994Z"
+  },
+  {
+    "id": "ableton-live-meter-cache-20260722",
+    "title": "Read real Live meters through cached listeners",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Fix Remote Script metering so /meters can report real Live audio signal when direct meter property reads stay at zero, using listener-backed cached values and explicit diagnostics.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T17:16:36.895Z",
+    "updatedAt": "2026-07-22T17:22:38.783Z"
+  },
+  {
+    "id": "ableton-live-meter-cache-20260722-developer-e249aa",
+    "title": "[DEVELOPER] ableton-live-meter-cache-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T17:16:43.836Z",
+    "updatedAt": "2026-07-22T17:23:11.402Z"
+  },
+  {
+    "id": "ableton-live-meter-cache-20260722-developer-649ec9",
+    "title": "[DEVELOPER] ableton-live-meter-cache-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-22T17:17:27.389Z",
+    "updatedAt": "2026-07-22T17:17:27.389Z"
+  },
+  {
+    "id": "ableton-meter-runtime-fix-20260722",
+    "title": "Make meters effective against live Ableton runtime",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Determine the supported Live Remote Script metering path, implement reliable observable meters or an explicit unsupported contract, and validate the result against the user's running Ableton instance without modifying the set beyond playback.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "src",
+      "test",
+      "docs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T18:15:31.367Z",
+    "updatedAt": "2026-07-22T18:45:36.417Z",
+    "blockedReason": "qa requested changes: Implementation and deterministic regression tests pass. Live evidence proves zero-only meters during audible playback, and the new contract should classify that runtime as unreliable. Final acceptance requires reinstall/restart and live verification of reliableForMixing=false, meterCapability.status=zero-only-during-active-playback, bounded target counts, and the production report risk.",
+    "testStrategy": "Run static and deterministic tests, reinstall the Remote Script, restart Ableton, then collect repeated localhost /meters samples during audible playback.",
+    "architectureApproval": {
+      "userApproved": true
+    },
+    "acceptanceCriteria": [
+      "Meter cache uses stable logical target keys across Live proxy wrapper instances",
+      "During audible playback /meters reports pollCount greater than zero and non-zero signal on at least one track and master",
+      "Meter diagnostics do not inflate observed target counts beyond the seven current track, return, and master targets",
+      "When Live returns zero-only meters during active playback, /meters reports reliableForMixing=false with an explicit capability status",
+      "Production reports and playback diagnostics prevent meter-guided mixing when runtime meters are unreliable"
+    ],
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-meter-runtime-fix-20260722-developer-a96260",
+    "title": "[DEVELOPER] ableton-meter-runtime-fix-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T18:15:46.376Z",
+    "updatedAt": "2026-07-22T18:44:58.332Z"
+  },
+  {
+    "id": "ableton-010-validated-checkpoint-20260722",
+    "title": "Commit validated Ableton MCP 0.1.0 checkpoint",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Create a local commit containing the validated 0.1.0 product, installer, diagnostics, mixing contracts, and truthful meter capability; run release validation and do not push, tag, publish, or deploy.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "README.md",
+      "package.json",
+      "src",
+      "bridge",
+      "ableton_remote_scripts",
+      "docs",
+      "scripts",
+      "test",
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-22T18:47:25.096Z",
+    "updatedAt": "2026-07-22T18:47:25.096Z"
+  },
+  {
+    "id": "ableton-010-validated-checkpoint-20260722-release-03f56e",
+    "title": "[RELEASE] ableton-010-validated-checkpoint-20260722",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T18:47:25.642Z",
+    "updatedAt": "2026-07-22T18:47:25.674Z"
   }
 ]

@@ -73,6 +73,56 @@ export function getClipNotes(state, payload = {}) {
   };
 }
 
+export function launchClip(state, payload = {}) {
+  validateClipTargetPayload(payload);
+  const track = getTrack(state, payload.trackIndex);
+  const clip = track.clips.find((candidate) => candidate.slot === payload.clipSlotIndex);
+  if (!clip) {
+    throw new BridgeRequestError("clipSlotIndex does not contain a clip", 404);
+  }
+  for (const candidate of track.clips) {
+    candidate.isPlaying = false;
+    candidate.isTriggered = false;
+  }
+  clip.isPlaying = true;
+  state.playing = true;
+  track.meter = { level: 0.5, left: 0.45, right: 0.46 };
+  state.master.meter = { level: 0.5, left: 0.45, right: 0.46 };
+  return {
+    ok: true,
+    launched: true,
+    clip: { slot: clip.slot, name: clip.name ?? "", lengthBeats: clip.lengthBeats ?? null },
+    track: { index: track.index, name: track.name }
+  };
+}
+
+export function launchScene(state, payload = {}) {
+  const sceneIndex = Number.parseInt(String(payload.sceneIndex), 10);
+  if (!Number.isInteger(sceneIndex) || sceneIndex < 0) {
+    throw new BridgeRequestError("sceneIndex must be a non-negative integer");
+  }
+  const launched = [];
+  for (const track of state.tracks) {
+    const clip = track.clips.find((candidate) => candidate.slot === sceneIndex);
+    if (!clip) {
+      continue;
+    }
+    for (const candidate of track.clips) {
+      candidate.isPlaying = false;
+      candidate.isTriggered = false;
+    }
+    clip.isPlaying = true;
+    track.meter = { level: 0.5, left: 0.45, right: 0.46 };
+    launched.push({ trackIndex: track.index, trackName: track.name, clipSlotIndex: clip.slot, name: clip.name ?? "" });
+  }
+  if (launched.length === 0) {
+    throw new BridgeRequestError("sceneIndex does not contain any clips", 404);
+  }
+  state.playing = true;
+  state.master.meter = { level: 0.5, left: 0.45, right: 0.46 };
+  return { ok: true, launched: true, sceneIndex, clips: launched };
+}
+
 export function importMidiFile(state, payload = {}) {
   validateMidiImportPayload(payload);
 

@@ -1,6 +1,8 @@
 import { BridgeRequestError } from "../errors.js";
 import { isNumberInRange, isValidDb, requireBoolean } from "./utils.js";
 
+const DEFAULT_WRITE_TOLERANCE_DB = 0.5;
+
 export function getTrack(state, trackIndex) {
   const track = state.tracks[trackIndex];
   if (!track) {
@@ -129,4 +131,69 @@ function applyMixerPatch(target, payload, applied) {
     target.solo = requireBoolean(payload.solo, "solo");
     applied.solo = target.solo;
   }
+}
+
+export function mixerWriteVerification(target, payload, applied = {}) {
+  const toleranceDb = writeToleranceDb(payload);
+  const verification = {};
+  if (payload.volumeDb !== undefined && applied.volumeDb !== undefined) {
+    verification.volumeDb = verifyDbWrite(payload.volumeDb, target.volumeDb, displayDb(target.volumeDb), toleranceDb);
+  }
+  if (payload.cueVolumeDb !== undefined && applied.cueVolumeDb !== undefined) {
+    verification.cueVolumeDb = verifyDbWrite(payload.cueVolumeDb, target.cueVolumeDb, displayDb(target.cueVolumeDb), toleranceDb);
+  }
+  if (payload.sends !== undefined && applied.sends !== undefined) {
+    verification.sends = {};
+    for (const [sendName, requested] of Object.entries(applied.sends)) {
+      verification.sends[sendName] = verifyDbWrite(requested, target.sends?.[sendName], displayDb(target.sends?.[sendName]), toleranceDb);
+    }
+  }
+  return verification;
+}
+
+export function mixerWriteWarnings(verification) {
+  const warnings = [];
+  collectVerificationWarnings(warnings, "volumeDb", verification.volumeDb);
+  collectVerificationWarnings(warnings, "cueVolumeDb", verification.cueVolumeDb);
+  for (const [sendName, sendVerification] of Object.entries(verification.sends ?? {})) {
+    collectVerificationWarnings(warnings, `sends.${sendName}`, sendVerification);
+  }
+  return warnings;
+}
+
+function writeToleranceDb(payload) {
+  return typeof payload.verifyToleranceDb === "number" && Number.isFinite(payload.verifyToleranceDb)
+    ? payload.verifyToleranceDb
+    : DEFAULT_WRITE_TOLERANCE_DB;
+}
+
+function verifyDbWrite(requested, observed, display, toleranceDb) {
+  const hasObserved = typeof observed === "number" && Number.isFinite(observed);
+  const deltaDb = hasObserved ? observed - requested : null;
+  return {
+    requested,
+    observed: hasObserved ? observed : null,
+    display: display ?? null,
+    deltaDb,
+    toleranceDb,
+    withinTolerance: hasObserved ? Math.abs(deltaDb) <= toleranceDb : false
+  };
+}
+
+function displayDb(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  return `${value.toFixed(1)} dB`;
+}
+
+function collectVerificationWarnings(warnings, name, verification) {
+  if (!verification || verification.withinTolerance) {
+    return;
+  }
+  if (verification.observed === null) {
+    warnings.push(`${name} write could not be verified from observed dB display`);
+    return;
+  }
+  warnings.push(`${name} write target ${verification.requested} dB observed ${verification.observed} dB outside +/-${verification.toleranceDb} dB tolerance`);
 }

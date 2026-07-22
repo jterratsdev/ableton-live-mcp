@@ -217,7 +217,7 @@ deterministic checks.
       "tier": "read",
       "remoteScriptExpectation": "supported",
       "editionImpact": "All editions can report observable track, return, and master meters; Lite has fewer tracks/returns.",
-      "versionImpact": "Expected on Live 11 and Live 12."
+      "versionImpact": "Expected on Live 11 and Live 12. Remote Script polls during the Control Surface display cycle and retains listeners as a secondary path; cache metadata distinguishes observed values from actual non-zero signal."
     },
     {
       "route": "GET /plugins",
@@ -307,6 +307,13 @@ deterministic checks.
       "unsupportedStatus": 501,
       "editionImpact": "All editions can rewrite MIDI notes when the target clip exists and editable-note APIs are exposed.",
       "versionImpact": "May return 501 when MIDI note rewrite support is unavailable."
+    },
+    {
+      "route": "POST /clips/launch",
+      "tier": "safe-write",
+      "remoteScriptExpectation": "supported",
+      "editionImpact": "All editions can launch Session View clips when the target clip slot exists.",
+      "versionImpact": "Expected on Live 11 and Live 12 through clip slot fire support."
     },
     {
       "route": "POST /clips/midi",
@@ -508,6 +515,13 @@ deterministic checks.
       "remoteScriptExpectation": "supported",
       "editionImpact": "No edition-specific limitation known.",
       "versionImpact": "Expected on Live 11 and Live 12."
+    },
+    {
+      "route": "POST /scenes/launch",
+      "tier": "safe-write",
+      "remoteScriptExpectation": "supported",
+      "editionImpact": "All editions can launch Session View scenes when the target scene exists.",
+      "versionImpact": "Expected on Live 11 and Live 12 through scene fire support."
     },
     {
       "route": "POST /transport/stop",

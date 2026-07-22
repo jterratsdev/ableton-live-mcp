@@ -101,6 +101,10 @@ async function routeRequest(req, adapter) {
       return adapter.deleteClip(await readJsonBody(req));
     case "GET /clips/notes":
       return adapter.getClipNotes(Object.fromEntries(url.searchParams));
+    case "POST /clips/launch":
+      return adapter.launchClip(await readJsonBody(req));
+    case "POST /scenes/launch":
+      return adapter.launchScene(await readJsonBody(req));
     case "POST /clips/humanize":
       return adapter.humanizeClip(await readJsonBody(req));
     case "POST /clips/quantize":

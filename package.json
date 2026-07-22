@@ -1,18 +1,28 @@
 {
-  "name": "ableton-live-mcp",
+  "name": "@jterrats/ableton-live-mcp",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "description": "Local MCP stdio server for controlling Ableton Live through a local bridge.",
   "bin": {
-    "ableton-live-mcp": "./src/server.js"
+    "ableton-live-mcp": "./src/cli.js"
   },
+  "files": [
+    "ableton_remote_scripts/",
+    "bridge/",
+    "docs/",
+    "scripts/install-ableton-remote-script.sh",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "bridge": "node bridge/server.js",
-    "doctor": "node src/doctor.js",
+    "bridge": "node src/cli.js bridge",
+    "doctor": "node src/cli.js doctor",
     "doctor:test": "node scripts/check-doctor-diagnostics.mjs",
-    "install:ableton-remote-script": "bash scripts/install-ableton-remote-script.sh",
-    "start": "node src/server.js",
+    "install:ableton-remote-script": "node src/cli.js install-remote-script",
+    "prepack": "npm test",
+    "start": "node src/cli.js",
     "smoke": "node test/smoke.mjs",
     "smoke:bridge": "node test/bridge-smoke-report.mjs",
     "smoke:live:readonly": "node test/live-smoke-readonly.mjs",
@@ -23,5 +33,5 @@
   "engines": {
     "node": ">=18"
   },
-  "license": "UNLICENSED"
+  "license": "MIT"
 }

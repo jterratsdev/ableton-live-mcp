@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { AbletonBridge } from "../src/bridge.js";
 import { loadBridgeConfig } from "../src/config.js";
+import { createDispatch } from "../src/tools.js";
 
 await rejectsInvalidMidiNoteValues();
 await rejectsInvalidMidiImportPath();
@@ -16,6 +17,8 @@ await returnsDeterministicPluginInventoryFixtures();
 await returnsDeterministicBrowserSearchFixtures();
 await readsMetersFromDevelopmentState();
 await mutatesDevelopmentArrangementState();
+await flagsLegacyMixerReadbackContracts();
+await annotatesLegacyProductionReports();
 validatesBridgeConfig();
 
 console.log("regression ok");
@@ -90,6 +93,48 @@ async function rejectsInvalidAudioAnalysisPath() {
     child.kill();
   }
 }
+
+async function flagsLegacyMixerReadbackContracts() {
+  const dispatch = createDispatch({
+    invoke: async (action) => {
+      assert.equal(action, "get_project");
+      return {
+        ok: true,
+        tracks: [{
+          index: 0,
+          name: "Legacy Track",
+          volumeDb: 0.8500000238418579,
+          sends: { 0: 0 }
+        }]
+      };
+    }
+  });
+
+  const project = await dispatch.ableton_get_project({});
+  assert.equal(project.mixerContract.safeForAutomatedMixing, false);
+  assert.equal(project.mixerContract.legacyRawVolumeDbSuspected, true);
+  assert.equal(project.mixerContract.legacyRawSendsSuspected, true);
+  assert.match(project.mixerWarnings[0], /Unsafe mixer readback contract/);
+}
+
+
+async function annotatesLegacyProductionReports() {
+  const dispatch = createDispatch({
+    invoke: async (action) => {
+      assert.equal(action, "get_production_report");
+      return {
+        ok: true,
+        summary: { tempo: 140 }
+      };
+    }
+  });
+
+  const report = await dispatch.ableton_get_production_report({});
+  assert.equal(report.mixerContract.safeForAutomatedMixing, false);
+  assert.ok(report.endpointSupport.count > 0);
+  assert.match(report.productionWarnings[0], /Unsafe or unknown mixer readback/);
+}
+
 
 async function rejectsInvalidClipRewriteBounds() {
   const child = spawn(process.execPath, ["src/server.js"], {

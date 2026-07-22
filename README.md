@@ -3,6 +3,8 @@
 Local MCP stdio server for inspecting and controlling Ableton Live through a
 local bridge.
 
+Current package version: `0.1.0`.
+
 This repo does not assume a specific Ableton integration layer. The MCP server
 speaks JSON-RPC over stdio to an MCP client, then forwards tool calls to a local
 HTTP bridge that you can implement with Max for Live, Ableton's Extensions SDK,
@@ -25,11 +27,15 @@ Read and inspect:
 - `ableton_get_arrangement`
 - `ableton_list_plugins`
 - `ableton_search_browser`
+- `ableton_diagnose_plugins`
 - `ableton_get_production_report`
+- `ableton_diagnose_playback`
 - `ableton_get_meters`
 - `ableton_list_returns`
 - `ableton_list_buses`
 - `ableton_get_clip_notes`
+- `ableton_launch_clip`
+- `ableton_launch_scene`
 - `ableton_get_device_parameters`
 - `ableton_analyze_audio`
 - `ableton_get_bridge_observability`
@@ -122,6 +128,33 @@ render-backed routes instead of simulating Live renders.
 
 ## Quick Start
 
+From npm:
+
+```sh
+npx -y @jterrats/ableton-live-mcp --help
+```
+
+Install the bundled Ableton Remote Script:
+
+```sh
+npx -y @jterrats/ableton-live-mcp install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"
+```
+
+Then restart Ableton Live, select `AbletonMcpBridge` in Preferences -> Link,
+Tempo & MIDI, and verify the installation:
+
+```sh
+npx -y @jterrats/ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app"
+```
+
+Run the MCP stdio server:
+
+```sh
+npx -y @jterrats/ableton-live-mcp
+```
+
+Local development from this repo:
+
 ```sh
 npm run smoke
 ```
@@ -152,8 +185,8 @@ Use this shape in an MCP client that supports stdio servers:
 {
   "mcpServers": {
     "ableton-live": {
-      "command": "node",
-      "args": ["/Users/polux/dev/ableton-mcp/src/server.js"],
+      "command": "npx",
+      "args": ["-y", "@jterrats/ableton-live-mcp"],
       "env": {
         "ABLETON_BRIDGE_URL": "http://127.0.0.1:9789"
       }
@@ -184,13 +217,18 @@ On this machine Ableton Live was detected at `/Applications/Ableton Live 12 Lite
 Install the bundled Remote Script with:
 
 ```bash
-npm run install:ableton-remote-script -- "/Applications/Ableton Live 12 Lite.app"
+npx -y @jterrats/ableton-live-mcp install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"
 ```
 
-If macOS rejects writes to `/Applications` with `Operation not permitted`, grant
-App Management or Full Disk Access to your terminal app in System Settings ->
-Privacy & Security, then rerun the installer. Finder manual copy with
-authentication is also valid.
+If macOS rejects writes to `/Applications` with `Operation not permitted`, close
+Ableton and retry with `sudo -E npx -y @jterrats/ableton-live-mcp
+install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"`.
+If sudo is still blocked, grant App Management or Full Disk Access to your
+terminal app in System Settings -> Privacy & Security, then rerun the installer.
+Finder manual copy with authentication is also valid.
+
+Release readiness checks are documented in
+[docs/release-checklist.md](docs/release-checklist.md).
 
 Keep the bridge local-only. Do not bind it to a public network interface unless
 you add authentication and understand the risk of remote DAW control.

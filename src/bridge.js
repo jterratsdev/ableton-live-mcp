@@ -31,6 +31,8 @@ const ACTIONS = {
   consolidate_clip: { method: "POST", path: "/clips/consolidate" },
   delete_clip: { method: "DELETE", path: "/clips/midi" },
   get_clip_notes: { method: "GET", path: "/clips/notes" },
+  launch_clip: { method: "POST", path: "/clips/launch" },
+  launch_scene: { method: "POST", path: "/scenes/launch" },
   humanize_clip: { method: "POST", path: "/clips/humanize" },
   quantize_clip: { method: "POST", path: "/clips/quantize" },
   apply_groove: { method: "POST", path: "/groove/apply" },

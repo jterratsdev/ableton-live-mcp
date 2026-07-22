@@ -15,6 +15,7 @@ const liveModulePaths = [
   `${scriptDir}/live_clips.py`,
   `${scriptDir}/live_core.py`,
   `${scriptDir}/live_devices.py`,
+  `${scriptDir}/live_meter_cache.py`,
   `${scriptDir}/live_mastering.py`,
   `${scriptDir}/live_mixer.py`,
   `${scriptDir}/live_snapshots.py`,
@@ -37,6 +38,7 @@ const liveApiSource = readFileSync(liveApiPath, "utf8");
 const liveBrowserSource = readFileSync(`${scriptDir}/live_browser.py`, "utf8");
 const liveCoreSource = readFileSync(`${scriptDir}/live_core.py`, "utf8");
 const liveDevicesSource = readFileSync(`${scriptDir}/live_devices.py`, "utf8");
+const liveMeterCacheSource = readFileSync(`${scriptDir}/live_meter_cache.py`, "utf8");
 const liveMasteringSource = readFileSync(`${scriptDir}/live_mastering.py`, "utf8");
 const liveMixerSource = readFileSync(`${scriptDir}/live_mixer.py`, "utf8");
 const liveSummariesSource = readFileSync(`${scriptDir}/live_summaries.py`, "utf8");
@@ -70,6 +72,8 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "POST /arrangement/locators",
   "POST /transport/start",
   "POST /transport/stop",
+  "POST /clips/launch",
+  "POST /scenes/launch",
   "POST /devices/load",
   "POST /devices/load-master",
   "GET /devices/parameters",
@@ -91,6 +95,8 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "POST /midi/import"
 ].forEach((route) => assert.ok(bridgeSource.includes(route), `${route} should be implemented`));
 assert.match(bridgeSource, /schedule_message\(1, self\._drain_live_call_queue\)/);
+assert.match(bridgeSource, /def update_display\(self\):/);
+assert.match(bridgeSource, /self\._meter_cache\.poll\(self\.song\(\)\)/);
 assert.match(bridgeSource, /Automation envelope writing is not supported/);
 assert.match(httpSource, /def do_DELETE\(self\):/);
 assert.match(httpSource, /method in \("POST", "DELETE"\)/);
@@ -105,9 +111,35 @@ assert.match(liveBrowserSource, /Browser category is not available in this Live 
 assert.match(liveBrowserSource, /MAX_BROWSER_SEARCH_RESULTS = 50/);
 assert.match(liveBrowserSource, /def plugin_type_for_kind\(kind\):/);
 assert.match(liveMixerSource, /def modify_track\(song, payload\):/);
+assert.match(liveMixerSource, /"writeVerification": write_verification/);
+assert.match(liveMixerSource, /def verify_db_write\(requested, parameter, tolerance_db\):/);
+assert.match(liveMixerSource, /verifyToleranceDb/);
 assert.match(liveMixerSource, /def create_return_track\(song, payload\):/);
 assert.match(liveMixerSource, /def delete_return_track\(song, payload\):/);
-assert.match(liveMixerSource, /def list_meters\(song\):/);
+assert.match(liveMixerSource, /def list_meters\(song, meter_cache=None\):/);
+assert.match(liveMixerSource, /def meter_capability\(song, diagnostics\):/);
+assert.match(liveMixerSource, /zero-only-during-active-playback/);
+assert.match(liveMixerSource, /"reliableForMixing": capability\["reliableForMixing"\]/);
+assert.match(liveMixerSource, /meter_cache\.sync\(song\)/);
+assert.match(liveMixerSource, /diagnostics = meter_cache\.diagnostics\(\)/);
+assert.match(liveMixerSource, /"meterCache": diagnostics/);
+assert.match(liveMeterCacheSource, /class LiveMeterCache\(object\):/);
+assert.match(liveMeterCacheSource, /add_%s_listener/);
+assert.match(liveMeterCacheSource, /remove_%s_listener/);
+assert.match(liveMeterCacheSource, /def snapshot\(self, target_type, target_index, track, label\):/);
+assert.match(liveMeterCacheSource, /def poll\(self, song\):/);
+assert.match(liveMeterCacheSource, /def meter_target_key\(target_type, target_index\):/);
+assert.match(liveMeterCacheSource, /self\._values\.setdefault\(target_key, \{\}\)/);
+assert.doesNotMatch(liveMeterCacheSource, /self\._values\.setdefault\(id\(track\)/);
+assert.match(liveMeterCacheSource, /getattr\(track, "has_audio_output", False\)/);
+assert.match(liveMeterCacheSource, /"display-poll"/);
+assert.match(liveMeterCacheSource, /"signalTargetCount": signal_targets/);
+assert.match(liveMeterCacheSource, /"signalEverObserved": self\._signal_ever_observed/);
+assert.match(liveMeterCacheSource, /"listenerObservedTargetCount": listener_observed_targets/);
+assert.match(liveMeterCacheSource, /"displayPollObservedTargetCount": display_poll_observed_targets/);
+assert.match(liveMeterCacheSource, /"pollCount": self\._poll_count/);
+assert.match(liveMeterCacheSource, /"pollTargetCount": len\(self\._poll_target_keys\)/);
+assert.match(liveMeterCacheSource, /"pollSkippedTargetCount": len\(self\._poll_skipped_target_keys\)/);
 assert.match(liveMixerSource, /output_meter_left/);
 assert.match(liveMixerSource, /output_meter_right/);
 assert.match(liveMixerSource, /output_meter_level/);
@@ -126,12 +158,22 @@ assert.match(liveTrackOperationsSource, /does not expose clip consolidation/);
 assert.match(liveTrackOperationsSource, /501/);
 assert.match(liveDevicesSource, /def set_device_parameter\(song, payload\):/);
 assert.match(liveDevicesSource, /def get_device_parameters\(song, payload\):/);
+assert.match(liveDevicesSource, /def device_parameter_payload\(payload\):/);
+assert.match(liveDevicesSource, /returnIndex/);
 assert.match(liveDevicesSource, /def load_master_device\(song, browser, payload\):/);
 assert.match(liveDevicesSource, /def reorder_device\(song, payload\):/);
 assert.match(liveDevicesSource, /def delete_device\(song, payload\):/);
 assert.match(liveDevicesSource, /Ableton Live API does not expose a reliable device reorder operation/);
 assert.match(liveMasteringSource, /def apply_mastering_chain\(song, browser, payload\):/);
+assert.match(liveMasteringSource, /replace_matching/);
+assert.match(liveMasteringSource, /removedDevices/);
+assert.match(readFileSync(`${scriptDir}/AbletonMcpBridge.py`, "utf8"), /"mixerContract": mixer_contract\(\)/);
+assert.match(readFileSync(`${scriptDir}/AbletonMcpBridge.py`, "utf8"), /"endpointSupport": endpoint_support_summary\(\)/);
+assert.match(readFileSync(`${scriptDir}/live_summaries.py`, "utf8"), /"sendsDisplay": send_summaries\(track, "display"\)/);
 assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /def humanize_clip\(song, payload\):/);
+assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /def launch_clip\(song, payload\):/);
+assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /def launch_scene\(song, payload\):/);
+assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /fire\(\)/);
 assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /def quantize_clip\(song, payload\):/);
 assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /def apply_groove\(song, payload\):/);
 assert.match(readFileSync(`${scriptDir}/live_clips.py`, "utf8"), /get_notes_extended/);

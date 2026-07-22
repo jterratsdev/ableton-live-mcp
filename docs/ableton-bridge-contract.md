@@ -22,6 +22,10 @@ Returns a compact status object.
 ```json
 {
   "ok": true,
+  "mixerContract": {
+    "version": 2,
+    "safeForAutomatedMixing": true
+  },
   "tempo": 124,
   "playing": false,
   "tracks": [
@@ -44,7 +48,12 @@ Returns enough structure for an LLM to reason before editing.
       "index": 0,
       "name": "Piano",
       "type": "midi",
+      "volumeRaw": 0.8500000238418579,
       "volumeDb": -6,
+      "volumeDisplay": "-6.0 dB",
+      "sendsRaw": { "0": 0 },
+      "sendsDb": { "0": null },
+      "sendsDisplay": { "0": "-inf dB" },
       "devices": [{ "index": 0, "name": "Wavetable", "kind": "instrument" }],
       "clips": [{ "slot": 0, "name": "Verse", "lengthBeats": 16 }]
     }
@@ -52,6 +61,11 @@ Returns enough structure for an LLM to reason before editing.
   "locators": [{ "beat": 0, "name": "Intro" }]
 }
 ```
+
+If `mixerContract` is missing or `safeForAutomatedMixing` is not `true`, clients
+must not copy `volumeDb`, `cueVolumeDb`, or `sends` readback into mixer write
+endpoints. That shape indicates an old or unknown bridge runtime where raw Live
+parameter values may still be mislabeled as dB.
 
 ### `GET /arrangement`
 
@@ -194,7 +208,7 @@ Analyzes a rendered local audio file with real local audio tooling. The bridge
 validates that `path` is absolute, points to a readable audio file, and uses a
 supported extension (`wav`, `aif`, `aiff`, `flac`, `mp3`, `m4a`, or `aac`).
 If `ffmpeg` or `ffprobe` is unavailable, the bridge returns `501` instead of
-simulating metrics.
+simulating analysis.
 
 ```json
 { "path": "/Users/example/Music/render.wav" }
@@ -217,6 +231,29 @@ simulating metrics.
   }
 }
 ```
+
+### Playback Diagnostics And Session Launch
+
+`ableton_diagnose_playback` is an MCP-level read-only diagnostic. It combines
+`/status`, `/project`, `/arrangement`, `/meters`, and `/routing/buses` to
+distinguish transport-running-but-silent, Session View clips that exist but are
+not launched, empty Arrangement playback, unobservable meters, and mute/solo
+states. It does not mutate Live.
+
+`POST /clips/launch` launches one Session View clip:
+
+```json
+{ "trackIndex": 0, "clipSlotIndex": 0 }
+```
+
+`POST /scenes/launch` launches a Session View scene by clip slot index:
+
+```json
+{ "sceneIndex": 0 }
+```
+
+Both launch endpoints are safe-write actions because they change playback state.
+Use the diagnostic first when transport is running but meters remain silent.
 
 ### `POST /tempo`
 
@@ -335,6 +372,7 @@ Changes mixer, naming, routing, or sends for one track.
   "trackIndex": 0,
   "name": "Piano Main",
   "volumeDb": -8,
+  "verifyToleranceDb": 0.5,
   "pan": 0,
   "muted": false,
   "solo": false,
@@ -351,6 +389,9 @@ raw parameter values back into those dB write fields: the Python Remote Script
 exposes raw parameter values as `volumeRaw` and `sendsRaw`; `volumeDb` and
 `sendsDb` are only populated from Live display strings when Live exposes a
 parseable dB display.
+Because Live parameter curves can be non-linear, dB writes are targets rather
+than exact guarantees. Clients should read `writeVerification` and continue
+automated mixing only when observed values are within tolerance.
 
 ```json
 {
@@ -367,6 +408,16 @@ parseable dB display.
     "volumeDb": -8,
     "pan": -0.2,
     "sends": { "Reverb": -18 }
+  },
+  "writeVerification": {
+    "volumeDb": {
+      "requested": -8,
+      "observed": -8.1,
+      "display": "-8.1 dB",
+      "deltaDb": -0.1,
+      "toleranceDb": 0.5,
+      "withinTolerance": true
+    }
   }
 }
 ```
@@ -507,15 +558,37 @@ field. Each target always includes `meter.left`, `meter.right`, and
 Bridge implementations must not fabricate levels from volume, clip state, or
 transport state.
 
+Remote Script responses may also include listener-backed observation metadata:
+`meterCache` at the response root and `meterSource`, `meterObserved`,
+`meterUpdatedAtMs`, and `meterAgeMs` per target. `meterSource:
+"listener-cache"` means the value came from a Live meter listener callback;
+`meterSource: "direct"` means the bridge fell back to a one-shot property read.
+
 ```json
 {
   "ok": true,
+  "reliableForMixing": true,
+  "meterCapability": {
+    "status": "signal-observed",
+    "reliableForMixing": true,
+    "activeSessionPlayback": true
+  },
+  "meterCache": {
+    "cacheEnabled": true,
+    "staleAfterMs": 2000,
+    "targetCount": 3,
+    "listenerCount": 9,
+    "observedTargetCount": 2,
+    "listenerErrorCount": 0
+  },
   "tracks": [
     {
       "index": 0,
       "name": "Piano",
       "type": "midi",
       "meter": { "left": 0.12, "right": 0.1, "level": 0.13 },
+      "meterSource": { "left": "display-poll-cache", "right": "display-poll-cache", "level": "display-poll-cache" },
+      "meterObserved": { "left": true, "right": true, "level": true },
       "warnings": []
     }
   ],
@@ -551,6 +624,21 @@ when present, including `meter.left/right/level`, `outputMeterLeft/Right/Level`,
 or `output_meter_left/right/level`. Its default fixture does not simulate audio
 meters, so defaults return `null` meter fields with warnings.
 
+The Remote Script samples these properties during Ableton's Control Surface
+display cycle and exposes `pollCount`, `pollErrorCount`, `lastPollAtMs`, and
+`signalTargetCount` in `meterCache`. `pollTargetCount` and
+`pollSkippedTargetCount` report the `has_audio_output` eligibility gate.
+`listenerObservedTargetCount` and `displayPollObservedTargetCount` identify the
+effective observation path. `meterObserved` means Live returned a fresh value;
+it does not by itself mean that the value was non-zero.
+
+Clients must require `reliableForMixing: true` before making meter-guided mix or
+mastering changes. A `meterCapability.status` of
+`zero-only-during-active-playback` means the bridge is polling successfully but
+the running Live API returns only zero values while Session clips are playing.
+The endpoint remains useful for diagnostics, but its levels must not be treated
+as audio measurements.
+
 ### `POST /master/modify`
 
 Changes master mixer state where the bridge runtime supports it.
@@ -558,6 +646,7 @@ Changes master mixer state where the bridge runtime supports it.
 ```json
 {
   "volumeDb": -2,
+  "verifyToleranceDb": 0.5,
   "pan": 0,
   "cueVolumeDb": -18,
   "muted": false,
@@ -575,6 +664,16 @@ of silent success.
   "ok": true,
   "master": { "name": "Master", "type": "master", "volumeDb": -2, "pan": 0 },
   "applied": { "volumeDb": -2, "pan": 0, "cueVolumeDb": -18 },
+  "writeVerification": {
+    "volumeDb": {
+      "requested": -2,
+      "observed": -2,
+      "display": "-2.0 dB",
+      "deltaDb": 0,
+      "toleranceDb": 0.5,
+      "withinTolerance": true
+    }
+  },
   "warnings": []
 }
 ```
@@ -802,29 +901,33 @@ Missing browser items return `404`.
 
 ### `POST /devices/parameter`
 
-Sets a device/plugin parameter.
+Sets a device/plugin parameter on a track, return, or master chain. Legacy
+payloads can still provide `trackIndex` directly; new payloads should prefer
+`target` or `location`.
 
 ```json
 {
-  "trackIndex": 0,
+  "target": "master",
   "deviceIndex": 0,
-  "parameter": "Filter Frequency",
+  "parameter": "Low Cut",
   "normalizedValue": 0.72
 }
 ```
 
 The bridge resolves the target device by `deviceIndex` or `deviceName`, then
 resolves `parameter` by exact normalized name. Missing devices or parameters
-return `404`; invalid values return `400`.
+return `404`; invalid values return `400`. For returns, pass
+`target: "return"` and `returnIndex`; for tracks, pass `target: "track"` and
+`trackIndex`.
 
 ```json
 {
   "ok": true,
   "parameter": {
-    "trackIndex": 0,
+    "location": { "target": "master" },
     "deviceIndex": 0,
-    "deviceName": "Wavetable",
-    "parameter": "Filter Frequency",
+    "deviceName": "EQ Eight",
+    "parameter": "Low Cut",
     "previousValue": 0.5,
     "value": 0.72
   }
@@ -836,16 +939,19 @@ return `404`; invalid values return `400`.
 Lists device parameters before mutation. Query parameters:
 
 ```text
-trackIndex=0&deviceIndex=0
+target=master&deviceIndex=0
 ```
 
-`deviceIndex` and `deviceName` are optional. When neither is provided, all
-devices on the track are returned.
+`target` may be `track`, `return`, or `master`. For track targets pass
+`trackIndex`; for return targets pass `returnIndex`. `deviceIndex` and
+`deviceName` are optional. When neither is provided, all devices on the chain
+are returned.
 
 ```json
 {
   "ok": true,
-  "track": { "index": 0, "name": "Piano" },
+  "location": { "target": "master" },
+  "chain": { "name": "Master", "type": "master" },
   "count": 1,
   "devices": [
     {
@@ -976,12 +1082,18 @@ envelope mutation surface for these lanes.
 Applies a master bus chain or mastering intent. The bridge reports only devices
 that were actually loaded/configured. If no requested mastering device can be
 loaded or configured, the endpoint returns a non-2xx error instead of `ok: true`.
+By default `mode` is `replace_matching`, which removes existing master devices
+whose names match the requested chain before loading new copies. Use
+`mode: "append"` only when duplicate/stacked processing is intentional. Use
+`mode: "replace_all"` only after explicit approval because it clears the master
+chain first.
 
 ```json
 {
   "style": "transparent",
   "targetLufs": -14,
   "truePeakDb": -1,
+  "mode": "replace_matching",
   "chain": [
     { "device": "EQ Eight", "settings": { "highPassHz": 25 } },
     { "device": "Limiter", "settings": { "ceilingDb": -1 } }
@@ -992,6 +1104,8 @@ loaded or configured, the endpoint returns a non-2xx error instead of `ok: true`
 ```json
 {
   "ok": true,
+  "mode": "replace_matching",
+  "removedDevices": [],
   "loadedDevices": [
     {
       "index": 0,
@@ -1104,6 +1218,13 @@ meters, arrangement data, and explicit risks.
 ```json
 {
   "ok": true,
+  "mixerContract": {
+    "version": 2,
+    "safeForAutomatedMixing": true
+  },
+  "endpointSupport": {
+    "count": 48
+  },
   "summary": {
     "tempo": 124,
     "timeSignature": "4/4",
@@ -1114,6 +1235,10 @@ meters, arrangement data, and explicit risks.
   "risks": ["Some meter values are unavailable"]
 }
 ```
+
+`endpointSupport` is the same support matrix exposed by observability. Clients
+can use `mixerContract.safeForAutomatedMixing` from this top-level report before
+running production workflows without making a separate `/project` read.
 
 ### `POST /tracks/bounce`
 

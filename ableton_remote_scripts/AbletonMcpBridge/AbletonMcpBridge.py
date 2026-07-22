@@ -18,10 +18,15 @@ except ImportError:
         def schedule_message(self, delay, callback):
             callback()
 
+        def update_display(self):
+            pass
+
         def disconnect(self):
             pass
 
 from .http_bridge import BridgeHttpError, start_http_server, stop_http_server
+from .live_meter_cache import LiveMeterCache
+from .live_observability import endpoint_support_summary
 from .live_api import (
     add_locator,
     apply_groove,
@@ -47,8 +52,11 @@ from .live_api import (
     humanize_clip,
     insert_arrangement_clip,
     load_master_device,
+    launch_clip,
+    launch_scene,
     list_meters,
     list_return_tracks,
+    master_track_detail,
     modify_master_track,
     modify_return_track,
     modify_track,
@@ -56,6 +64,7 @@ from .live_api import (
     routing_buses,
     reorder_device,
     quantize_clip,
+    return_track_detail,
     set_device_parameter,
     apply_mastering_chain,
     duplicate_track,
@@ -77,16 +86,25 @@ class AbletonMcpBridge(ControlSurface):
         self._pending_live_calls = []
         self._snapshots = {}
         self._snapshot_counter = 0
+        self._meter_cache = LiveMeterCache(self._log)
         self._server = None
         self._server_thread = None
         self._server, self._server_thread = start_http_server(HOST, PORT, self)
         self._log("AbletonMcpBridge listening on http://%s:%s" % (HOST, PORT))
 
     def disconnect(self):
+        self._meter_cache.clear()
         stop_http_server(self._server)
         self._server = None
         self._server_thread = None
         ControlSurface.disconnect(self)
+
+    def update_display(self):
+        ControlSurface.update_display(self)
+        try:
+            self._meter_cache.poll(self.song())
+        except Exception as error:
+            self._log("Unable to poll Live meters during update_display: %s" % error)
 
     def handle_request(self, method, path, query, payload):
         route = "%s %s" % (method, path)
@@ -135,7 +153,7 @@ class AbletonMcpBridge(ControlSurface):
         if route == "GET /routing/buses":
             return self._call_live_thread(lambda: routing_buses(self.song()))
         if route == "GET /meters":
-            return self._call_live_thread(lambda: list_meters(self.song()))
+            return self._call_live_thread(lambda: list_meters(self.song(), self._meter_cache))
         if route == "POST /master/modify":
             return self._call_live_thread(lambda: modify_master_track(self.song(), payload))
         if route == "POST /arrangement/insert":
@@ -152,7 +170,9 @@ class AbletonMcpBridge(ControlSurface):
             return self._call_live_thread(lambda: load_master_device(self.song(), self.application().browser, payload))
         if route == "GET /devices/parameters":
             return self._call_live_thread(lambda: get_device_parameters(self.song(), {
+                "target": first_query_value(query, "target"),
                 "trackIndex": first_query_value(query, "trackIndex"),
+                "returnIndex": first_query_value(query, "returnIndex"),
                 "deviceIndex": first_query_value(query, "deviceIndex"),
                 "deviceName": first_query_value(query, "deviceName")
             }))
@@ -183,6 +203,10 @@ class AbletonMcpBridge(ControlSurface):
                 "trackIndex": first_query_value(query, "trackIndex"),
                 "clipSlotIndex": first_query_value(query, "clipSlotIndex")
             }))
+        if route == "POST /clips/launch":
+            return self._call_live_thread(lambda: launch_clip(self.song(), payload))
+        if route == "POST /scenes/launch":
+            return self._call_live_thread(lambda: launch_scene(self.song(), payload))
         if route == "POST /clips/humanize":
             return self._call_live_thread(lambda: humanize_clip(self.song(), payload))
         if route == "POST /clips/quantize":
@@ -238,9 +262,12 @@ class AbletonMcpBridge(ControlSurface):
         song = self.song()
         return {
             "ok": True,
+            "mixerContract": mixer_contract(),
             "tempo": song.tempo,
             "timeSignature": "%s/%s" % (song.signature_numerator, song.signature_denominator),
             "tracks": [track_detail(index, track) for index, track in enumerate(song.tracks)],
+            "returns": [return_track_detail(index, track) for index, track in enumerate(getattr(song, "return_tracks", []) or [])],
+            "master": master_track_detail(song.master_track),
             "locators": cue_points(song)
         }
 
@@ -264,13 +291,18 @@ class AbletonMcpBridge(ControlSurface):
     def _production_report(self):
         project = self._get_project()
         buses = routing_buses(self.song())
-        meters = list_meters(self.song())
+        meters = list_meters(self.song(), self._meter_cache)
         risks = []
         if meters.get("warnings"):
             risks.append("Some meter values are unavailable from this Live API")
+        if not meters.get("reliableForMixing"):
+            status = meters.get("meterCapability", {}).get("status", "unknown")
+            risks.append("Live meters are not reliable for automated mixing: %s" % status)
         return {
             "ok": True,
             "mode": "ableton-remote-script-report",
+            "mixerContract": project.get("mixerContract"),
+            "endpointSupport": endpoint_support_summary(),
             "summary": {
                 "tempo": project.get("tempo"),
                 "timeSignature": project.get("timeSignature"),
@@ -459,3 +491,24 @@ class AbletonMcpBridge(ControlSurface):
             self.log_message(message)
         except Exception:
             print(message)
+
+
+def mixer_contract():
+    return {
+        "version": 2,
+        "safeForAutomatedMixing": True,
+        "readback": {
+            "volumeRaw": "Live raw mixer parameter value",
+            "volumeDb": "Parsed dB display value when available",
+            "volumeDisplay": "Live display string",
+            "sendsRaw": "Live raw send parameter values",
+            "sendsDb": "Parsed send dB display values when available",
+            "sendsDisplay": "Live send display strings, including -inf dB/off states"
+        },
+        "writes": {
+            "volumeDb": "Real dB target; verify observed readback after writing",
+            "cueVolumeDb": "Real dB target; verify observed readback after writing",
+            "sends": "Real dB targets by send index or name",
+            "verifyToleranceDb": "Optional dB tolerance for writeVerification; defaults to 0.5"
+        }
+    }

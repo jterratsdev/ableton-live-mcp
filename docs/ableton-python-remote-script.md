@@ -22,15 +22,17 @@ to Ableton's MIDI Remote Scripts directory. Common macOS locations are:
 This repo also includes an installer helper:
 
 ```sh
-npm run install:ableton-remote-script -- "/Applications/Ableton Live 12 Lite.app"
+ableton-live-mcp install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"
 ```
 
-If macOS rejects writes to `/Applications` with `Operation not permitted`, `sudo`
-may still fail until the terminal app is allowed to modify applications. Open
-System Settings -> Privacy & Security and grant App Management or Full Disk
-Access to Terminal, iTerm, or the terminal host you are using. Then rerun the
-installer. You can also copy the folder manually in Finder and authenticate when
-prompted.
+If macOS rejects writes to `/Applications` with `Operation not permitted`, close
+Ableton and retry with `sudo -E npx -y @jterrats/ableton-live-mcp
+install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"`.
+On recent macOS versions, sudo can still fail until the terminal app is allowed
+to modify applications. Open System Settings -> Privacy & Security and grant App
+Management or Full Disk Access to Terminal, iTerm, or the terminal host you are
+using. Then rerun the installer. You can also copy the folder manually in Finder
+and authenticate when prompted.
 
 Restart Ableton Live, then open Preferences -> Link, Tempo & MIDI and select
 `AbletonMcpBridge` as a Control Surface. Input and Output can remain `None`.
@@ -38,7 +40,7 @@ Restart Ableton Live, then open Preferences -> Link, Tempo & MIDI and select
 Verify the installation and runtime health with:
 
 ```sh
-npm run doctor -- "/Applications/Ableton Live 12 Lite.app"
+ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app"
 ```
 
 The doctor reports the selected Ableton app path, installed Remote Script path,
@@ -47,7 +49,7 @@ Ableton Live PID, the bridge `/status` result, and a stale-runtime diagnosis.
 Use JSON output when attaching diagnostics to a bug report:
 
 ```sh
-npm run doctor -- --app-path "/Applications/Ableton Live 12 Lite.app" --json
+ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app" --json
 ```
 
 If the doctor says Ableton Live started before the installed Remote Script was
@@ -77,12 +79,14 @@ The Remote Script currently implements:
 - `POST /signature`
 - `POST /transport/start`
 - `POST /transport/stop`
+- `POST /clips/launch`
+- `POST /scenes/launch`
 - `POST /tracks/duplicate`
 - `POST /tracks/freeze`
 - `POST /tracks/flatten`
 - `POST /devices/load`
 - `POST /devices/load-master`
-- `GET /devices/parameters?trackIndex=...&deviceIndex=...`
+- `GET /devices/parameters?target=track|return|master&trackIndex=...&returnIndex=...&deviceIndex=...`
 - `POST /devices/parameter`
 - `POST /devices/reorder`
 - `DELETE /devices`
@@ -125,7 +129,7 @@ ABLETON_BRIDGE_URL=http://127.0.0.1:9789 npm run smoke:bridge
 This exercises the MCP server against the real bridge without
 `ABLETON_MCP_DRY_RUN`.
 
-Run `npm run doctor -- "/Applications/Ableton Live 12 Lite.app"` first when the
+Run `ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app"` first when the
 smoke test cannot connect. The doctor separates install freshness, Live process,
 and bridge reachability issues before deeper MCP smoke testing.
 
@@ -151,11 +155,23 @@ and bridge reachability issues before deeper MCP smoke testing.
   the Live API. Unknown sends or unavailable routing names return
   contract-shaped errors. Unsupported master mute/solo controls are returned as
   warnings after payload validation.
-- `GET /meters` reads `output_meter_left`, `output_meter_right`, and
-  `output_meter_level` from Live track, return-track, and master-track objects
-  when those properties are exposed by the running Live version. Missing or
-  unreadable fields are returned as `null` with warnings; the Remote Script does
-  not synthesize levels from mixer volume or playback state.
+- `GET /meters` reads Live `output_meter_left`, `output_meter_right`, and
+  `output_meter_level` during the Control Surface `update_display` cycle, which
+  matches the polling path used by Ableton's bundled Mackie Control script.
+  Polling is limited to tracks where Live reports `has_audio_output=true`; the
+  bridge also keeps property listeners as a secondary observation path. Missing,
+  stale, or unobserved fields are surfaced with `meterCache`, `meterSource`,
+  `meterObserved`, and warnings; `signalTargetCount` distinguishes a successful
+  zero-valued poll from actual non-zero signal. Root diagnostics also separate
+  `listenerObservedTargetCount` from `displayPollObservedTargetCount`. The Remote
+  Script does not synthesize levels from mixer volume or playback state.
+  `reliableForMixing` remains false until Live produces a non-zero observation;
+  zero-only polling during active Session playback is reported explicitly as
+  `meterCapability.status: zero-only-during-active-playback`.
+- `POST /clips/launch` and `POST /scenes/launch` call Live's Session View
+  `fire()` APIs. They change playback state only; they do not create, delete, or
+  edit clips. Use `ableton_diagnose_playback` first when transport is running
+  but meters are silent.
 - `POST /tracks/duplicate` uses Ableton's `duplicate_track` API when exposed
   and verifies that Live reports a new track. Unsupported duplication returns
   `501`.

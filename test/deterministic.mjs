@@ -3,6 +3,7 @@ const deterministicSuites = [
   "./regression.mjs",
   "./bridge.mjs",
   "./remote-script-static.mjs",
+  "./live-meter-cache.mjs",
   "../scripts/check-doctor-diagnostics.mjs",
   "./render-export.mjs",
   "./risk-policy.mjs",
@@ -10,7 +11,9 @@ const deterministicSuites = [
   "./snapshot-rollback.mjs",
   "./observability.mjs",
   "./compatibility-matrix.mjs",
-  "./workflow-plans.mjs"
+  "./workflow-plans.mjs",
+  "../scripts/check-installer.mjs",
+  "../scripts/check-package-release.mjs"
 ];
 
 for (const suite of deterministicSuites) {

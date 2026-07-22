@@ -10,9 +10,8 @@ DEVICE_TARGETS = ("track", "return", "master")
 
 
 def set_device_parameter(song, payload):
-    track_index = parse_non_negative_integer(payload.get("trackIndex"), "trackIndex")
-    track = get_track(song, track_index)
-    device = resolve_device(track, payload)
+    target = resolve_device_chain(song, device_parameter_payload(payload))
+    device = resolve_device_from_list(target["devices"], payload)
     parameter_name = payload.get("parameter")
     if not isinstance(parameter_name, str) or parameter_name.strip() == "":
         raise BridgeHttpError("parameter must be a non-empty string")
@@ -25,8 +24,8 @@ def set_device_parameter(song, payload):
     return {
         "ok": True,
         "parameter": {
-            "trackIndex": track_index,
-            "deviceIndex": list(track.devices).index(device),
+            "location": target["location"],
+            "deviceIndex": target["devices"].index(device),
             "deviceName": getattr(device, "name", ""),
             "parameter": getattr(parameter, "name", parameter_name),
             "previousValue": previous,
@@ -36,12 +35,12 @@ def set_device_parameter(song, payload):
 
 
 def get_device_parameters(song, payload):
-    track_index = parse_non_negative_integer(payload.get("trackIndex"), "trackIndex")
-    track = get_track(song, track_index)
-    devices = resolve_devices(track, payload)
+    target = resolve_device_chain(song, device_parameter_payload(payload))
+    devices = resolve_devices_from_list(target["devices"], payload)
     return {
         "ok": True,
-        "track": {"index": track_index, "name": getattr(track, "name", "")},
+        "location": target["location"],
+        "chain": {"name": getattr(target["chain"], "name", ""), "type": target["location"]["target"]},
         "count": len(devices),
         "devices": [device_parameter_inventory(device_index, device) for device_index, device in devices]
     }
@@ -148,6 +147,10 @@ def delete_first_instrument(track):
 
 def resolve_device(track, payload):
     devices = list(track.devices)
+    return resolve_device_from_list(devices, payload)
+
+
+def resolve_device_from_list(devices, payload):
     if "deviceIndex" in payload and payload.get("deviceIndex") is not None:
         device_index = parse_non_negative_integer(payload.get("deviceIndex"), "deviceIndex")
         if device_index >= len(devices):
@@ -164,11 +167,15 @@ def resolve_device(track, payload):
 
 def resolve_devices(track, payload):
     devices = list(track.devices)
+    return resolve_devices_from_list(devices, payload)
+
+
+def resolve_devices_from_list(devices, payload):
     has_device_index = payload.get("deviceIndex") is not None and payload.get("deviceIndex") != ""
     has_device_name = isinstance(payload.get("deviceName"), str) and payload.get("deviceName").strip() != ""
     if not has_device_index and not has_device_name:
         return list(enumerate(devices))
-    device = resolve_device(track, payload)
+    device = resolve_device_from_list(devices, payload)
     return [(devices.index(device), device)]
 
 
@@ -205,6 +212,11 @@ def resolve_device_chain(song, payload):
 def normalized_location(payload):
     raw = payload.get("location") if isinstance(payload.get("location"), dict) else payload
     target = raw.get("target")
+    if target is None:
+        if raw.get("returnIndex") is not None:
+            target = "return"
+        elif raw.get("trackIndex") is not None:
+            target = "track"
     if target not in DEVICE_TARGETS:
         raise BridgeHttpError("location.target must be track, return, or master")
     return {
@@ -212,6 +224,26 @@ def normalized_location(payload):
         "trackIndex": raw.get("trackIndex", payload.get("trackIndex")),
         "returnIndex": raw.get("returnIndex", payload.get("returnIndex"))
     }
+
+
+def device_parameter_payload(payload):
+    if isinstance(payload.get("location"), dict):
+        return payload
+    target = payload.get("target")
+    if target is None:
+        if payload.get("returnIndex") is not None:
+            target = "return"
+        elif payload.get("trackIndex") is not None:
+            target = "track"
+        else:
+            target = "track"
+    cloned = dict(payload)
+    cloned["location"] = {
+        "target": target,
+        "trackIndex": payload.get("trackIndex"),
+        "returnIndex": payload.get("returnIndex")
+    }
+    return cloned
 
 
 def resolve_device_index(devices, value, name):

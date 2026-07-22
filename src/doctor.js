@@ -105,7 +105,7 @@ export function parseDoctorArgs(argv) {
 }
 
 export function doctorHelp() {
-  return `Usage: npm run doctor -- [--app-path "/Applications/Ableton Live 12 Lite.app"] [--json]
+  return `Usage: ableton-live-mcp doctor [--app-path "/Applications/Ableton Live 12 Lite.app"] [--json]
 
 Reports Ableton app path, installed Remote Script path, file freshness, Live PID,
 bridge /status health, and stale-runtime restart guidance.`;
@@ -265,23 +265,23 @@ export function isAbletonLiveProcess(command = "") {
 function diagnoseStaleRuntime({ freshness, liveProcess, bridge }) {
   if (freshness.status === "app_not_found") {
     return diagnosis("app_not_found", "Ableton app was not found.", [
-      "Pass the app path with npm run doctor -- --app-path \"/Applications/Ableton Live 12 Lite.app\"."
+      "Pass the app path with ableton-live-mcp doctor --app-path \"/Applications/Ableton Live 12 Lite.app\"."
     ]);
   }
   if (freshness.status === "not_installed") {
     return diagnosis("not_installed", "Remote Script is not installed in the selected Ableton app.", [
-      "Run npm run install:ableton-remote-script -- \"<Ableton app path>\"."
+      "Run ableton-live-mcp install-remote-script \"<Ableton app path>\"."
     ]);
   }
   if (freshness.status === "stale") {
     return diagnosis("installed_files_stale", "Installed Remote Script files differ from the bundled copy.", [
-      "Run npm run install:ableton-remote-script -- \"<Ableton app path>\".",
+      "Run ableton-live-mcp install-remote-script \"<Ableton app path>\".",
       "Restart Ableton Live after reinstalling so the Python runtime reloads the script."
     ]);
   }
   if (!liveProcess) {
     return diagnosis("live_not_running", "Remote Script files are fresh, but Ableton Live is not running.", [
-      "Start Ableton Live, select AbletonMcpBridge as a Control Surface, then rerun npm run doctor."
+      "Start Ableton Live, select AbletonMcpBridge as a Control Surface, then rerun ableton-live-mcp doctor."
     ]);
   }
   if (freshness.installedNewestAt && liveProcess.startedAt && freshness.installedNewestAt > liveProcess.startedAt) {
@@ -296,7 +296,7 @@ function diagnoseStaleRuntime({ freshness, liveProcess, bridge }) {
     ]);
   }
   return diagnosis("not_detected", "No stale Remote Script runtime was detected.", [
-    "Use npm run smoke:bridge for a deeper MCP-to-bridge verification."
+    "Use npm run smoke:bridge for a deeper local MCP-to-bridge verification."
   ]);
 }
 

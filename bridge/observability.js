@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 
 export const OBSERVABILITY_SCHEMA_VERSION = "1.0.0";
-export const DEFAULT_BRIDGE_VERSION = "0.1.0";
+export const DEFAULT_BRIDGE_VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
 
 export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("GET", "/status", "read", "supported", "supported"),
@@ -34,6 +35,8 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("POST", "/arrangement/locators", "safe-write", "supported", "conditional", "Requires Live cue point mutation support"),
   endpoint("POST", "/transport/start", "safe-write", "supported", "supported"),
   endpoint("POST", "/transport/stop", "safe-write", "supported", "supported"),
+  endpoint("POST", "/clips/launch", "safe-write", "supported", "supported"),
+  endpoint("POST", "/scenes/launch", "safe-write", "supported", "supported"),
   endpoint("POST", "/devices/load", "safe-write", "supported", "supported"),
   endpoint("POST", "/devices/load-master", "safe-write", "supported", "supported"),
   endpoint("GET", "/devices/parameters", "read", "supported", "supported"),

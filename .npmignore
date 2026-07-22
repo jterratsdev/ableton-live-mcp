@@ -1,0 +1,11 @@
+.agent-workflow/
+.generated-prompts/
+.git/
+.github/
+.DS_Store
+node_modules/
+npm-debug.log*
+rules/
+skills/
+test/
+architect

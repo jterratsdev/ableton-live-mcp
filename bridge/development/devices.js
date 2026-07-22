@@ -134,8 +134,8 @@ export function loadMasterDevice(state, payload = {}) {
 }
 
 export function setDeviceParameter(state, payload = {}) {
-  const track = getTrack(state, requireNonNegativeInteger(payload.trackIndex, "trackIndex"));
-  const device = resolveDevice(track.devices, payload);
+  const target = resolveDeviceChain(state, deviceParameterPayload(payload));
+  const device = resolveDevice(target.devices, payload);
   const parameterName = validateParameterName(payload.parameter);
   const value = payload.normalizedValue ?? payload.value;
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -149,7 +149,7 @@ export function setDeviceParameter(state, payload = {}) {
   return {
     ok: true,
     parameter: {
-      trackIndex: track.index,
+      location: target.location,
       deviceIndex: device.index,
       deviceName: device.name,
       parameter: parameterName,
@@ -159,11 +159,12 @@ export function setDeviceParameter(state, payload = {}) {
 }
 
 export function getDeviceParameters(state, payload = {}) {
-  const track = getTrack(state, coerceNonNegativeInteger(payload.trackIndex));
-  const devices = resolveDevices(track.devices, payload);
+  const target = resolveDeviceChain(state, deviceParameterPayload(payload));
+  const devices = resolveDevices(target.devices, payload);
   return {
     ok: true,
-    track: { index: track.index, name: track.name },
+    location: target.location,
+    chain: { name: target.chain.name, type: target.location.target },
     count: devices.length,
     devices: devices.map((device) => deviceParameterInventory(device))
   };
@@ -249,7 +250,7 @@ function resolveDeviceChain(state, payload) {
 
 function normalizeLocation(payload) {
   const rawLocation = isPlainObject(payload.location) ? payload.location : payload;
-  const target = rawLocation.target;
+  const target = rawLocation.target ?? (rawLocation.returnIndex !== undefined ? "return" : rawLocation.trackIndex !== undefined ? "track" : undefined);
   if (!DEVICE_TARGETS.includes(target)) {
     throw new BridgeRequestError("location.target must be track, return, or master");
   }
@@ -277,4 +278,18 @@ function validateParameterName(parameter) {
     throw new BridgeRequestError("parameter must be a non-empty string");
   }
   return parameter.trim();
+}
+
+function deviceParameterPayload(payload) {
+  if (isPlainObject(payload.location)) {
+    return payload;
+  }
+  return {
+    ...payload,
+    location: {
+      target: payload.target ?? (payload.returnIndex !== undefined ? "return" : payload.trackIndex !== undefined ? "track" : "track"),
+      trackIndex: payload.trackIndex,
+      returnIndex: payload.returnIndex
+    }
+  };
 }

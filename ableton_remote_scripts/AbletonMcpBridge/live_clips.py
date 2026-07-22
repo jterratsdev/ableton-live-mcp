@@ -119,6 +119,52 @@ def get_clip_notes(song, payload):
     }
 
 
+def launch_clip(song, payload):
+    track_index = payload.get("trackIndex")
+    clip_slot_index = payload.get("clipSlotIndex")
+    track_index, clip_slot_index = validate_clip_target_payload(track_index, clip_slot_index)
+    track = get_track(song, track_index)
+    clip_slots = list(getattr(track, "clip_slots", []))
+    if clip_slot_index >= len(clip_slots):
+        raise BridgeHttpError("clipSlotIndex is outside the available clip slot range", 404)
+    clip_slot = clip_slots[clip_slot_index]
+    if not getattr(clip_slot, "has_clip", False):
+        raise BridgeHttpError("clipSlotIndex does not contain a clip", 404)
+    fire = getattr(clip_slot, "fire", None)
+    if fire is None:
+        raise BridgeHttpError("Clip launch is not supported by this Live API", 501)
+    fire()
+    clip = clip_slot.clip
+    return {
+        "ok": True,
+        "launched": True,
+        "clip": {
+            "slot": clip_slot_index,
+            "name": getattr(clip, "name", ""),
+            "lengthBeats": getattr(clip, "length", None)
+        },
+        "track": {"index": track_index, "name": getattr(track, "name", "")}
+    }
+
+
+def launch_scene(song, payload):
+    scene_index = parse_non_negative_integer(payload.get("sceneIndex"), "sceneIndex")
+    scenes = list(getattr(song, "scenes", []) or [])
+    if scene_index >= len(scenes):
+        raise BridgeHttpError("sceneIndex is outside the available scene range", 404)
+    scene = scenes[scene_index]
+    fire = getattr(scene, "fire", None)
+    if fire is None:
+        raise BridgeHttpError("Scene launch is not supported by this Live API", 501)
+    fire()
+    return {
+        "ok": True,
+        "launched": True,
+        "sceneIndex": scene_index,
+        "scene": {"name": getattr(scene, "name", "")}
+    }
+
+
 def humanize_clip(song, payload):
     track_index, clip_slot_index, track, clip, notes = editable_clip_notes(song, payload)
     timing_amount = optional_number(payload, "timingAmountBeats", 0, MAX_HUMANIZE_TIMING_BEATS, 0)

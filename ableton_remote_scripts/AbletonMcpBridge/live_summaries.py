@@ -28,6 +28,7 @@ def track_detail(index, track):
         "outputRouting": routing_name(getattr(track, "current_output_routing", None)),
         "sendsRaw": send_summaries(track, "raw"),
         "sendsDb": send_summaries(track, "db"),
+        "sendsDisplay": send_summaries(track, "display"),
         "devices": [device_summary(device_index, device) for device_index, device in enumerate(track.devices)],
         "clips": clip_summaries(track)
     }
@@ -81,6 +82,8 @@ def send_summaries(track, unit):
     for index, send in enumerate(getattr(track.mixer_device, "sends", []) or []):
         if unit == "db":
             sends[str(index)] = parameter_db_value(send)
+        elif unit == "display":
+            sends[str(index)] = parameter_display_value(send)
         else:
             sends[str(index)] = parameter_value(send)
     return sends
@@ -128,7 +131,9 @@ def clip_summaries(track):
             clips.append({
                 "slot": slot_index,
                 "name": clip.name,
-                "lengthBeats": clip.length
+                "lengthBeats": clip.length,
+                "isPlaying": bool(getattr(clip, "is_playing", False)),
+                "isTriggered": bool(getattr(clip, "is_triggered", False))
             })
     return clips
 

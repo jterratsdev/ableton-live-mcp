@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtemp, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { DevelopmentAbletonAdapter } from "../bridge/development-adapter.js";
@@ -49,6 +49,16 @@ try {
   const project = await toolCall(3, "ableton_get_project");
   assert.equal(project.timeSignature, "4/4");
   assert.equal(project.tracks[0].devices[0].name, "Wavetable");
+  assert.equal(project.mixerContract.version, 2);
+  assert.equal(project.mixerContract.safeForAutomatedMixing, true);
+  assert.equal(project.mixerContract.readback.sendsDisplay.includes("display"), true);
+  assert.equal(project.tracks[0].sendsDisplay.Reverb, "-12.0 dB");
+
+  const initialProductionReport = await toolCall(78, "ableton_get_production_report");
+  assert.equal(initialProductionReport.ok, true);
+  assert.equal(initialProductionReport.mixerContract.safeForAutomatedMixing, true);
+  assert.ok(initialProductionReport.endpointSupport.count > 0);
+  assert.equal(initialProductionReport.masteringPolicy.defaultApplyMode, "replace_matching");
 
   const initialArrangement = await toolCall(42, "ableton_get_arrangement");
   assert.equal(initialArrangement.ok, true);
@@ -89,6 +99,27 @@ try {
   assert.equal(afterRollback.tempo, 124);
   assert.equal(afterRollback.timeSignature, "4/4");
 
+  const playbackBeforeLaunch = await toolCall(80, "ableton_diagnose_playback");
+  assert.equal(playbackBeforeLaunch.ok, true);
+  assert.equal(playbackBeforeLaunch.session.clipCount, 1);
+  assert.equal(playbackBeforeLaunch.session.launchedClipCount, 0);
+  assert.ok(playbackBeforeLaunch.findings.some((finding) => finding.code === "session_clips_idle"));
+
+  const launchedClip = await toolCall(81, "ableton_launch_clip", { trackIndex: 0, clipSlotIndex: 0 });
+  assert.equal(launchedClip.ok, true);
+  assert.equal(launchedClip.launched, true);
+  assert.equal(launchedClip.clip.name, "Verse");
+
+  const playbackAfterLaunch = await toolCall(82, "ableton_diagnose_playback");
+  assert.equal(playbackAfterLaunch.playing, true);
+  assert.equal(playbackAfterLaunch.session.launchedClipCount, 1);
+  assert.equal(playbackAfterLaunch.meterSummary.hasSignal, true);
+  assert.equal(playbackAfterLaunch.meterSummary.reliableForMixing, true);
+
+  const launchedScene = await toolCall(83, "ableton_launch_scene", { sceneIndex: 0 });
+  assert.equal(launchedScene.ok, true);
+  assert.equal(launchedScene.clips[0].trackIndex, 0);
+
   const modifiedTrack = await toolCall(24, "ableton_modify_track", {
     trackIndex: 0,
     name: "Piano Main",
@@ -106,6 +137,16 @@ try {
   assert.equal(modifiedTrack.track.pan, -0.2);
   assert.equal(modifiedTrack.track.solo, true);
   assert.equal(modifiedTrack.track.sends.Reverb, -18);
+  assert.deepEqual(modifiedTrack.writeVerification.volumeDb, {
+    requested: -8,
+    observed: -8,
+    display: "-8.0 dB",
+    deltaDb: 0,
+    toleranceDb: 0.5,
+    withinTolerance: true
+  });
+  assert.equal(modifiedTrack.writeVerification.sends.Reverb.withinTolerance, true);
+  assert.deepEqual(modifiedTrack.warnings, []);
 
   const returns = await toolCall(25, "ableton_list_returns");
   assert.equal(returns.ok, true);
@@ -120,6 +161,8 @@ try {
   });
   assert.equal(modifiedReturn.return.volumeDb, -14);
   assert.equal(modifiedReturn.return.pan, 0.25);
+  assert.equal(modifiedReturn.writeVerification.volumeDb.observed, -14);
+  assert.equal(modifiedReturn.writeVerification.volumeDb.withinTolerance, true);
 
   const createdReturn = await toolCall(32, "ableton_create_return_track", {
     name: "Parallel Crush"
@@ -165,10 +208,9 @@ try {
   assert.equal(meters.ok, true);
   assert.equal(meters.tracks.length, 2);
   assert.equal(meters.returns.length, 2);
-  assert.deepEqual(meters.tracks[0].meter, { left: null, right: null, level: null });
-  assert.deepEqual(meters.master.meter, { left: null, right: null, level: null });
-  assert.ok(meters.warnings.some((warning) => warning.includes("tracks[0].meter.left")));
-  assert.ok(meters.warnings.some((warning) => warning.includes("master.meter.level")));
+  assert.deepEqual(meters.tracks[0].meter, { left: 0.45, right: 0.46, level: 0.5 });
+  assert.deepEqual(meters.master.meter, { left: 0.45, right: 0.46, level: 0.5 });
+  assert.ok(meters.warnings.some((warning) => warning.includes("returns[0].meter.left")));
 
   const httpMeters = await getJson(`${bridgeUrl}/meters`);
   assert.equal(httpMeters.ok, true);
@@ -186,6 +228,8 @@ try {
   assert.equal(modifiedMaster.master.pan, 0.1);
   assert.equal(modifiedMaster.master.cueVolumeDb, -18);
   assert.deepEqual(modifiedMaster.applied, { volumeDb: -2, pan: 0.1, cueVolumeDb: -18 });
+  assert.equal(modifiedMaster.writeVerification.volumeDb.withinTolerance, true);
+  assert.equal(modifiedMaster.writeVerification.cueVolumeDb.withinTolerance, true);
   assert.deepEqual(modifiedMaster.warnings, ["Master mute is not supported by the development adapter"]);
 
   const invalidMaster = await postJson(`${bridgeUrl}/master/modify`, { volumeDb: -90 }, { expectedStatus: 400 });
@@ -257,6 +301,26 @@ try {
   const allParameterInventory = await getJson(`${bridgeUrl}/devices/parameters?trackIndex=0`);
   assert.equal(allParameterInventory.ok, true);
   assert.equal(allParameterInventory.devices[0].parameterCount, 1);
+
+  const returnParameter = await toolCall(75, "ableton_set_device_parameter", {
+    target: "return",
+    returnIndex: 0,
+    deviceIndex: 0,
+    parameter: "DryWet",
+    normalizedValue: 0.22
+  });
+  assert.equal(returnParameter.ok, true);
+  assert.deepEqual(returnParameter.parameter.location, { target: "return", returnIndex: 0 });
+  assert.equal(returnParameter.parameter.value, 0.22);
+
+  const returnParameterInventory = await toolCall(76, "ableton_get_device_parameters", {
+    target: "return",
+    returnIndex: 0,
+    deviceIndex: 0
+  });
+  assert.equal(returnParameterInventory.ok, true);
+  assert.deepEqual(returnParameterInventory.location, { target: "return", returnIndex: 0 });
+  assert.equal(returnParameterInventory.devices[0].parameters[0].value, 0.22);
 
   const tempoAutomation = await toolCall(70, "ableton_set_automation", {
     target: "tempo",
@@ -354,8 +418,30 @@ try {
     chain: [{ device: "EQ Eight", settings: { "Low Cut": 0.25 } }]
   });
   assert.equal(mastering.ok, true);
+  assert.equal(mastering.mode, "replace_matching");
   assert.equal(mastering.loadedDevices[0].name, "EQ Eight");
   assert.equal(mastering.loadedDevices[0].parameters["Low Cut"], 0.25);
+
+  const masterParameter = await toolCall(77, "ableton_set_device_parameter", {
+    target: "master",
+    deviceIndex: 0,
+    parameter: "Low Cut",
+    normalizedValue: 0.33
+  });
+  assert.equal(masterParameter.ok, true);
+  assert.deepEqual(masterParameter.parameter.location, { target: "master" });
+  assert.equal(masterParameter.parameter.value, 0.33);
+
+  const repeatedMastering = await postJson(`${bridgeUrl}/mastering/apply`, {
+    style: "transparent",
+    targetLufs: -16,
+    truePeakDb: -1,
+    chain: [{ device: "EQ Eight", settings: { "Low Cut": 0.4 } }]
+  });
+  assert.equal(repeatedMastering.ok, true);
+  assert.equal(repeatedMastering.mode, "replace_matching");
+  assert.equal(repeatedMastering.removedDevices.length, 1);
+  assert.equal(repeatedMastering.loadedDevices[0].parameters["Low Cut"], 0.4);
 
   const missingMastering = await postJson(`${bridgeUrl}/mastering/apply`, {
     style: "transparent",
@@ -481,6 +567,22 @@ try {
 
   const auPlugins = await toolCall(23, "ableton_list_plugins", { kind: "au", query: "labs" });
   assert.deepEqual(auPlugins.plugins.map((plugin) => plugin.name), ["LABS"]);
+
+  const pluginRoot = await mkdtemp(join(tmpdir(), "ableton-plugin-diagnostics-"));
+  await mkdir(join(pluginRoot, "VST3", "ValhallaRoom.vst3"), { recursive: true });
+  await mkdir(join(pluginRoot, "Components", "Youlean Loudness Meter 2.component"), { recursive: true });
+  const pluginDiagnostics = await toolCall(79, "ableton_diagnose_plugins", {
+    queries: ["Valhalla", "Kontakt", "MissingFx"],
+    includeDefaultDirectories: false,
+    pluginDirectories: [pluginRoot]
+  });
+  assert.equal(pluginDiagnostics.ok, true);
+  assert.equal(pluginDiagnostics.scannedDirectories[0].pluginCount, 2);
+  assert.equal(pluginDiagnostics.missingFromAbletonIndex[0].query, "Valhalla");
+  assert.equal(pluginDiagnostics.missingFromAbletonIndex[0].diskMatches[0].format, "vst3");
+  assert.equal(pluginDiagnostics.availableInAbleton[0].query, "Kontakt");
+  assert.equal(pluginDiagnostics.notInstalled[0].query, "MissingFx");
+  assert.ok(pluginDiagnostics.recommendedActions.some((action) => action.includes("Rescan")));
 
   const browserSamples = await toolCall(41, "ableton_search_browser", { kind: "sample", query: "clap", limit: 3 });
   assert.equal(browserSamples.ok, true);

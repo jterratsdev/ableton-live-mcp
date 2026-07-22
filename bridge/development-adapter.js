@@ -5,7 +5,7 @@ import { analyzeAndApplyMastering, applyMasteringChain, bounceTracks, production
 import { addOrUpdateLocator, arrangementSnapshot, insertArrangementClip } from "./development/arrangement.js";
 import { setAutomation } from "./development/automation.js";
 import { applyGrooveToClipNotes, humanizeClipNotes, quantizeClipNotes } from "./development/clip-notes.js";
-import { createMidiClip, deleteClip, getClipNotes, importMidiFile } from "./development/clips.js";
+import { createMidiClip, deleteClip, getClipNotes, importMidiFile, launchClip, launchScene } from "./development/clips.js";
 import { createDevelopmentState } from "./development/default-state.js";
 import { createDevelopmentSnapshot, rollbackDevelopmentSnapshot } from "./development/snapshots.js";
 import {
@@ -16,11 +16,12 @@ import {
   reorderDeviceInChain,
   setDeviceParameter
 } from "./development/devices.js";
-import { getTrack, applyMasterPatch, applyTrackPatch } from "./development/mixer.js";
+import { getTrack, applyMasterPatch, applyTrackPatch, mixerWriteVerification, mixerWriteWarnings } from "./development/mixer.js";
 import { projectMeterSnapshot } from "./development/metering.js";
 import { consolidateClip, createMidiTrack, duplicateTrack, flattenTrack, freezeTrack } from "./development/track-operations.js";
 import { listPlugins, searchBrowser } from "./development/plugins.js";
 import { createReturn, deleteReturn, listBuses, listReturns, modifyReturn } from "./development/returns.js";
+import { createMixerContract } from "./mixer-contract.js";
 import {
   clone,
   isValidTempo,
@@ -45,9 +46,10 @@ export class DevelopmentAbletonAdapter {
   async getProject() {
     return {
       ok: true,
+      mixerContract: createMixerContract(),
       tempo: this.state.tempo,
       timeSignature: this.state.timeSignature,
-      tracks: clone(this.state.tracks),
+      tracks: this.state.tracks.map(projectTrack),
       returns: clone(this.state.returns),
       master: clone(this.state.master),
       locators: clone(this.state.locators),
@@ -152,7 +154,8 @@ export class DevelopmentAbletonAdapter {
   async modifyTrack(payload) {
     const track = getTrack(this.state, requireNonNegativeInteger(payload.trackIndex, "trackIndex"));
     const applied = applyTrackPatch(track, payload, this.state.returns);
-    return { ok: true, track: clone(track), applied };
+    const writeVerification = mixerWriteVerification(track, payload, applied);
+    return { ok: true, track: clone(track), applied, writeVerification, warnings: mixerWriteWarnings(writeVerification) };
   }
 
   async listReturns() {
@@ -181,7 +184,8 @@ export class DevelopmentAbletonAdapter {
 
   async modifyMaster(payload) {
     const { applied, warnings } = applyMasterPatch(this.state.master, payload);
-    return { ok: true, master: clone(this.state.master), applied, warnings };
+    const writeVerification = mixerWriteVerification(this.state.master, payload, applied);
+    return { ok: true, master: clone(this.state.master), applied, writeVerification, warnings: [...warnings, ...mixerWriteWarnings(writeVerification)] };
   }
 
   async insertArrangementClip(payload) {
@@ -232,6 +236,14 @@ export class DevelopmentAbletonAdapter {
     return getClipNotes(this.state, payload);
   }
 
+  async launchClip(payload) {
+    return launchClip(this.state, payload);
+  }
+
+  async launchScene(payload) {
+    return launchScene(this.state, payload);
+  }
+
   async humanizeClip(payload) {
     return humanizeClipNotes(this.state, payload);
   }
@@ -251,4 +263,19 @@ export class DevelopmentAbletonAdapter {
   async applyMasteringChain(payload) {
     return applyMasteringChain(this.state, payload);
   }
+}
+
+function projectTrack(track) {
+  return {
+    ...clone(track),
+    sendsDb: clone(track.sends ?? {}),
+    sendsDisplay: Object.fromEntries(Object.entries(track.sends ?? {}).map(([name, value]) => [name, dbDisplay(value)]))
+  };
+}
+
+function dbDisplay(value) {
+  if (value === null || value === undefined || value === -Infinity) {
+    return "-inf dB";
+  }
+  return `${Number(value).toFixed(1)} dB`;
 }

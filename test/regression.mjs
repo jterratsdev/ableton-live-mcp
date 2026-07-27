@@ -8,6 +8,7 @@ import { createDispatch } from "../src/tools.js";
 await rejectsInvalidMidiNoteValues();
 await rejectsInvalidMidiImportPath();
 await rejectsInvalidAudioAnalysisPath();
+await rejectsInvalidMixAnalysisPayload();
 await rejectsInvalidClipRewriteBounds();
 await rejectsInvalidTrackOperations();
 await rejectsInvalidConsolidationRange();
@@ -89,6 +90,31 @@ async function rejectsInvalidAudioAnalysisPath() {
 
     assert.equal(response.error.code, -32602);
     assert.match(response.error.message, /path must be an absolute local file path/);
+  } finally {
+    child.kill();
+  }
+}
+
+async function rejectsInvalidMixAnalysisPayload() {
+  const child = spawn(process.execPath, ["src/server.js"], {
+    stdio: ["pipe", "pipe", "pipe"],
+    env: { ...process.env, ABLETON_MCP_DRY_RUN: "1" }
+  });
+
+  try {
+    const response = await request(child, 22, "tools/call", {
+      name: "ableton_analyze_mix",
+      arguments: {
+        masterPath: "/tmp/master.wav",
+        stems: [
+          { name: "Piano", path: "/tmp/piano.wav" },
+          { name: "Piano", path: "relative/piano.wav" }
+        ]
+      }
+    });
+
+    assert.equal(response.error.code, -32602);
+    assert.match(response.error.message, /duplicate name/);
   } finally {
     child.kill();
   }

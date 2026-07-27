@@ -170,13 +170,21 @@ function writeToleranceDb(payload) {
 function verifyDbWrite(requested, observed, display, toleranceDb) {
   const hasObserved = typeof observed === "number" && Number.isFinite(observed);
   const deltaDb = hasObserved ? observed - requested : null;
+  const confirmed = hasObserved ? Math.abs(deltaDb) <= toleranceDb : false;
   return {
+    requestedDb: requested,
+    rawWritten: hasObserved ? observed : null,
+    observedRaw: hasObserved ? observed : null,
+    observedDisplay: display ?? null,
+    observedDb: hasObserved ? observed : null,
+    confirmed,
     requested,
     observed: hasObserved ? observed : null,
     display: display ?? null,
+    raw: hasObserved ? observed : null,
     deltaDb,
     toleranceDb,
-    withinTolerance: hasObserved ? Math.abs(deltaDb) <= toleranceDb : false
+    withinTolerance: confirmed
   };
 }
 

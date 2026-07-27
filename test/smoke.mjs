@@ -48,6 +48,7 @@ try {
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_search_browser"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_diagnose_plugins"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_analyze_audio"));
+  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_analyze_mix"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_production_report"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_diagnose_playback"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_bridge_observability"));
@@ -118,6 +119,13 @@ try {
   send(45, "tools/call", { name: "ableton_analyze_audio", arguments: { path: "/tmp/render.wav" } });
   const audioAnalysis = await waitFor(45);
   assert.match(audioAnalysis.result.content[0].text, /"analyze_audio"/);
+
+  send(80, "tools/call", {
+    name: "ableton_analyze_mix",
+    arguments: { masterPath: "/tmp/master.wav", stems: [{ name: "Piano", path: "/tmp/piano.wav" }] }
+  });
+  const mixAnalysis = await waitFor(80);
+  assert.match(mixAnalysis.result.content[0].text, /"analyze_mix"/);
 
   send(4, "tools/call", {
     name: "ableton_create_midi_clip",

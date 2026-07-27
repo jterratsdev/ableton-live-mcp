@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { extname, isAbsolute } from "node:path";
 import { promisify } from "node:util";
-import { BridgeRequestError } from "../errors.js";
+import { BridgeRequestError } from "./errors.js";
 
 const execFileAsync = promisify(execFile);
 const SUPPORTED_EXTENSIONS = new Set([".wav", ".aif", ".aiff", ".flac", ".mp3", ".m4a", ".aac"]);
@@ -21,8 +21,14 @@ export async function analyzeAudioFile(payload = {}) {
     ? { detected: peakDb >= -0.1, thresholdDb: -0.1, peakDb }
     : { detected: null, thresholdDb: -0.1, peakDb: null };
 
+  if (![loudness.integratedLufs, peakDb, rmsDb].every(isMeasuredAudioValue)) {
+    throw new BridgeRequestError("ffmpeg did not return the required loudness, peak, and RMS measurements", 422);
+  }
+
   return {
     ok: true,
+    reliableForMixing: true,
+    measurementSource: "rendered-audio-file",
     path: filePath,
     format: extname(filePath).slice(1).toLowerCase(),
     durationSeconds,
@@ -40,11 +46,77 @@ export async function analyzeAudioFile(payload = {}) {
       clipping
     },
     tool: {
+      backend: "ffmpeg-file-analysis",
+      mode: "offline-file-analysis",
+      liveMetersUsed: false,
       ffprobe: "ffprobe",
       ffmpeg: "ffmpeg",
       filters: ["ebur128=peak=true", "volumedetect"]
     }
   };
+}
+
+export async function analyzeRenderedMix(payload = {}) {
+  const masterPath = payload.masterPath;
+  const stems = validateStems(payload.stems);
+  const master = await analyzeAudioFile({ path: masterPath });
+  const analyzedStems = [];
+
+  for (const stem of stems) {
+    analyzedStems.push({
+      name: stem.name,
+      ...(await analyzeAudioFile({ path: stem.path }))
+    });
+  }
+
+  return {
+    ok: true,
+    reliableForMixing: true,
+    measurementSource: "rendered-audio-files",
+    backend: {
+      id: "ffmpeg-file-analysis",
+      mode: "offline-file-analysis",
+      liveMetersUsed: false
+    },
+    master,
+    stems: analyzedStems,
+    summary: {
+      stemCount: analyzedStems.length,
+      clippingDetected: [master, ...analyzedStems].some((item) => item.clipping.detected === true),
+      integratedLufs: master.lufs,
+      truePeakDb: master.truePeakDb,
+      rmsDb: master.rmsDb,
+      crestFactorDb: master.crestFactorDb
+    }
+  };
+}
+
+function validateStems(stems) {
+  if (stems === undefined) {
+    return [];
+  }
+  if (!Array.isArray(stems)) {
+    throw new BridgeRequestError("stems must be an array");
+  }
+  if (stems.length > 128) {
+    throw new BridgeRequestError("stems must contain at most 128 files");
+  }
+
+  const names = new Set();
+  return stems.map((stem, index) => {
+    if (!stem || typeof stem !== "object" || Array.isArray(stem)) {
+      throw new BridgeRequestError(`stems[${index}] must be an object`);
+    }
+    const name = typeof stem.name === "string" ? stem.name.trim() : "";
+    if (!name) {
+      throw new BridgeRequestError(`stems[${index}].name must be a non-empty string`);
+    }
+    if (names.has(name)) {
+      throw new BridgeRequestError(`stems contains duplicate name: ${name}`);
+    }
+    names.add(name);
+    return { name, path: validateAudioPath(stem.path) };
+  });
 }
 
 function validateAudioPath(filePath) {
@@ -143,6 +215,10 @@ function parseAudioNumber(value) {
   }
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? round(parsed) : null;
+}
+
+function isMeasuredAudioValue(value) {
+  return typeof value === "number" && !Number.isNaN(value);
 }
 
 function round(value) {

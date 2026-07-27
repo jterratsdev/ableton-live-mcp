@@ -10,6 +10,7 @@ import { collectInstalledFileMetadata, createBridgeObservabilitySnapshot } from 
 import { matchPresetIntent } from "../bridge/presets/matcher.js";
 import { diagnosePlugins } from "./plugin-diagnostics.js";
 import { diagnosePlayback } from "./playback-diagnostics.js";
+import { analyzeAudioFile, analyzeRenderedMix } from "../bridge/audio-analysis.js";
 
 export const tools = [
   tool("ableton_get_status", "Read Ableton Live transport and session status.", {}),
@@ -45,6 +46,17 @@ export const tools = [
   tool("ableton_analyze_audio", "Analyze a rendered audio file for LUFS, true peak, RMS, crest factor, and clipping.", {
     path: stringProp("Absolute local path to a rendered audio file.")
   }, ["path"]),
+  tool("ableton_analyze_mix", "Analyze a rendered master and optional stems using verified offline audio measurements.", {
+    masterPath: stringProp("Absolute local path to the rendered master audio file."),
+    stems: {
+      type: "array",
+      maxItems: 128,
+      items: objectSchema({
+        name: stringProp("Unique stem name."),
+        path: stringProp("Absolute local path to the rendered stem audio file.")
+      }, ["name", "path"])
+    }
+  }, ["masterPath"]),
   tool("ableton_get_production_report", "Summarize tracks, buses, devices, meters, arrangement, and production risks.", {}),
   tool("ableton_diagnose_playback", "Diagnose silent playback from transport, Session clips, Arrangement clips, meters, routing, mute, and solo state.", {}),
   tool("ableton_get_bridge_observability", "Read local bridge version, endpoint support, stale-runtime, and installed-file diagnostics.", {
@@ -339,7 +351,8 @@ export function createDispatch(bridge) {
     ableton_list_plugins: (args) => bridge.invoke("list_plugins", args),
     ableton_search_browser: (args) => bridge.invoke("search_browser", args),
     ableton_diagnose_plugins: (args) => diagnosePlugins(bridge, args),
-    ableton_analyze_audio: (args) => bridge.invoke("analyze_audio", args),
+    ableton_analyze_audio: (args) => bridge.dryRun ? bridge.invoke("analyze_audio", args) : analyzeAudioFile(args),
+    ableton_analyze_mix: (args) => bridge.dryRun ? bridge.invoke("analyze_mix", args) : analyzeRenderedMix(args),
     ableton_get_production_report: async () => annotateProductionReport(await bridge.invoke("get_production_report")),
     ableton_diagnose_playback: () => diagnosePlayback(bridge),
     ableton_get_bridge_observability: (args) => getBridgeObservability(args),
@@ -464,6 +477,27 @@ export function validateToolInput(toolName, args) {
     }
     if (!/\.(wav|aif|aiff|flac|mp3|m4a|aac)$/i.test(args.path)) {
       throw rpcError(-32602, "path must point to a supported audio file");
+    }
+  }
+
+  if (toolName === "ableton_analyze_mix") {
+    validateAudioFilePath(args.masterPath, "masterPath");
+    if (args.stems !== undefined && !Array.isArray(args.stems)) {
+      throw rpcError(-32602, "stems must be an array");
+    }
+    if ((args.stems?.length ?? 0) > 128) {
+      throw rpcError(-32602, "stems must contain at most 128 files");
+    }
+    const names = new Set();
+    for (const [index, stem] of (args.stems ?? []).entries()) {
+      if (!stem || typeof stem !== "object" || Array.isArray(stem) || isBlank(stem.name)) {
+        throw rpcError(-32602, `stems[${index}].name must be a non-empty string`);
+      }
+      if (names.has(stem.name.trim())) {
+        throw rpcError(-32602, `stems contains duplicate name: ${stem.name.trim()}`);
+      }
+      names.add(stem.name.trim());
+      validateAudioFilePath(stem.path, `stems[${index}].path`);
     }
   }
 
@@ -1014,6 +1048,15 @@ function requirePositiveNumber(value, name) {
 
 function isBlank(value) {
   return typeof value !== "string" || value.trim() === "";
+}
+
+function validateAudioFilePath(value, name) {
+  if (isBlank(value) || !value.startsWith("/")) {
+    throw rpcError(-32602, `${name} must be a non-empty absolute local file path`);
+  }
+  if (!/\.(wav|aif|aiff|flac|mp3|m4a|aac)$/i.test(value)) {
+    throw rpcError(-32602, `${name} must point to a supported audio file`);
+  }
 }
 
 function isNumberInRange(value, min, max) {

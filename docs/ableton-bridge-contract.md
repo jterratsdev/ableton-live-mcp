@@ -134,10 +134,29 @@ Restores a previously created bridge snapshot.
 
 The deterministic development bridge restores the full in-memory project state.
 The Python Remote Script stores snapshots in memory while the Control Surface is
-loaded and restores tempo, time signature, and MIDI clips that it can read and
-rewrite through Ableton's Python API. Arbitrary device/plugin state, routing,
-audio clips, undo history, and saved `.als` file state are outside the current
-Remote Script rollback surface. Missing snapshot IDs return `404`.
+loaded. It captures and restores raw Live mixer parameter values for track,
+return, and master volume/pan, track and return sends, master cue volume, and
+mute/solo/arm flags where Live exposes them. Raw values are written directly;
+rollback never converts captured mixer state through dB.
+
+Rollback responses include `restoration` in the deterministic adapter and
+`restored.mixerState` in the Remote Script response. Both contain:
+
+- `complete`, plus aggregate `appliedCount`, `skippedCount`, and `failedCount`.
+- One result per track, return, and master target.
+- One `applied`, `skipped`, or `failed` result per captured mixer field.
+- Captured `expected` and post-write `observed` values for verification.
+
+Unsupported fields are `skipped`. A field that was supported at capture time
+but cannot be written or does not match raw readback is `failed`, and the mixer
+restoration reports `complete: false`. Callers must inspect this value and must
+not treat a partial restoration as successful.
+
+The Remote Script also restores tempo, time signature, and MIDI clips that it
+can read and rewrite through Ableton's Python API. Arbitrary device/plugin
+state, routing, return-track structure, audio clips, automation, undo history,
+and saved `.als` file state remain outside this rollback surface. Missing
+snapshot IDs return `404`.
 
 ### `GET /plugins`
 
@@ -232,6 +251,34 @@ simulating analysis.
 }
 ```
 
+Successful responses also include `reliableForMixing: true` and identify the
+backend as `ffmpeg-file-analysis` in `offline-file-analysis` mode. This is a
+measurement of the rendered file, not a read from Ableton's live meters. The
+request fails with `422` when the required loudness, peak, or RMS metric cannot
+be measured.
+
+### `POST /analysis/mix`
+
+Analyzes one rendered master and optional named stems using the same verified
+offline backend. Every path must be an absolute path to an existing supported
+audio file. The operation is read-only and fails rather than returning partial
+or simulated measurements.
+
+```json
+{
+  "masterPath": "/Users/example/Music/master.wav",
+  "stems": [
+    { "name": "Piano", "path": "/Users/example/Music/piano.wav" },
+    { "name": "Strings", "path": "/Users/example/Music/strings.wav" }
+  ]
+}
+```
+
+The response contains measurements for `master` and each entry in `stems`, a
+master-based `summary`, and backend provenance with
+`liveMetersUsed: false`. `reliableForMixing` is true only after all requested
+files produce real loudness, peak, and RMS measurements.
+
 ### Playback Diagnostics And Session Launch
 
 `ableton_diagnose_playback` is an MCP-level read-only diagnostic. It combines
@@ -294,6 +341,11 @@ Starts playback.
 {}
 ```
 
+The response uses `playing: true` and `requestedPlaying: true` for the accepted
+command. `observedPlaying` is Live's immediate readback and `confirmed` states
+whether that readback already matches the request. Use `GET /status` for the
+authoritative observed state after the command.
+
 ### `POST /transport/stop`
 
 Stops playback.
@@ -301,6 +353,11 @@ Stops playback.
 ```json
 {}
 ```
+
+The response uses `playing: false` and `requestedPlaying: false` for the
+accepted command. Live can defer its `is_playing` update until after the Remote
+Script callback, so `observedPlaying` may briefly remain true and `confirmed`
+may be false. Use `GET /status` for the authoritative observed state.
 
 ### `POST /tracks/midi`
 
@@ -389,9 +446,13 @@ raw parameter values back into those dB write fields: the Python Remote Script
 exposes raw parameter values as `volumeRaw` and `sendsRaw`; `volumeDb` and
 `sendsDb` are only populated from Live display strings when Live exposes a
 parseable dB display.
-Because Live parameter curves can be non-linear, dB writes are targets rather
-than exact guarantees. Clients should read `writeVerification` and continue
-automated mixing only when observed values are within tolerance.
+Because Live parameter curves can be non-linear, the Remote Script resolves the
+raw value through the parameter's own `str_for_value` display semantics. It
+does not use an amplitude-to-dB formula. The bridge writes only a raw candidate
+that resolves within tolerance, then verifies the observed raw value and dB
+display. If verification fails, it restores the original raw value and returns
+a non-2xx error. Clients must require `confirmed: true` before continuing an
+automated mix.
 
 ```json
 {
@@ -411,6 +472,12 @@ automated mixing only when observed values are within tolerance.
   },
   "writeVerification": {
     "volumeDb": {
+      "requestedDb": -8,
+      "rawWritten": 0.75,
+      "observedRaw": 0.75,
+      "observedDisplay": "-8.1 dB",
+      "observedDb": -8.1,
+      "confirmed": true,
       "requested": -8,
       "observed": -8.1,
       "display": "-8.1 dB",
@@ -589,6 +656,23 @@ Remote Script responses may also include listener-backed observation metadata:
       "meter": { "left": 0.12, "right": 0.1, "level": 0.13 },
       "meterSource": { "left": "display-poll-cache", "right": "display-poll-cache", "level": "display-poll-cache" },
       "meterObserved": { "left": true, "right": true, "level": true },
+      "meterDiagnostics": {
+        "objectPath": "song.tracks[0]",
+        "proxyType": "Live.Track.Track",
+        "hasAudioOutput": true,
+        "properties": {
+          "left": {
+            "property": "output_meter_left",
+            "path": "song.tracks[0].output_meter_left",
+            "directRaw": 0.0,
+            "cachedRaw": 0.0,
+            "cachedSource": "display-poll",
+            "cachedFresh": true,
+            "listenerRegistered": true,
+            "listenerError": null
+          }
+        }
+      },
       "warnings": []
     }
   ],
@@ -631,6 +715,13 @@ display cycle and exposes `pollCount`, `pollErrorCount`, `lastPollAtMs`, and
 `listenerObservedTargetCount` and `displayPollObservedTargetCount` identify the
 effective observation path. `meterObserved` means Live returned a fresh value;
 it does not by itself mean that the value was non-zero.
+
+Each target also includes bounded `meterDiagnostics` for the three documented
+Live properties. It reports the canonical object/property path, direct raw
+value, cached raw value and source, cache freshness, listener registration or
+error, proxy type, and `has_audio_output`. These fields diagnose what Live
+actually exposed; they do not alter `reliableForMixing` or turn zero-only values
+into usable audio measurements.
 
 Clients must require `reliableForMixing: true` before making meter-guided mix or
 mastering changes. A `meterCapability.status` of

@@ -2,19 +2,17 @@ from __future__ import absolute_import, print_function
 
 from .http_bridge import BridgeHttpError
 from .live_core import (
-    db_to_live_send,
-    db_to_live_volume,
     normalize,
-    parameter_db_value,
-    parameter_display_value,
     parameter_value,
     parse_non_negative_integer,
     require_bool,
     require_non_empty_string,
-    require_number_range
+    require_number_range,
+    verify_parameter_db_write,
+    write_verified_db
 )
 from .live_summaries import device_summary, master_track_detail, return_track_detail, routing_name, routing_names, track_detail, track_type
-from .live_meter_cache import read_meter_property
+from .live_meter_cache import meter_object_path, qualified_type_name, read_meter_property
 
 
 DEFAULT_WRITE_TOLERANCE_DB = 0.5
@@ -172,24 +170,16 @@ def modify_master_track(song, payload):
 
     if "volumeDb" in payload:
         db = require_number_range(payload.get("volumeDb"), "volumeDb", -70, 12)
-        applied["volumeDb"] = {
-            "requested": db,
-            "value": set_parameter_value(mixer.volume, db_to_live_volume(db), False)
-        }
-        write_verification["volumeDb"] = verify_db_write(db, mixer.volume, tolerance_db)
-        append_verification_warning(warnings, "volumeDb", write_verification["volumeDb"])
+        write_verification["volumeDb"] = write_verified_db(mixer.volume, db, tolerance_db)
+        applied["volumeDb"] = applied_db_write(write_verification["volumeDb"])
     if "pan" in payload:
         pan = require_number_range(payload.get("pan"), "pan", -1, 1)
         applied["pan"] = set_parameter_value(mixer.panning, pan, False)
     if "cueVolumeDb" in payload:
         db = require_number_range(payload.get("cueVolumeDb"), "cueVolumeDb", -70, 12)
         if hasattr(mixer, "cue_volume"):
-            applied["cueVolumeDb"] = {
-                "requested": db,
-                "value": set_parameter_value(mixer.cue_volume, db_to_live_volume(db), False)
-            }
-            write_verification["cueVolumeDb"] = verify_db_write(db, mixer.cue_volume, tolerance_db)
-            append_verification_warning(warnings, "cueVolumeDb", write_verification["cueVolumeDb"])
+            write_verification["cueVolumeDb"] = write_verified_db(mixer.cue_volume, db, tolerance_db)
+            applied["cueVolumeDb"] = applied_db_write(write_verification["cueVolumeDb"])
         else:
             warnings.append("Master cue volume is not exposed by this Ableton Live API")
     if "muted" in payload:
@@ -288,6 +278,7 @@ def meter_target(index, track, label, target_type, meter_cache=None):
         "meterObserved": snapshot.get("meterObserved"),
         "meterUpdatedAtMs": snapshot.get("meterUpdatedAtMs"),
         "meterAgeMs": snapshot.get("meterAgeMs"),
+        "meterDiagnostics": snapshot.get("meterDiagnostics"),
         "warnings": snapshot["warnings"]
     }
 
@@ -302,6 +293,7 @@ def master_meter_target(track, meter_cache=None):
         "meterObserved": snapshot.get("meterObserved"),
         "meterUpdatedAtMs": snapshot.get("meterUpdatedAtMs"),
         "meterAgeMs": snapshot.get("meterAgeMs"),
+        "meterDiagnostics": snapshot.get("meterDiagnostics"),
         "warnings": snapshot["warnings"]
     }
 
@@ -315,6 +307,8 @@ def read_output_meter(track, label, meter_cache=None, target_type="track", targe
     observed = {}
     updated_at_ms = {}
     age_ms = {}
+    property_diagnostics = {}
+    object_path = meter_object_path(target_type, target_index)
     for field, property_name in METER_PROPERTIES:
         value = read_meter_property(track, property_name)
         meter[field] = value
@@ -322,6 +316,19 @@ def read_output_meter(track, label, meter_cache=None, target_type="track", targe
         observed[field] = False
         updated_at_ms[field] = None
         age_ms[field] = None
+        property_diagnostics[field] = {
+            "property": property_name,
+            "path": "%s.%s" % (object_path, property_name),
+            "directRaw": value,
+            "propertyAvailable": value is not None,
+            "cachedRaw": None,
+            "cachedSource": None,
+            "cachedFresh": False,
+            "cachedUpdatedAtMs": None,
+            "cachedAgeMs": None,
+            "listenerRegistered": False,
+            "listenerError": None
+        }
         if value is None:
             warnings.append("%s.meter.%s is not exposed by this Ableton Live API" % (label, field))
     return {
@@ -330,6 +337,12 @@ def read_output_meter(track, label, meter_cache=None, target_type="track", targe
         "meterObserved": observed,
         "meterUpdatedAtMs": updated_at_ms,
         "meterAgeMs": age_ms,
+        "meterDiagnostics": {
+            "objectPath": object_path,
+            "proxyType": qualified_type_name(track),
+            "hasAudioOutput": bool(getattr(track, "has_audio_output", False)),
+            "properties": property_diagnostics
+        },
         "warnings": warnings
     }
 
@@ -381,12 +394,8 @@ def apply_mixer_patch(track, payload, applied, warnings, write_verification, tol
     mixer = track.mixer_device
     if "volumeDb" in payload:
         db = require_number_range(payload.get("volumeDb"), "volumeDb", -70, 12)
-        applied["volumeDb"] = {
-            "requested": db,
-            "value": set_parameter_value(mixer.volume, db_to_live_volume(db), False)
-        }
-        write_verification["volumeDb"] = verify_db_write(db, mixer.volume, tolerance_db)
-        append_verification_warning(warnings, "volumeDb", write_verification["volumeDb"])
+        write_verification["volumeDb"] = write_verified_db(mixer.volume, db, tolerance_db)
+        applied["volumeDb"] = applied_db_write(write_verification["volumeDb"])
     if "pan" in payload:
         pan = require_number_range(payload.get("pan"), "pan", -1, 1)
         applied["pan"] = set_parameter_value(mixer.panning, pan, False)
@@ -411,12 +420,8 @@ def apply_sends(song, track, sends, write_verification, tolerance_db, warnings):
             raise BridgeHttpError("send does not exist on track: %s" % name, 404)
         db = require_number_range(value, "sends.%s" % name, -70, 12)
         applied_name = getattr(return_tracks[send_index], "name", str(send_index)) if send_index < len(return_tracks) else str(send_index)
-        applied[applied_name] = {
-            "requested": db,
-            "value": set_parameter_value(send_parameters[send_index], db_to_live_send(db), False)
-        }
-        write_verification["sends"][applied_name] = verify_db_write(db, send_parameters[send_index], tolerance_db)
-        append_verification_warning(warnings, "sends.%s" % applied_name, write_verification["sends"][applied_name])
+        write_verification["sends"][applied_name] = write_verified_db(send_parameters[send_index], db, tolerance_db)
+        applied[applied_name] = applied_db_write(write_verification["sends"][applied_name])
     return applied
 
 
@@ -427,32 +432,16 @@ def write_tolerance_db(payload):
 
 
 def verify_db_write(requested, parameter, tolerance_db):
-    observed = parameter_db_value(parameter)
-    has_observed = isinstance(observed, (int, float)) and not isinstance(observed, bool)
-    delta = observed - requested if has_observed else None
+    raw = parameter_value(parameter)
+    return verify_parameter_db_write(parameter, requested, raw, tolerance_db)
+
+
+def applied_db_write(verification):
     return {
-        "requested": requested,
-        "observed": observed if has_observed else None,
-        "display": parameter_display_value(parameter),
-        "raw": parameter_value(parameter),
-        "deltaDb": delta,
-        "toleranceDb": tolerance_db,
-        "withinTolerance": abs(delta) <= tolerance_db if delta is not None else False
+        "requestedDb": verification.get("requestedDb"),
+        "rawWritten": verification.get("rawWritten"),
+        "confirmed": verification.get("confirmed")
     }
-
-
-def append_verification_warning(warnings, name, verification):
-    if verification.get("withinTolerance"):
-        return
-    if verification.get("observed") is None:
-        warnings.append("%s write could not be verified from observed dB display" % name)
-        return
-    warnings.append("%s write target %s dB observed %s dB outside +/- %s dB tolerance" % (
-        name,
-        verification.get("requested"),
-        verification.get("observed"),
-        verification.get("toleranceDb")
-    ))
 
 
 def resolve_send_index(return_tracks, name):

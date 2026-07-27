@@ -54,6 +54,10 @@ class ProxySong(object):
         return FakeTrack(self._values((0.5, 0.45, 0.6)))
 
 
+class UnavailableTrack(object):
+    has_audio_output = True
+
+
 class LiveMeterCacheTest(unittest.TestCase):
     def test_poll_cache_survives_new_live_proxy_wrappers(self):
         song = ProxySong()
@@ -66,6 +70,17 @@ class LiveMeterCacheTest(unittest.TestCase):
         self.assertEqual(snapshot["meter"]["level"], 0.5)
         self.assertEqual(snapshot["meterSource"]["level"], "display-poll-cache")
         self.assertTrue(snapshot["meterObserved"]["level"])
+        self.assertEqual(snapshot["meterDiagnostics"]["objectPath"], "song.tracks[0]")
+        self.assertTrue(snapshot["meterDiagnostics"]["proxyType"].endswith(".FakeTrack"))
+        level_diagnostics = snapshot["meterDiagnostics"]["properties"]["level"]
+        self.assertEqual(level_diagnostics["property"], "output_meter_level")
+        self.assertEqual(level_diagnostics["path"], "song.tracks[0].output_meter_level")
+        self.assertEqual(level_diagnostics["directRaw"], 0.0)
+        self.assertEqual(level_diagnostics["cachedRaw"], 0.5)
+        self.assertEqual(level_diagnostics["cachedSource"], "display-poll")
+        self.assertTrue(level_diagnostics["cachedFresh"])
+        self.assertTrue(level_diagnostics["listenerRegistered"])
+        self.assertIsNone(level_diagnostics["listenerError"])
 
         diagnostics = cache.diagnostics()
         self.assertEqual(diagnostics["targetCount"], 3)
@@ -73,6 +88,43 @@ class LiveMeterCacheTest(unittest.TestCase):
         self.assertEqual(diagnostics["displayPollObservedTargetCount"], 3)
         self.assertEqual(diagnostics["signalTargetCount"], 3)
         self.assertEqual(diagnostics["listenerCount"], 9)
+
+    def test_zero_only_values_remain_explicit_raw_diagnostics(self):
+        song = ProxySong()
+        song.emit_signal = False
+        cache = LIVE_METER_CACHE.LiveMeterCache()
+
+        cache.poll(song)
+        snapshot = cache.snapshot("master", None, song.master_track, "master")
+        diagnostics = snapshot["meterDiagnostics"]
+
+        self.assertEqual(diagnostics["objectPath"], "song.master_track")
+        self.assertTrue(diagnostics["hasAudioOutput"])
+        for field in ("left", "right", "level"):
+            self.assertEqual(diagnostics["properties"][field]["directRaw"], 0.0)
+            self.assertEqual(diagnostics["properties"][field]["cachedRaw"], 0.0)
+            self.assertTrue(diagnostics["properties"][field]["propertyAvailable"])
+        self.assertFalse(cache.diagnostics()["signalEverObserved"])
+
+    def test_unavailable_properties_report_paths_and_listener_errors(self):
+        track = UnavailableTrack()
+        song = type("Song", (object,), {
+            "tracks": [track],
+            "return_tracks": [],
+            "master_track": None
+        })()
+        cache = LIVE_METER_CACHE.LiveMeterCache()
+
+        cache.poll(song)
+        snapshot = cache.snapshot("track", 0, track, "tracks[0]")
+        left = snapshot["meterDiagnostics"]["properties"]["left"]
+
+        self.assertEqual(left["path"], "song.tracks[0].output_meter_left")
+        self.assertIsNone(left["directRaw"])
+        self.assertIsNone(left["cachedRaw"])
+        self.assertFalse(left["propertyAvailable"])
+        self.assertFalse(left["listenerRegistered"])
+        self.assertEqual(left["listenerError"], "add_output_meter_left_listener is not exposed")
 
     def test_repeated_polls_do_not_accumulate_proxy_ids(self):
         song = ProxySong()

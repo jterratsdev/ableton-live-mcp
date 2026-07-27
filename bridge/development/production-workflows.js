@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { BridgeRequestError } from "../errors.js";
-import { analyzeAudioFile } from "./audio-analysis.js";
+import { analyzeAudioFile } from "../audio-analysis.js";
 import { arrangementSnapshot } from "./arrangement.js";
 import { exportDevelopmentRender } from "./render.js";
 import { clone, isValidLoudness, isValidTruePeak, normalize, requireNonNegativeInteger } from "./utils.js";

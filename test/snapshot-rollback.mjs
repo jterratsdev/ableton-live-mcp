@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { DevelopmentAbletonAdapter } from "../bridge/development-adapter.js";
 
 const adapter = new DevelopmentAbletonAdapter();
+adapter.state.tracks[0].volumeRaw = 0.6831;
+adapter.state.tracks[1].volumeRaw = 0.6412;
+adapter.state.tracks[0].sendsRaw = { 0: 0.11, 1: 0.22 };
+adapter.state.returns[0].volumeRaw = 0.61;
+adapter.state.returns[0].sendsRaw = { 0: 0.12 };
+adapter.state.master.volumeRaw = 0.85;
+adapter.state.master.cueVolumeRaw = 0.42;
 const baseline = rollbackComparableState(adapter.state);
 
 const snapshot = await adapter.createSnapshot({ label: "before guarded edit" });
@@ -79,6 +87,14 @@ assert.equal(rollback.project.trackCount, baseline.tracks.length);
 assert.equal(rollback.project.returnCount, baseline.returns.length);
 assert.equal(rollback.project.masterDeviceCount, baseline.master.devices.length);
 assert.deepEqual(rollback.snapshot.coverage.tracks, snapshot.snapshot.coverage.tracks);
+assert.equal(rollback.restoration.complete, true);
+assert.equal(rollback.restoration.failedCount, 0);
+assert.ok(rollback.restoration.appliedCount > 0);
+assert.equal(
+  rollback.restoration.targets.find((target) => target.target === "track" && target.index === 0)
+    .fields.find((field) => field.field === "volumeRaw").observed,
+  0.6831
+);
 assert.deepEqual(rollbackComparableState(adapter.state), baseline);
 
 await assert.rejects(
@@ -86,11 +102,41 @@ await assert.rejects(
   /snapshotId does not exist/
 );
 
+const partialAdapter = new DevelopmentAbletonAdapter();
+const partialSnapshot = await partialAdapter.createSnapshot({ label: "unverifiable mixer field" });
+const storedPartialSnapshot = partialAdapter.state.snapshots.find(
+  (candidate) => candidate.id === partialSnapshot.snapshot.id
+);
+storedPartialSnapshot.project.mixerState.tracks[0].fields.volumeRaw.sourceProperty = "missingRaw";
+const partialRollback = await partialAdapter.rollbackSnapshot({ snapshotId: partialSnapshot.snapshot.id });
+assert.equal(partialRollback.ok, false);
+assert.equal(partialRollback.rolledBack, false);
+assert.equal(partialRollback.restoration.complete, false);
+assert.equal(partialRollback.restoration.failedCount, 1);
+assert.equal(
+  partialRollback.restoration.targets[0].fields.find((field) => field.field === "volumeRaw").status,
+  "failed"
+);
+
 const liveSnapshotSource = await readFile("ableton_remote_scripts/AbletonMcpBridge/live_snapshots.py", "utf8");
-assert.match(liveSnapshotSource, /return_track_detail/);
-assert.match(liveSnapshotSource, /master_track_detail/);
-assert.match(liveSnapshotSource, /Remote Script rollback records but does not restore mixer values/);
+assert.match(liveSnapshotSource, /def restore_mixer_state\(song, snapshot\):/);
+assert.match(liveSnapshotSource, /parameter\.value = expected/);
+assert.match(liveSnapshotSource, /"complete": failed_count == 0/);
 assert.match(liveSnapshotSource, /def remote_script_rollback_warnings\(snapshot\):/);
+
+const liveBridgeSource = await readFile(
+  "ableton_remote_scripts/AbletonMcpBridge/AbletonMcpBridge.py",
+  "utf8"
+);
+assert.match(liveBridgeSource, /complete = bool\(result\.get\("complete"\)\)/);
+assert.match(liveBridgeSource, /"ok": complete/);
+assert.match(liveBridgeSource, /"rolledBack": complete/);
+
+const pythonResult = spawnSync("python3", ["test/live_snapshots_test.py"], {
+  cwd: process.cwd(),
+  encoding: "utf8"
+});
+assert.equal(pythonResult.status, 0, pythonResult.stderr || pythonResult.stdout);
 
 console.log("snapshot rollback ok");
 

@@ -1,5 +1,5 @@
 import { BridgeRequestError } from "./errors.js";
-import { analyzeAudioFile } from "./development/audio-analysis.js";
+import { analyzeAudioFile, analyzeRenderedMix } from "./audio-analysis.js";
 import { exportDevelopmentRender } from "./development/render.js";
 import { analyzeAndApplyMastering, applyMasteringChain, bounceTracks, productionSessionReport } from "./development/production-workflows.js";
 import { addOrUpdateLocator, arrangementSnapshot, insertArrangementClip } from "./development/arrangement.js";
@@ -99,16 +99,20 @@ export class DevelopmentAbletonAdapter {
 
   async startTransport() {
     this.state.playing = true;
-    return { ok: true, playing: this.state.playing };
+    return transportCommandResponse(true, this.state.playing);
   }
 
   async stopTransport() {
     this.state.playing = false;
-    return { ok: true, playing: this.state.playing };
+    return transportCommandResponse(false, this.state.playing);
   }
 
   async analyzeAudio(payload) {
     return analyzeAudioFile(payload);
+  }
+
+  async analyzeMix(payload) {
+    return analyzeRenderedMix(payload);
   }
 
   async exportRender(payload) {
@@ -270,6 +274,16 @@ function projectTrack(track) {
     ...clone(track),
     sendsDb: clone(track.sends ?? {}),
     sendsDisplay: Object.fromEntries(Object.entries(track.sends ?? {}).map(([name, value]) => [name, dbDisplay(value)]))
+  };
+}
+
+function transportCommandResponse(requestedPlaying, observedPlaying) {
+  return {
+    ok: true,
+    playing: requestedPlaying,
+    requestedPlaying,
+    observedPlaying,
+    confirmed: observedPlaying === requestedPlaying
   };
 }
 

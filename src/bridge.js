@@ -9,6 +9,7 @@ const ACTIONS = {
   list_plugins: { method: "GET", path: "/plugins" },
   search_browser: { method: "GET", path: "/browser/search" },
   analyze_audio: { method: "POST", path: "/analysis/audio" },
+  analyze_mix: { method: "POST", path: "/analysis/mix" },
   get_production_report: { method: "GET", path: "/production/report" },
   set_tempo: { method: "POST", path: "/tempo" },
   save_project: { method: "POST", path: "/project/save" },

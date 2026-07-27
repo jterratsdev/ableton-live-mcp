@@ -84,6 +84,9 @@ try {
 
   const started = await toolCall(5, "ableton_start_transport");
   assert.equal(started.playing, true);
+  assert.equal(started.requestedPlaying, true);
+  assert.equal(started.observedPlaying, true);
+  assert.equal(started.confirmed, true);
 
   const changedStatus = await toolCall(6, "ableton_get_status");
   assert.equal(changedStatus.tempo, 132);
@@ -137,14 +140,14 @@ try {
   assert.equal(modifiedTrack.track.pan, -0.2);
   assert.equal(modifiedTrack.track.solo, true);
   assert.equal(modifiedTrack.track.sends.Reverb, -18);
-  assert.deepEqual(modifiedTrack.writeVerification.volumeDb, {
-    requested: -8,
-    observed: -8,
-    display: "-8.0 dB",
-    deltaDb: 0,
-    toleranceDb: 0.5,
-    withinTolerance: true
-  });
+  assert.equal(modifiedTrack.writeVerification.volumeDb.requestedDb, -8);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.rawWritten, -8);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.observedRaw, -8);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.observedDisplay, "-8.0 dB");
+  assert.equal(modifiedTrack.writeVerification.volumeDb.observedDb, -8);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.deltaDb, 0);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.toleranceDb, 0.5);
+  assert.equal(modifiedTrack.writeVerification.volumeDb.confirmed, true);
   assert.equal(modifiedTrack.writeVerification.sends.Reverb.withinTolerance, true);
   assert.deepEqual(modifiedTrack.warnings, []);
 
@@ -609,6 +612,28 @@ try {
   assert.equal(typeof audioAnalysis.rmsDb, "number");
   assert.equal(typeof audioAnalysis.crestFactorDb, "number");
   assert.equal(audioAnalysis.clipping.detected, false);
+  assert.equal(audioAnalysis.reliableForMixing, true);
+  assert.equal(audioAnalysis.tool.backend, "ffmpeg-file-analysis");
+  assert.equal(audioAnalysis.tool.liveMetersUsed, false);
+
+  const mixAnalysis = await toolCall(84, "ableton_analyze_mix", {
+    masterPath: wavPath,
+    stems: [{ name: "Piano", path: wavPath }]
+  });
+  assert.equal(mixAnalysis.ok, true);
+  assert.equal(mixAnalysis.reliableForMixing, true);
+  assert.equal(mixAnalysis.backend.mode, "offline-file-analysis");
+  assert.equal(mixAnalysis.backend.liveMetersUsed, false);
+  assert.equal(mixAnalysis.summary.stemCount, 1);
+  assert.equal(mixAnalysis.summary.integratedLufs, mixAnalysis.master.lufs);
+  assert.equal(mixAnalysis.stems[0].name, "Piano");
+
+  const directMixAnalysis = await postJson(`${bridgeUrl}/analysis/mix`, {
+    masterPath: wavPath,
+    stems: [{ name: "Strings", path: wavPath }]
+  });
+  assert.equal(directMixAnalysis.reliableForMixing, true);
+  assert.equal(directMixAnalysis.stems[0].name, "Strings");
 
   const missingAudio = await postJson(`${bridgeUrl}/analysis/audio`, {
     path: "/tmp/ableton-mcp-missing.wav"
@@ -895,6 +920,9 @@ try {
 
   const stopped = await toolCall(14, "ableton_stop_transport");
   assert.equal(stopped.playing, false);
+  assert.equal(stopped.requestedPlaying, false);
+  assert.equal(stopped.observedPlaying, false);
+  assert.equal(stopped.confirmed, true);
 
   console.log("bridge ok");
 } finally {

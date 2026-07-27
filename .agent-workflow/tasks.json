@@ -3061,9 +3061,12 @@
         "release_manager"
       ]
     },
-    "status": "pending",
+    "status": "done",
     "createdAt": "2026-07-22T18:47:25.096Z",
-    "updatedAt": "2026-07-22T18:47:25.096Z"
+    "updatedAt": "2026-07-22T18:48:47.323Z",
+    "architectureApproval": {
+      "userApproved": true
+    }
   },
   {
     "id": "ableton-010-validated-checkpoint-20260722-release-03f56e",
@@ -3078,5 +3081,619 @@
     "status": "done",
     "createdAt": "2026-07-22T18:47:25.642Z",
     "updatedAt": "2026-07-22T18:47:25.674Z"
+  },
+  {
+    "id": "ableton-rendered-audio-metering-20260722",
+    "title": "Add verified rendered-audio metering",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Provide a trustworthy file-based metering workflow for rendered masters and stems when Ableton Remote Script live meters are unavailable.",
+    "acceptanceCriteria": [
+      "Analyze an existing master render and optional stem files without modifying the Ableton set.",
+      "Return measured loudness, peak, RMS or dynamics metrics with backend provenance and reliableForMixing=true only when analysis succeeds.",
+      "Keep rendered-audio measurements distinct from unsupported Live Remote Script meter values and never fabricate measurements.",
+      "Expose the workflow through the development HTTP adapter and MCP tools with deterministic automated tests and documentation."
+    ],
+    "assumptions": [
+      "Users can export a master or stems from Ableton when Remote Script rendering is unsupported."
+    ],
+    "risks": [
+      "Metric availability depends on installed ffmpeg filters; paths and subprocess invocation must remain safely validated."
+    ],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts/AbletonMcpBridge/live_observability.py",
+      "docs",
+      "test",
+      "README.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T18:49:03.615Z",
+    "updatedAt": "2026-07-22T18:59:05.353Z",
+    "scope": "Build on the existing /analysis/audio and ffmpeg/ffprobe integration; accept local audio artifacts only. Do not automate Ableton GUI export in this task.",
+    "testStrategy": "Unit and bridge integration tests with deterministic generated audio fixtures, full npm test, and a real local audio-file probe when available.",
+    "architectureApproval": {
+      "userApproved": true
+    },
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-rendered-audio-metering-20260722-developer-06bd1e",
+    "title": "[DEVELOPER] ableton-rendered-audio-metering-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T18:49:04.625Z",
+    "updatedAt": "2026-07-22T18:49:04.660Z"
+  },
+  {
+    "id": "ableton-meter-raw-path-diagnostics-20260722",
+    "title": "Expose raw Live meter property diagnostics",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Expose the exact Live object/property paths and raw direct/cache values used by meter polling so zero-only runtime behavior can be diagnosed without implying reliable signal.",
+    "acceptanceCriteria": [
+      "Each track, return, and master meter response identifies its Live object path and the exact meter properties read.",
+      "Diagnostics expose raw direct and cached values, source, freshness, listener registration/error state, and has_audio_output without changing reliableForMixing semantics.",
+      "Automated tests cover populated, zero-only, unavailable, and listener-backed values.",
+      "The updated Remote Script is validated against the running Ableton instance after reinstall."
+    ],
+    "assumptions": [
+      "The current runtime polls output_meter_left",
+      "output_meter_right",
+      "and output_meter_level during update_display."
+    ],
+    "risks": [
+      "Diagnostics can become noisy; keep the shape bounded to three properties per logical target."
+    ],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_meter_cache.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_mixer.py",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T19:02:04.736Z",
+    "updatedAt": "2026-07-22T19:11:03.450Z",
+    "scope": "Read-only diagnostics only; do not add new meter properties or claim that zero-only Live values are valid for mixing.",
+    "testStrategy": "Python cache tests, static contract tests, full npm test, reinstall Remote Script, then sample /meters during audible playback.",
+    "architectureApproval": {
+      "userApproved": true
+    },
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-meter-raw-path-diagnostics-20260722-developer-d9d0a8",
+    "title": "[DEVELOPER] ableton-meter-raw-path-diagnostics-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T19:02:05.776Z",
+    "updatedAt": "2026-07-22T19:02:05.812Z"
+  },
+  {
+    "id": "ableton-transport-response-consistency-20260722",
+    "title": "Fix transport command response consistency",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Make transport start/stop responses distinguish requested state from immediate Live readback so POST /transport/stop never reports playing=true as the command result when /status has stopped.",
+    "acceptanceCriteria": [
+      "POST /transport/start returns playing=true and POST /transport/stop returns playing=false as the requested command result.",
+      "Responses expose requestedPlaying, observedPlaying, and confirmed so deferred Live state transitions remain truthful.",
+      "GET /status remains the authoritative observed transport state.",
+      "Automated tests and live validation cover start, stop, and immediate status readback without modifying composition or mix."
+    ],
+    "assumptions": [
+      "Live may update song.is_playing after stop_playing returns within the same Control Surface callback."
+    ],
+    "risks": [
+      "Clients may have assumed playing was an immediate observation; preserve that information explicitly as observedPlaying."
+    ],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/AbletonMcpBridge.py",
+      "bridge/development-adapter.js",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T19:58:00.241Z",
+    "updatedAt": "2026-07-22T20:07:35.855Z",
+    "scope": "Transport response contract only; do not alter clip launch, arrangement, composition, instruments, or mixer state.",
+    "testStrategy": "Static Remote Script contract test, development bridge integration test, full npm test, reinstall/restart, then live start/stop/status comparison.",
+    "architectureApproval": {
+      "userApproved": true
+    },
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-transport-response-consistency-20260722-developer-c5d9b0",
+    "title": "[DEVELOPER] ableton-transport-response-consistency-20260722",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-22T19:58:00.939Z",
+    "updatedAt": "2026-07-22T19:58:00.974Z"
+  },
+  {
+    "id": "ableton-core-device-browser-discovery-20260723",
+    "title": "Discover and load Ableton Core audio effects",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Make Remote Script browser search and device loading reliably find built-in Core audio effects such as Utility and Channel EQ without GUI automation.",
+    "acceptanceCriteria": [
+      "GET /browser/search?kind=audio_effect finds installed Core effects such as Utility or Channel EQ when Live exposes them.",
+      "POST /devices/load can load an exact browser result on a target track without fuzzy selection of an unrelated device.",
+      "Search diagnostics distinguish not found, traversal limit, unavailable edition, and non-loadable browser items.",
+      "Automated tests and live read-only search validation pass before any device is loaded into the user's set."
+    ],
+    "assumptions": [
+      "Utility and Channel EQ are available in the installed Live edition but current recursive browser traversal fails to surface them."
+    ],
+    "risks": [
+      "Live browser trees vary by version and edition; traversal must be bounded and report truncation."
+    ],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_browser.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_devices.py",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-23T23:31:16.673Z",
+    "updatedAt": "2026-07-23T23:57:08.236Z",
+    "scope": "Browser discovery and exact-load contract only. Do not change guitar MIDI, instrument preset, fader, devices, or mix during implementation/QA.",
+    "testStrategy": "Unit/static tests with nested browser fixtures, full npm test, reinstall/restart, then read-only searches for Utility and Channel EQ. Device loading requires separate explicit approval.",
+    "architectureApproval": {
+      "userApproved": true
+    },
+    "blockedReason": "Paused behind safety-critical volume conversion and mixer rollback defects; no device load or mixing work may continue until both are fixed."
+  },
+  {
+    "id": "ableton-core-device-browser-discovery-20260723-developer-cb8d76",
+    "title": "[DEVELOPER] ableton-core-device-browser-discovery-20260723",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-23T23:31:17.763Z",
+    "updatedAt": "2026-07-23T23:31:17.802Z"
+  },
+  {
+    "id": "ableton-volume-db-write-safety-20260723",
+    "title": "Fix Live volume dB write conversion",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Guarantee that volumeDb writes target the requested Ableton display dB without corrupting track levels through an incorrect raw-value conversion.",
+    "acceptanceCriteria": [
+      "Volume writes use Live parameter conversion/display semantics or a verified calibrated mapping rather than assuming a linear raw scale.",
+      "Responses report requested dB, raw value written, observed raw value, observed display/dB, tolerance, and confirmation.",
+      "Unsafe or unverifiable dB writes fail closed and do not report success.",
+      "Automated round-trip tests cover the restored levels -7.372, -8.337, -10.161, and -5.68 dB plus boundary values.",
+      "No live mixer writes occur until the user explicitly approves post-reinstall validation."
+    ],
+    "assumptions": [],
+    "risks": [
+      "A wrong conversion can damage an existing mix; all uncertain writes must fail closed."
+    ],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_core.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_mixer.py",
+      "bridge/development/mixer.js",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-23T23:52:34.244Z",
+    "updatedAt": "2026-07-24T00:10:24.180Z",
+    "scope": "Track, return, and master volume conversion/readback only; do not change current set values during development.",
+    "testStrategy": "Pure conversion tests with fake Live parameters, static tests, full npm test, reinstall/restart, then optional user-approved write/restore on one target.",
+    "architectureApproval": {
+      "userApproved": true,
+      "proposal": "Use Live parameter display/value semantics with bounded verified resolution; report requested dB, raw write, observed raw/display, tolerance, and confirmation; fail closed when verification is unavailable.",
+      "approvedBy": "user",
+      "approvedAt": "2026-07-23T23:55:23.677Z"
+    }
+  },
+  {
+    "id": "ableton-volume-db-write-safety-20260723-developer-85bda0",
+    "title": "[DEVELOPER] ableton-volume-db-write-safety-20260723",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-23T23:52:35.144Z",
+    "updatedAt": "2026-07-24T00:02:46.320Z"
+  },
+  {
+    "id": "ableton-mixer-snapshot-rollback-safety-20260723",
+    "title": "Restore complete mixer state on rollback",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Make project snapshots capture and rollback the complete mixer state for tracks, returns, and master without relying on unsafe dB conversion.",
+    "acceptanceCriteria": [
+      "Snapshots capture raw volume, pan, sends, mute, solo, arm where supported, plus return and master mixer state.",
+      "Rollback restores captured mixer values using raw parameter values and reports per-field applied, skipped, and failed results.",
+      "Rollback fails visibly when required state cannot be restored and never reports blanket success for partial restoration.",
+      "Tests cover round-trip restoration of track, return, and master mixer state including the user's restored track levels.",
+      "No live rollback is executed until the user explicitly approves a disposable verification or confirms a backup."
+    ],
+    "assumptions": [],
+    "risks": [
+      "Partial rollback can leave a mix corrupted; report granular restoration and fail closed on required mixer fields."
+    ],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_snapshots.py",
+      "bridge/development/snapshots.js",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-23T23:56:19.559Z",
+    "updatedAt": "2026-07-24T00:10:24.340Z",
+    "scope": "Snapshot and rollback mixer state only; do not alter clips, notes, devices, arrangement, or the current Live set during development.",
+    "testStrategy": "Python/JS round-trip fixture tests, full npm test, reinstall/restart, then user-approved disposable live snapshot/write/rollback verification.",
+    "architectureApproval": {
+      "proposal": "Capture raw Live parameter values and booleans for tracks, returns, and master; restore raw values directly; return granular applied/skipped/failed verification and no blanket success on partial failure.",
+      "userApproved": true,
+      "approvedBy": "user",
+      "approvedAt": "2026-07-23T23:56:19.419Z"
+    }
+  },
+  {
+    "id": "ableton-mixer-snapshot-rollback-safety-20260723-developer-b9a293",
+    "title": "[DEVELOPER] ableton-mixer-snapshot-rollback-safety-20260723",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-23T23:56:20.482Z",
+    "updatedAt": "2026-07-24T00:05:24.101Z"
+  },
+  {
+    "id": "ableton-live-readonly-safety-contract-validation-20260723",
+    "title": "Validate reinstalled mixer safety contract in Live",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Running bridge responds after Ableton restart.",
+      "Read-only project responses expose distinct volumeRaw, volumeDb, and volumeDisplay fields without changing mixer state.",
+      "Installed Remote Script source contains verified dB writes and rollback completion propagation.",
+      "No write, snapshot, rollback, transport, or device-load endpoint is invoked."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-24T00:17:48.355Z",
+    "updatedAt": "2026-07-24T00:18:34.895Z",
+    "goal": "Confirm the reinstalled Ableton Remote Script is the new safety build without modifying the current set.",
+    "scope": "Read-only HTTP and installed-source inspection only.",
+    "testStrategy": "GET status/project and compare installed source fingerprints with workspace; do not invoke POST endpoints.",
+    "qaGate": {
+      "executionStatus": "passed"
+    }
+  },
+  {
+    "id": "ableton-live-readonly-safety-contract-validation-20260723-qa-fa4858",
+    "title": "[QA] ableton-live-readonly-safety-contract-validation-20260723",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-24T00:17:48.957Z",
+    "updatedAt": "2026-07-24T00:17:48.999Z"
+  },
+  {
+    "id": "ableton-master-optional-mixer-properties-20260723",
+    "title": "Handle optional master mute and solo properties",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Snapshot capture does not fail when master mute or solo is absent.",
+      "Snapshot capture marks mute or solo unsupported when the Live proxy raises while reading it.",
+      "Rollback skips unsupported fields and never accesses absent master properties.",
+      "Targeted and full automated test suites pass without calling the running Ableton bridge."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_snapshots.py",
+      "test/live_snapshots_test.py"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-07-24T00:24:06.699Z",
+    "updatedAt": "2026-07-24T00:25:39.692Z",
+    "goal": "Make snapshot capture and rollback tolerate master mixer controls that are visible in Live but not exposed as Python API properties.",
+    "scope": "Optional boolean mixer attributes in live_snapshots.py and fixture tests only.",
+    "testStrategy": "Fake master proxies with absent and raising mute/solo descriptors; targeted Python/Node tests and npm test.",
+    "verifierContract": {
+      "version": 1,
+      "entries": [
+        {
+          "id": "master-optional-read",
+          "surface": "api",
+          "setup": "Fake Main proxy exposes mute and solo descriptors that raise RuntimeError.",
+          "action": "Call master_snapshot and inspect mixerState.muted and mixerState.solo.",
+          "expectedObservable": "Both fields equal supported=false and value=null without raising.",
+          "assertionType": "equals",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "AC2"
+          ]
+        },
+        {
+          "id": "master-optional-rollback",
+          "surface": "api",
+          "setup": "Snapshot mixer state contains unsupported mute and solo fields and target Main omits those properties.",
+          "action": "Call apply_project_snapshot and inspect master restoration fields.",
+          "expectedObservable": "Mute and solo are skipped with zero failed fields and no property access exception.",
+          "assertionType": "equals",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "AC3"
+          ]
+        }
+      ]
+    },
+    "blockedReason": "Superseded because Orchestra goal-verification lint rejects AC2/AC3 wording; replacement task uses explicit observable test assertions."
+  },
+  {
+    "id": "ableton-master-optional-mixer-properties-20260723-developer-a8422b",
+    "title": "[DEVELOPER] ableton-master-optional-mixer-properties-20260723",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-24T00:24:07.361Z",
+    "updatedAt": "2026-07-24T00:24:07.361Z"
+  },
+  {
+    "id": "ableton-master-optional-mixer-properties-v2-20260723",
+    "title": "Handle optional master mute and solo properties",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "A unit test asserts snapshot capture completes when master mute and solo are absent.",
+      "A unit test asserts exception-raising master mute and solo descriptors produce supported=false and value=null.",
+      "A unit test asserts rollback reports unsupported master mute and solo as skipped with zero failures and no property access exception.",
+      "Command output shows targeted and full automated test suites pass without calling the running Ableton bridge."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts/AbletonMcpBridge/live_snapshots.py",
+      "test/live_snapshots_test.py"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-24T00:25:39.849Z",
+    "updatedAt": "2026-07-24T00:28:33.094Z",
+    "goal": "Make snapshot capture and rollback tolerate master mixer controls that are visible in Live but not exposed as Python API properties.",
+    "scope": "Optional boolean mixer attributes in live_snapshots.py and fixture tests only.",
+    "testStrategy": "Fake master proxies with absent and raising mute/solo descriptors; targeted Python/Node tests and npm test.",
+    "qaGate": {
+      "plan": "Local proxy fixtures and full suite now; real snapshot creation after user reinstalls/restarts.",
+      "executionStatus": "deferred",
+      "deferredRationale": "Real Live snapshot validation requires the user to reinstall/restart the updated Remote Script. Local fixture and regression evidence passed; no active-set endpoint will be called before reinstall.",
+      "deferredOwner": "user"
+    },
+    "verifierContract": {
+      "version": 1,
+      "entries": [
+        {
+          "id": "snapshot-absent",
+          "surface": "api",
+          "setup": "Fake Main object omits mute and solo properties.",
+          "action": "Run python3 test/live_snapshots_test.py and execute absent-property case.",
+          "expectedObservable": "Test passes and snapshot mixerState contains neither muted nor solo.",
+          "assertionType": "custom",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "A unit test asserts snapshot capture completes when master mute and solo are absent."
+          ]
+        },
+        {
+          "id": "snapshot-raising",
+          "surface": "api",
+          "setup": "Fake Main proxy raises RuntimeError when mute or solo is read.",
+          "action": "Run attribute_snapshot and project_snapshot assertions.",
+          "expectedObservable": "attribute_snapshot returns supported=false/value=null and project snapshot omits both fields.",
+          "assertionType": "custom",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "A unit test asserts exception-raising master mute and solo descriptors produce supported=false and value=null."
+          ]
+        },
+        {
+          "id": "rollback-optional",
+          "surface": "api",
+          "setup": "Snapshot omits optional Main fields and proxy access counter is reset.",
+          "action": "Apply project snapshot and inspect restoration plus access counter.",
+          "expectedObservable": "Rollback completes with zero failures and optional access counter remains zero.",
+          "assertionType": "custom",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "A unit test asserts rollback reports unsupported master mute and solo as skipped with zero failures and no property access exception."
+          ]
+        },
+        {
+          "id": "suite-output",
+          "surface": "api",
+          "setup": "Updated source and local test fixtures are present.",
+          "action": "Run targeted Python/Node checks and npm test.",
+          "expectedObservable": "All commands exit zero and no HTTP endpoint is invoked.",
+          "assertionType": "custom",
+          "evidenceArtifact": "test/live_snapshots_test.py",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "Command output shows targeted and full automated test suites pass without calling the running Ableton bridge."
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ableton-master-optional-mixer-properties-v2-20260723-developer-3e3879",
+    "title": "[DEVELOPER] ableton-master-optional-mixer-properties-v2-20260723",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-24T00:25:40.466Z",
+    "updatedAt": "2026-07-24T00:25:40.466Z"
+  },
+  {
+    "id": "ableton-commit-mixing-safety-batch-20260727",
+    "title": "Commit accumulated mixing safety improvements",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Command output shows the complete test suite passes before staging.",
+      "The staged diff contains the accumulated meter diagnostics, rendered analysis, transport consistency, dB write safety, snapshot rollback, and optional Main property changes.",
+      "A local git commit is created without pushing or tagging."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "ableton_remote_scripts",
+      "bridge",
+      "src",
+      "test",
+      "docs",
+      "README.md",
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-27T17:41:09.587Z",
+    "updatedAt": "2026-07-27T17:42:10.616Z",
+    "goal": "Create one reviewed local commit for all accumulated Ableton MCP work since d693179.",
+    "scope": "Commit current intended product, test, documentation, and Orchestra artifacts; exclude transient active runtime state.",
+    "testStrategy": "Run npm test and git diff --check, inspect staged diff/stat, then commit locally."
+  },
+  {
+    "id": "ableton-commit-mixing-safety-batch-20260727-release-eb8e73",
+    "title": "[RELEASE] ableton-commit-mixing-safety-batch-20260727",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-27T17:41:10.745Z",
+    "updatedAt": "2026-07-27T17:41:10.782Z"
   }
 ]

@@ -269,6 +269,13 @@ deterministic checks.
       "versionImpact": "Use the development/local bridge path; the Python Remote Script does not need to own local audio analysis."
     },
     {
+      "route": "POST /analysis/mix",
+      "tier": "read",
+      "remoteScriptExpectation": "local_bridge_only",
+      "editionImpact": "No edition-specific limitation; the MCP analyzes exported master and stem files locally.",
+      "versionImpact": "Available with Live 11 and Live 12 exports; the Python Remote Script does not perform the analysis."
+    },
+    {
       "route": "POST /arrangement/insert",
       "tier": "safe-write",
       "remoteScriptExpectation": "unsupported_501",

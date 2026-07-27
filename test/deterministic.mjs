@@ -4,6 +4,7 @@ const deterministicSuites = [
   "./bridge.mjs",
   "./remote-script-static.mjs",
   "./live-meter-cache.mjs",
+  "./live-volume-write.mjs",
   "../scripts/check-doctor-diagnostics.mjs",
   "./render-export.mjs",
   "./risk-policy.mjs",

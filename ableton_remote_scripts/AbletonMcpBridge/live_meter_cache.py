@@ -103,6 +103,7 @@ class LiveMeterCache(object):
             "meterObserved": observed,
             "meterUpdatedAtMs": updated_at_ms,
             "meterAgeMs": age_ms,
+            "meterDiagnostics": self._target_diagnostics(target_key, target_type, target_index, track, now),
             "warnings": warnings
         }
 
@@ -222,6 +223,33 @@ class LiveMeterCache(object):
     def _cached_field(self, target_key, field):
         return self._values.get(target_key, {}).get(field)
 
+    def _target_diagnostics(self, target_key, target_type, target_index, track, now):
+        object_path = meter_object_path(target_type, target_index)
+        properties = {}
+        for field, property_name in METER_PROPERTIES:
+            cached = self._cached_field(target_key, field)
+            listener_key = (target_key, property_name)
+            direct_value = read_meter_property(track, property_name)
+            properties[field] = {
+                "property": property_name,
+                "path": "%s.%s" % (object_path, property_name),
+                "directRaw": direct_value,
+                "propertyAvailable": direct_value is not None,
+                "cachedRaw": cached.get("value") if cached is not None else None,
+                "cachedSource": cached.get("source") if cached is not None else None,
+                "cachedFresh": _is_fresh(cached, now) if cached is not None else False,
+                "cachedUpdatedAtMs": _updated_at_ms(cached),
+                "cachedAgeMs": _age_ms(cached, now),
+                "listenerRegistered": listener_key in self._listeners,
+                "listenerError": self._listener_errors.get(listener_key)
+            }
+        return {
+            "objectPath": object_path,
+            "proxyType": qualified_type_name(track),
+            "hasAudioOutput": bool(getattr(track, "has_audio_output", False)),
+            "properties": properties
+        }
+
     def _select_value(self, direct_value, cached, now):
         if cached is not None and _is_fresh(cached, now):
             cached_value = cached.get("value")
@@ -273,6 +301,23 @@ def meter_targets(song):
 
 def meter_target_key(target_type, target_index):
     return (target_type, target_index)
+
+
+def meter_object_path(target_type, target_index):
+    if target_type == "master":
+        return "song.master_track"
+    if target_type == "return":
+        return "song.return_tracks[%s]" % target_index
+    return "song.tracks[%s]" % target_index
+
+
+def qualified_type_name(value):
+    value_type = type(value)
+    module_name = getattr(value_type, "__module__", "")
+    type_name = getattr(value_type, "__name__", str(value_type))
+    if module_name and module_name != "__builtin__":
+        return "%s.%s" % (module_name, type_name)
+    return type_name
 
 
 def _updated_at_ms(observation):

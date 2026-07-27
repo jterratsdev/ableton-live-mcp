@@ -35,6 +35,8 @@ async function routeRequest(req, adapter) {
       return adapter.searchBrowser(Object.fromEntries(url.searchParams));
     case "POST /analysis/audio":
       return adapter.analyzeAudio(await readJsonBody(req));
+    case "POST /analysis/mix":
+      return adapter.analyzeMix(await readJsonBody(req));
     case "GET /production/report":
       return adapter.getProductionReport();
     case "POST /tempo":

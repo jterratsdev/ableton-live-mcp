@@ -38,6 +38,7 @@ Read and inspect:
 - `ableton_launch_scene`
 - `ableton_get_device_parameters`
 - `ableton_analyze_audio`
+- `ableton_analyze_mix`
 - `ableton_get_bridge_observability`
 - `ableton_evaluate_action_risk`
 - `ableton_list_risk_policy`
@@ -114,8 +115,9 @@ For meaningful LLM control, the recommended sequence is:
 8. `ableton_freeze_track` and `ableton_flatten_track` when committing tracks to audio is supported by the active bridge.
 9. `ableton_apply_mastering_chain` for master bus preparation.
 10. `ableton_export_render`, `ableton_bounce_tracks`, and
-    `ableton_analyze_audio` for approved export, stem, and audio-validation
-    workflows.
+    `ableton_analyze_audio`, and `ableton_analyze_mix` for approved export,
+    stem, and audio-validation workflows. File analysis runs locally in the MCP
+    process and does not depend on Ableton's Remote Script meters.
 
 Risk tiers and default blocking recommendations are documented in
 [docs/risk-policy.md](docs/risk-policy.md) and exposed through

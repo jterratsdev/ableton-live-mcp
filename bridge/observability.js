@@ -14,6 +14,7 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("GET", "/plugins", "read", "supported", "supported"),
   endpoint("GET", "/browser/search", "read", "supported", "supported"),
   endpoint("POST", "/analysis/audio", "read", "supported", "unsupported", "Remote Script does not analyze local audio files"),
+  endpoint("POST", "/analysis/mix", "read", "supported", "unsupported", "MCP performs rendered-file analysis locally; Remote Script does not analyze audio files"),
   endpoint("GET", "/production/report", "read", "supported", "supported"),
   endpoint("POST", "/tempo", "safe-write", "supported", "supported"),
   endpoint("POST", "/automation", "safe-write", "supported", "unsupported", "Live Python API does not expose reliable cross-version envelope mutation"),

@@ -124,6 +124,7 @@ classification.
 - `GET /plugins`
 - `GET /browser/search`
 - `POST /analysis/audio`
+- `POST /analysis/mix`
 - `GET /production/report`
 - `GET /returns`
 - `GET /routing/buses`

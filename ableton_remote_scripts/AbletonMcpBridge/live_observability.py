@@ -19,6 +19,7 @@ ENDPOINT_SUPPORT = (
     {"method": "GET", "path": "/plugins", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/browser/search", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/analysis/audio", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "Remote Script does not analyze local audio files"}},
+    {"method": "POST", "path": "/analysis/mix", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "MCP performs rendered-file analysis locally; Remote Script does not analyze audio files"}},
     {"method": "GET", "path": "/production/report", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/tempo", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/automation", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "Live Python API does not expose reliable cross-version envelope mutation"}},

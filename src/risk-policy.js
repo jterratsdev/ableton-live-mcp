@@ -48,6 +48,7 @@ const HTTP_ENDPOINT_RISKS = Object.freeze({
   "GET /plugins": read("Read browser/plugin inventory."),
   "GET /browser/search": read("Read loadable browser search results."),
   "POST /analysis/audio": read("Analyze an existing local audio artifact without mutating Live."),
+  "POST /analysis/mix": read("Analyze rendered master and stem artifacts without mutating Live."),
   "GET /production/report": read("Read derived production diagnostics."),
   "POST /tempo": safeWrite("Change song tempo."),
   "POST /project/save": destructive("Persist the current Live set and potentially overwrite disk state."),
@@ -105,6 +106,7 @@ const MCP_TOOL_RISKS = Object.freeze({
     endpoint: null
   },
   ableton_analyze_audio: tool("POST /analysis/audio"),
+  ableton_analyze_mix: tool("POST /analysis/mix"),
   ableton_get_production_report: tool("GET /production/report"),
   ableton_diagnose_playback: {
     ...read("Diagnose silent playback without mutating Live state."),

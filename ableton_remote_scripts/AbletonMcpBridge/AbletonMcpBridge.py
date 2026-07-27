@@ -79,6 +79,18 @@ PORT = 9789
 LIVE_CALL_TIMEOUT_SECONDS = 5
 
 
+def transport_command_response(requested_playing, observed_playing):
+    requested = bool(requested_playing)
+    observed = bool(observed_playing)
+    return {
+        "ok": True,
+        "playing": requested,
+        "requestedPlaying": requested,
+        "observedPlaying": observed,
+        "confirmed": observed == requested
+    }
+
+
 class AbletonMcpBridge(ControlSurface):
     def __init__(self, c_instance):
         ControlSurface.__init__(self, c_instance)
@@ -355,9 +367,10 @@ class AbletonMcpBridge(ControlSurface):
             raise BridgeHttpError("snapshotId does not exist", 404)
 
         result = apply_project_snapshot(self.song(), snapshot["project"])
+        complete = bool(result.get("complete"))
         return {
-            "ok": True,
-            "rolledBack": True,
+            "ok": complete,
+            "rolledBack": complete,
             "snapshot": {
                 "id": snapshot["id"],
                 "label": snapshot["label"],
@@ -413,12 +426,14 @@ class AbletonMcpBridge(ControlSurface):
         }
 
     def _start_transport(self):
-        self.song().start_playing()
-        return {"ok": True, "playing": self.song().is_playing}
+        song = self.song()
+        song.start_playing()
+        return transport_command_response(True, song.is_playing)
 
     def _stop_transport(self):
-        self.song().stop_playing()
-        return {"ok": True, "playing": self.song().is_playing}
+        song = self.song()
+        song.stop_playing()
+        return transport_command_response(False, song.is_playing)
 
     def _create_midi_track(self, payload):
         name = payload.get("name") or "MIDI"

@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 24]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run deterministic tests
+        run: npm test
+      - name: Compile Remote Script
+        env:
+          PYTHONPYCACHEPREFIX: /tmp/ableton-mcp-pycache
+        run: python3 -m py_compile ableton_remote_scripts/AbletonMcpBridge/*.py
+      - name: Validate package contents
+        if: matrix.node-version == 24
+        run: npm pack --dry-run

@@ -3695,5 +3695,239 @@
     "status": "done",
     "createdAt": "2026-07-27T17:41:10.745Z",
     "updatedAt": "2026-07-27T17:41:10.782Z"
+  },
+  {
+    "id": "ableton-npm-release-readiness-plan-20260728",
+    "title": "Assess npm release readiness for Ableton MCP",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "The assessment reports npm package identity, version, tarball contents, tests, install command, and Remote Script installation flow.",
+      "The assessment identifies missing release metadata, authentication, repository, security, and runtime-validation prerequisites.",
+      "The response provides an ordered publication sequence without running npm publish, git push, or git tag."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "README.md",
+      "docs/release-checklist.md",
+      "scripts",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-28T18:35:53.460Z",
+    "updatedAt": "2026-07-28T21:05:04.015Z",
+    "goal": "Define the exact safe path from the current local 0.1.0 package to a public npm release.",
+    "scope": "Read-only package/repository/npm-registry assessment and release plan only; no publication action.",
+    "testStrategy": "Inspect package metadata and release checklist, run npm pack dry-run and package tests, query package name/auth state without mutating registry."
+  },
+  {
+    "id": "ableton-npm-release-readiness-plan-20260728-release-9e1eeb",
+    "title": "[RELEASE] ableton-npm-release-readiness-plan-20260728",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-28T18:35:54.092Z",
+    "updatedAt": "2026-07-28T18:35:54.128Z"
+  },
+  {
+    "id": "ableton-release-metadata-ci-20260728",
+    "title": "Prepare npm release metadata and CI",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Prepare a reproducible and guarded public npm release process for @jterrats/ableton-live-mcp without creating remote state or publishing.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "package-lock.json",
+      ".github/workflows/ci.yml",
+      ".github/workflows/publish.yml",
+      "scripts/check-package-release.mjs",
+      "docs/release-checklist.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa",
+        "release_manager"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-07-28T21:41:57.423Z",
+    "updatedAt": "2026-07-28T21:42:38.400Z",
+    "scope": "Package metadata, lockfile, CI, a manually gated trusted-publishing workflow, release validation, and operator documentation. Excludes GitHub repository creation, remote configuration, push, tags, npm authentication, and npm publish.",
+    "testStrategy": "Static release-contract checks plus npm ci, npm audit, full tests, Python compilation, npm pack dry-run, and git diff checks.",
+    "acceptanceCriteria": [
+      "A test asserts package.json contains repository, homepage, bugs, author, keywords, and publishConfig.access=public for @jterrats/ableton-live-mcp.",
+      "Command output shows npm ci, npm audit, npm test, Python compilation, and npm pack dry-run pass from the lockfile.",
+      "A workflow validation test asserts CI runs npm ci, tests, Python compilation, and package validation on supported Node versions.",
+      "A workflow validation test asserts publishing is manually gated, uses OIDC permissions, validates the package, and is not executed by local tests.",
+      "No git remote, push, tag, GitHub repository, npm authentication, or npm publish action is performed.",
+      "Running npm run check:package exits 0 and reports valid repository, homepage, bugs, author, keywords, and public publish configuration.",
+      "Running npm ci, npm audit --omit=dev, npm test, Python compilation, and npm pack --dry-run exits 0 with the committed lockfile.",
+      "Running npm run check:package exits 0 after verifying CI invokes deterministic install, tests, Python compilation, and package validation on supported Node versions.",
+      "Running npm run check:package exits 0 after verifying publishing is workflow_dispatch-only, requests OIDC permission, and runs validation before npm publish.",
+      "Running git remote -v and git status confirms no remote, push, tag, GitHub repository, npm authentication, or npm publication was created by this task."
+    ],
+    "blockedReason": "Superseded because the workflow run captured pre-refinement acceptance criteria; replacement task uses command-observable criteria at creation time."
+  },
+  {
+    "id": "ableton-release-metadata-ci-20260728-developer-165061",
+    "title": "[DEVELOPER] ableton-release-metadata-ci-20260728",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-28T21:42:20.138Z",
+    "updatedAt": "2026-07-28T21:42:20.138Z"
+  },
+  {
+    "id": "ableton-release-metadata-ci-v2-20260728",
+    "title": "Prepare npm release metadata and CI",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Running npm run check:package exits 0 and reports valid repository, homepage, bugs, author, keywords, and public publish configuration.",
+      "Running npm ci, npm audit --omit=dev, npm test, Python compilation, and npm pack --dry-run exits 0 with the committed lockfile.",
+      "Running npm run check:package exits 0 after verifying CI invokes deterministic install, tests, Python compilation, and package validation on supported Node versions.",
+      "Running npm run check:package exits 0 after verifying publishing is workflow_dispatch-only, requests OIDC permission, and runs validation before npm publish.",
+      "Running git remote -v and git status confirms no remote, push, tag, GitHub repository, npm authentication, or npm publication was created by this task."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "package-lock.json",
+      ".github/workflows/ci.yml",
+      ".github/workflows/publish.yml",
+      "scripts/check-package-release.mjs",
+      "docs/release-checklist.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa",
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-28T21:42:43.145Z",
+    "updatedAt": "2026-07-28T21:55:39.436Z",
+    "goal": "Prepare a reproducible and guarded public npm release process for @jterrats/ableton-live-mcp without creating remote state or publishing.",
+    "scope": "Package metadata, lockfile, CI, a manually gated trusted-publishing workflow, release validation, and operator documentation. Excludes GitHub repository creation, remote configuration, push, tags, npm authentication, and npm publish.",
+    "testStrategy": "Static release-contract checks plus npm ci, npm audit, full tests, Python compilation, npm pack dry-run, and git diff checks.",
+    "blockedReason": ""
+  },
+  {
+    "id": "ableton-release-metadata-ci-v2-20260728-developer-435533",
+    "title": "[DEVELOPER] ableton-release-metadata-ci-v2-20260728",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-28T21:42:58.277Z",
+    "updatedAt": "2026-07-28T21:42:58.319Z"
+  },
+  {
+    "id": "ableton-release-metadata-ci-v2-20260728-qa-435533",
+    "title": "[QA] ableton-release-metadata-ci-v2-20260728",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-release-metadata-ci-v2-20260728-developer-435533"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-28T21:42:58.321Z",
+    "updatedAt": "2026-07-28T21:42:58.321Z"
+  },
+  {
+    "id": "ableton-release-metadata-ci-v2-20260728-release-435533",
+    "title": "[RELEASE] ableton-release-metadata-ci-v2-20260728",
+    "ownerRole": "release_manager",
+    "dependencies": [
+      "ableton-release-metadata-ci-v2-20260728-qa-435533"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-28T21:55:11.988Z",
+    "updatedAt": "2026-07-28T21:55:12.023Z"
+  },
+  {
+    "id": "ableton-commit-create-public-repo-20260729",
+    "title": "Commit release preparation and create public repository",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Running git show --stat HEAD reports a release-preparation commit containing the reviewed package, workflow, documentation, and Orchestra artifacts.",
+      "Running gh repo view jterrats/ableton-live-mcp reports visibility PUBLIC and the expected repository URL.",
+      "Running git remote get-url origin reports https://github.com/jterrats/ableton-live-mcp.git.",
+      "Running git rev-parse HEAD and git rev-parse origin/main reports the same commit after push.",
+      "Running git status --short confirms no unintended product files remain uncommitted after recording final workflow evidence."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "package-lock.json",
+      ".github",
+      "docs/release-checklist.md",
+      "scripts/check-package-release.mjs",
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager",
+        "qa"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-07-29T23:21:43.593Z",
+    "updatedAt": "2026-07-29T23:29:38.005Z",
+    "goal": "Record the validated 0.1.0 release preparation in Git, create its public GitHub repository, and push the current branch.",
+    "scope": "Commit the currently reviewed release-preparation and Orchestra artifacts, create public GitHub repository jterrats/ableton-live-mcp, configure origin, and push the current branch with upstream. Excludes tags, GitHub releases, npm authentication, and npm publish.",
+    "testStrategy": "Re-run package checks, inspect staged diff, verify commit contents, query GitHub visibility and origin, verify pushed HEAD/upstream, and inspect final worktree.",
+    "blockedReason": "qa requested block: The generated QA handoff claimed the commit, public repository, origin, and pushed ref existed before any of those operations ran. It is simulated evidence and cannot authorize release."
+  },
+  {
+    "id": "ableton-commit-create-public-repo-20260729-qa-b16bc9",
+    "title": "[QA] ableton-commit-create-public-repo-20260729",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-07-29T23:22:06.111Z",
+    "updatedAt": "2026-07-29T23:22:06.111Z"
   }
 ]

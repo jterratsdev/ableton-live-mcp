@@ -4,6 +4,25 @@
   "private": false,
   "type": "module",
   "description": "Local MCP stdio server for controlling Ableton Live through a local bridge.",
+  "author": "Jaime Terrats",
+  "keywords": [
+    "ableton-live",
+    "daw",
+    "mcp",
+    "model-context-protocol",
+    "music-production"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jterrats/ableton-live-mcp.git"
+  },
+  "homepage": "https://github.com/jterrats/ableton-live-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/jterrats/ableton-live-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "ableton-live-mcp": "./src/cli.js"
   },
@@ -18,6 +37,7 @@
   ],
   "scripts": {
     "bridge": "node src/cli.js bridge",
+    "check:package": "node scripts/check-package-release.mjs",
     "doctor": "node src/cli.js doctor",
     "doctor:test": "node scripts/check-doctor-diagnostics.mjs",
     "install:ableton-remote-script": "node src/cli.js install-remote-script",

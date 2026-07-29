@@ -1,0 +1,43 @@
+name: Publish npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version from package.json to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    environment: npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Update npm for trusted publishing
+        run: npm install --global npm@latest
+      - name: Verify requested version
+        run: test "${{ inputs.version }}" = "$(node --print "require('./package.json').version")"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run deterministic tests
+        run: npm test
+      - name: Compile Remote Script
+        env:
+          PYTHONPYCACHEPREFIX: /tmp/ableton-mcp-pycache
+        run: python3 -m py_compile ableton_remote_scripts/AbletonMcpBridge/*.py
+      - name: Validate package contents
+        run: npm pack --dry-run
+      - name: Publish with provenance
+        run: npm publish --access public --provenance

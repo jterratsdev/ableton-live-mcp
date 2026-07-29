@@ -4,10 +4,52 @@ This checklist defines the expected bar for publishing `@jterrats/ableton-live-m
 
 ## Required Local Checks
 
+- `npm ci`
+- `npm audit --omit=dev`
 - `npm test`
-- `python3 -m py_compile ableton_remote_scripts/AbletonMcpBridge/*.py`
+- `PYTHONPYCACHEPREFIX=/tmp/ableton-mcp-pycache python3 -m py_compile ableton_remote_scripts/AbletonMcpBridge/*.py`
 - `npm pack --dry-run`
 - `ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app"`
+
+## Initial Publication
+
+The first publication is a manual bootstrap because npm trusted publishing can
+only be configured after the package exists.
+
+1. Create the public GitHub repository `jterrats/ableton-live-mcp`.
+2. Add the repository as the local `origin`, then push the reviewed commit.
+3. Set the release version in `package.json`. Use
+   `npm version <version> --no-git-tag-version` so npm also synchronizes
+   `package-lock.json` without creating a Git tag.
+4. Run `npm login`, complete two-factor authentication, and verify the account
+   with `npm whoami`.
+5. Run all required local and Live checks from the exact commit being released.
+6. Inspect `npm pack --dry-run` and publish with
+   `npm publish --access public`.
+7. Confirm `@jterrats/ableton-live-mcp@0.1.0` installs and its CLI starts from a
+   clean temporary directory.
+
+Creating the repository, adding a remote, pushing, tagging, authenticating, and
+publishing are explicit operator actions. Release preparation must not perform
+them implicitly.
+
+## Subsequent Publications
+
+After the first package exists, configure npm trusted publishing for the GitHub
+repository and `.github/workflows/publish.yml`. Configure a protected GitHub
+environment named `npm` with required reviewers.
+
+The publish workflow:
+
+- is available only through `workflow_dispatch`;
+- treats `package.json` as the version source of truth and requires the
+  requested version and `package-lock.json` to match it;
+- reruns deterministic install, tests, Python compilation, and package checks;
+- uses GitHub OIDC and npm provenance instead of a long-lived npm token.
+
+Do not run the workflow until trusted publishing and the protected environment
+are configured. Version changes, tags, and publication remain separate,
+explicit release actions.
 
 ## Required Live Checks
 

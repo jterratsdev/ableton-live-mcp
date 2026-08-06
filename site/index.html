@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Ableton Live MCP is an open-source local connector for inspecting and controlling Ableton Live from MCP-compatible AI clients."
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ableton Live MCP" />
+    <meta
+      property="og:description"
+      content="A local, open-source MCP connector for reviewable music production workflows in Ableton Live."
+    />
+    <meta property="og:url" content="https://ableton-mcp.jterrats.dev/" />
+    <meta
+      property="og:image"
+      content="https://ableton-mcp.jterrats.dev/assets/ableton-mcp-workflow.png"
+    />
+    <link rel="canonical" href="https://ableton-mcp.jterrats.dev/" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Ableton Live MCP | jterrats.dev</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="https://jterrats.dev">jterrats.dev</a>
+      <nav aria-label="Primary navigation">
+        <a href="#architecture">Architecture</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#install">Install</a>
+        <a href="#limits">Limits</a>
+      </nav>
+      <a class="header-link" href="https://github.com/jterratsdev/ableton-live-mcp">GitHub</a>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Open-source music production connector</p>
+          <h1 id="hero-title">Ableton Live MCP</h1>
+          <p class="hero-lede">
+            Inspect, arrange, and produce inside Ableton Live from an MCP-compatible AI client,
+            with local-only transport, explicit risk tiers, and evidence before broad changes.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#install">Install 0.1.0</a>
+            <a class="button" href="https://github.com/jterratsdev/ableton-live-mcp">View source</a>
+          </div>
+        </div>
+
+        <figure class="product-visual">
+          <img
+            src="./assets/ableton-mcp-workflow.png"
+            alt="A classical music arrangement with piano, violin, guitar, and flute tracks connected to a local production workflow"
+            width="1680"
+            height="945"
+          />
+          <figcaption>One local path from an MCP client to a reviewable Ableton Live session.</figcaption>
+        </figure>
+
+        <dl class="release-facts" aria-label="Release facts">
+          <div><dt>Release</dt><dd>0.1.0</dd></div>
+          <div><dt>License</dt><dd>MIT</dd></div>
+          <div><dt>Transport</dt><dd>Local stdio + HTTP</dd></div>
+          <div><dt>Target</dt><dd>Ableton Live 11 / 12</dd></div>
+        </dl>
+      </section>
+
+      <section class="section" id="architecture" aria-labelledby="architecture-title">
+        <div class="section-heading">
+          <p class="eyebrow">System boundary</p>
+          <h2 id="architecture-title">Local by design</h2>
+          <p>
+            The public MCP process never embeds itself in Live. A small Remote Script adapter
+            translates local HTTP requests into Live API operations and keeps DAW-specific logic
+            behind focused helpers.
+          </p>
+        </div>
+        <ol class="architecture-flow" aria-label="Connector request flow">
+          <li><strong>MCP client</strong><span>Tool request</span></li>
+          <li><strong>Node server</strong><span>stdio + policy</span></li>
+          <li><strong>HTTP bridge</strong><span>127.0.0.1:9789</span></li>
+          <li><strong>Remote Script</strong><span>Live API adapter</span></li>
+          <li><strong>Ableton Live</strong><span>Open set</span></li>
+        </ol>
+      </section>
+
+      <section class="section" id="capabilities" aria-labelledby="capabilities-title">
+        <div class="section-heading">
+          <p class="eyebrow">Production surface</p>
+          <h2 id="capabilities-title">Tools for the full session</h2>
+          <p>
+            The connector exposes inspection and controlled writes across arrangement, MIDI,
+            devices, routing, mixer state, snapshots, and production diagnostics.
+          </p>
+        </div>
+        <div class="capability-grid">
+          <article>
+            <p class="capability-index">01</p>
+            <h3>Arrangement & MIDI</h3>
+            <p>Create tracks and clips, import MIDI, edit notes, quantize, humanize, apply grooves, and add locators.</p>
+          </article>
+          <article>
+            <p class="capability-index">02</p>
+            <h3>Mixer & routing</h3>
+            <p>Inspect and change track, return, and master controls with explicit dB, pan, send, and routing contracts.</p>
+          </article>
+          <article>
+            <p class="capability-index">03</p>
+            <h3>Devices & plugins</h3>
+            <p>Search Live's indexed browser, load instruments and effects, inspect parameters, and automate exposed controls.</p>
+          </article>
+          <article>
+            <p class="capability-index">04</p>
+            <h3>Safety & recovery</h3>
+            <p>Classify action risk, create snapshots, verify writes, report unsupported operations, and roll back covered state.</p>
+          </article>
+          <article>
+            <p class="capability-index">05</p>
+            <h3>Production analysis</h3>
+            <p>Inspect the project and arrangement, diagnose playback and plugins, and analyze current rendered WAV files locally.</p>
+          </article>
+          <article>
+            <p class="capability-index">06</p>
+            <h3>Observable workflows</h3>
+            <p>Use production reports, endpoint support, bridge health, and workflow plans to decide what is safe before writing.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section install-section" id="install" aria-labelledby="install-title">
+        <div class="section-heading">
+          <p class="eyebrow">Quick start</p>
+          <h2 id="install-title">Install the connector</h2>
+          <p>Install the package, copy the bundled Remote Script, select it in Live, then add the stdio server to your MCP client.</p>
+        </div>
+        <div class="steps">
+          <section aria-labelledby="step-package">
+            <p class="step-number">Step 1</p>
+            <h3 id="step-package">Check the package</h3>
+            <pre><code>npx -y @jterrats/ableton-live-mcp --help</code></pre>
+          </section>
+          <section aria-labelledby="step-bridge">
+            <p class="step-number">Step 2</p>
+            <h3 id="step-bridge">Install the Remote Script</h3>
+            <pre><code>npx -y @jterrats/ableton-live-mcp install-remote-script \
+  --app-path "/Applications/Ableton Live 12.app"</code></pre>
+          </section>
+          <section aria-labelledby="step-client">
+            <p class="step-number">Step 3</p>
+            <h3 id="step-client">Configure your MCP client</h3>
+            <pre><code>{
+  "mcpServers": {
+    "ableton-live": {
+      "command": "npx",
+      "args": ["-y", "@jterrats/ableton-live-mcp"],
+      "env": {
+        "ABLETON_BRIDGE_URL": "http://127.0.0.1:9789"
+      }
+    }
+  }
+}</code></pre>
+          </section>
+        </div>
+        <p class="install-note">
+          Restart Live and select <strong>AbletonMcpBridge</strong> under Settings → Link,
+          Tempo & MIDI. The bridge listens on loopback only.
+        </p>
+      </section>
+
+      <section class="section" id="safety" aria-labelledby="safety-title">
+        <div class="section-heading">
+          <p class="eyebrow">Operating model</p>
+          <h2 id="safety-title">Automation should remain reviewable</h2>
+        </div>
+        <div class="safety-layout">
+          <p class="statement">
+            Read first. Snapshot before broad writes. Verify the value Live reports after each
+            change. Stop when the active bridge marks a capability unreliable or unsupported.
+          </p>
+          <ul class="check-list">
+            <li><strong>Read</strong><span>Project, arrangement, devices, routing, and diagnostics.</span></li>
+            <li><strong>Safe write</strong><span>Scoped changes with observed post-write values.</span></li>
+            <li><strong>Destructive</strong><span>Delete, flatten, and rollback require explicit intent.</span></li>
+            <li><strong>Export</strong><span>Separate approval and bridge capability checks.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section" id="limits" aria-labelledby="limits-title">
+        <div class="section-heading">
+          <p class="eyebrow">Current boundaries</p>
+          <h2 id="limits-title">What 0.1.0 does not hide</h2>
+          <p>Capabilities depend on what Ableton Live exposes to the active Remote Script and what the installed edition indexes.</p>
+        </div>
+        <ul class="limits-list">
+          <li><strong>Render and bounce</strong><span>The Python Remote Script returns explicit unsupported responses; it does not simulate an audio export.</span></li>
+          <li><strong>Live meters</strong><span>Telemetry is marked unreliable for mixing when Live returns zero-only values during audible playback.</span></li>
+          <li><strong>Plugin discovery</strong><span>Results come from Live's browser index, so system plugins must be enabled and scanned in Live first.</span></li>
+          <li><strong>Snapshot coverage</strong><span>Snapshots document coverage and limitations; they are not a replacement for saving or duplicating the .als set.</span></li>
+          <li><strong>macOS installation</strong><span>Writing inside the Live application may require App Management permission or an elevated installer command.</span></li>
+        </ul>
+      </section>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <p class="eyebrow">Build in the open</p>
+        <h2 id="closing-title">A production connector you can inspect.</h2>
+        <p>Read the implementation, report a bridge mismatch, or help extend the Live adapter.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/jterratsdev/ableton-live-mcp">Explore the repository</a>
+          <a class="button" href="https://github.com/jterratsdev/ableton-live-mcp/issues">Open an issue</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built by <a href="https://jterrats.dev">Jaime Terrats</a>. Released under the MIT License.</p>
+      <p>Ableton is a trademark of Ableton AG. This project is independent and unaffiliated.</p>
+    </footer>
+  </body>
+</html>

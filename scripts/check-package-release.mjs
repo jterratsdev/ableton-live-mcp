@@ -22,10 +22,10 @@ assert.equal(packageJson.license, "MIT");
 assert.equal(packageJson.author, "Jaime Terrats");
 assert.deepEqual(packageJson.repository, {
   type: "git",
-  url: "git+https://github.com/jterrats/ableton-live-mcp.git"
+  url: "git+https://github.com/jterratsdev/ableton-live-mcp.git"
 });
-assert.equal(packageJson.homepage, "https://github.com/jterrats/ableton-live-mcp#readme");
-assert.equal(packageJson.bugs.url, "https://github.com/jterrats/ableton-live-mcp/issues");
+assert.equal(packageJson.homepage, "https://ableton-mcp.jterrats.dev");
+assert.equal(packageJson.bugs.url, "https://github.com/jterratsdev/ableton-live-mcp/issues");
 assert.equal(packageJson.publishConfig.access, "public");
 assert.ok(packageJson.keywords.includes("ableton-live"));
 assert.ok(packageJson.keywords.includes("mcp"));

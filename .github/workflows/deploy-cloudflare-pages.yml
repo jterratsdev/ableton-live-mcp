@@ -1,0 +1,75 @@
+name: Deploy product site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - 'scripts/check-site.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-cloudflare-pages.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'site/**'
+      - 'scripts/check-site.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-cloudflare-pages.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ableton-live-mcp-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  deploy:
+    name: Validate and deploy
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.user.login != 'dependabot[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install audio analysis tools
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate product site
+        run: npm run check:site
+
+      - name: Run MCP regression tests
+        run: npm test
+
+      - name: Deploy production
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=ableton-live-mcp --branch=main
+
+      - name: Deploy preview
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=ableton-live-mcp --branch=preview-${{ github.event.pull_request.number }}

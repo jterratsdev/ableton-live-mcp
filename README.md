@@ -5,6 +5,8 @@ local bridge.
 
 Current package version: `0.1.0`.
 
+Product site: [ableton-mcp.jterrats.dev](https://ableton-mcp.jterrats.dev)
+
 This repo does not assume a specific Ableton integration layer. The MCP server
 speaks JSON-RPC over stdio to an MCP client, then forwards tool calls to a local
 HTTP bridge that you can implement with Max for Live, Ableton's Extensions SDK,

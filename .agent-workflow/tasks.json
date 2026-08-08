@@ -4847,5 +4847,108 @@
     "status": "done",
     "createdAt": "2026-08-08T07:29:59.171Z",
     "updatedAt": "2026-08-08T07:29:59.220Z"
+  },
+  {
+    "id": "ableton-efficient-ci-auto-publish-20260808",
+    "title": "Optimize CI and publish on version changes",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Minimize GitHub Actions minutes while running human PR/main CI and automatically publishing trusted npm releases only when package.json version changes.",
+    "acceptanceCriteria": [
+      "CI runs one Node 18 job for human pull requests and pushes to main, skips Dependabot, and cancels obsolete runs for the same ref.",
+      "Publish workflow triggers only for package.json changes on main by non-Dependabot actors and verifies the previous and current version differ before expensive steps.",
+      "Publication uses Node 24, validates package-lock version parity, runs deterministic tests and package checks, and publishes with OIDC provenance through the npm environment.",
+      "Static release-contract checks and the deterministic suite pass."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/publish.yml",
+      "scripts/check-package-release.mjs",
+      "docs/release-checklist.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:02:07.729Z",
+    "updatedAt": "2026-08-08T08:06:26.112Z"
+  },
+  {
+    "id": "ableton-efficient-ci-auto-publish-20260808-developer-c545b0",
+    "title": "[DEVELOPER] ableton-efficient-ci-auto-publish-20260808",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:02:16.018Z",
+    "updatedAt": "2026-08-08T08:05:58.889Z"
+  },
+  {
+    "id": "ableton-efficient-ci-auto-publish-20260808-qa-c545b0",
+    "title": "[QA] ableton-efficient-ci-auto-publish-20260808",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-efficient-ci-auto-publish-20260808-developer-c545b0"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:05:58.891Z",
+    "updatedAt": "2026-08-08T08:05:58.940Z"
+  },
+  {
+    "id": "ableton-release-efficient-ci-auto-publish-20260808",
+    "title": "Release optimized CI and npm automation",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Commit and push the validated minute-efficient CI and version-gated npm publishing configuration with durable Orchestra history.",
+    "acceptanceCriteria": [
+      "The commit contains the four approved product files and durable Orchestra history while excluding active-runtime.json and runtime-sessions.",
+      "The commit is pushed to origin/main without changing package.json, so no npm publication is triggered.",
+      "The resulting human main CI run completes successfully as one Node 18 job."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/publish.yml",
+      "scripts/check-package-release.mjs",
+      "docs/release-checklist.md",
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-08T08:21:36.288Z",
+    "updatedAt": "2026-08-08T08:21:36.288Z"
+  },
+  {
+    "id": "ableton-release-efficient-ci-auto-publish-20260808-release-4dfc16",
+    "title": "[RELEASE] ableton-release-efficient-ci-auto-publish-20260808",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:21:43.827Z",
+    "updatedAt": "2026-08-08T08:21:43.880Z"
   }
 ]

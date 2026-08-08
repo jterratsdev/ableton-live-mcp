@@ -15,7 +15,6 @@ const publishWorkflow = await readFile(
 
 assert.equal(packageJson.name, "@jterrats/ableton-live-mcp");
 assert.equal(packageJson.private, false);
-assert.equal(packageJson.version, "0.1.0");
 assert.match(packageJson.version, /^\d+\.\d+\.\d+$/);
 assert.equal(packageJson.bin["ableton-live-mcp"], "./src/cli.js");
 assert.equal(packageJson.license, "MIT");
@@ -50,26 +49,46 @@ assert.match(npmignore, /^test\/$/m);
 
 assert.match(ciWorkflow, /^\s+pull_request:$/m);
 assert.match(ciWorkflow, /^\s+push:$/m);
-assert.match(ciWorkflow, /node-version:\s*\[18, 24\]/);
+assert.match(ciWorkflow, /branches:\s*\n\s+- main/);
+assert.match(ciWorkflow, /paths-ignore:/);
+assert.match(ciWorkflow, /\.agent-workflow\/\*\*/);
+assert.match(ciWorkflow, /"\*\*\/\*\.md"/);
+assert.match(ciWorkflow, /cancel-in-progress:\s*true/);
+assert.match(ciWorkflow, /github\.actor != 'dependabot\[bot\]'/);
+assert.match(ciWorkflow, /node-version:\s*18/);
+assert.doesNotMatch(ciWorkflow, /matrix:/);
 assert.match(ciWorkflow, /apt-get install --yes ffmpeg/);
 assert.match(ciWorkflow, /run:\s*npm ci/);
 assert.match(ciWorkflow, /run:\s*npm test/);
 assert.match(ciWorkflow, /python3 -m py_compile/);
-assert.match(ciWorkflow, /npm pack --dry-run/);
+assert.match(ciWorkflow, /npm pack --dry-run --ignore-scripts/);
 
-assert.match(publishWorkflow, /^\s+workflow_dispatch:$/m);
-assert.doesNotMatch(publishWorkflow, /^\s+push:$/m);
+assert.match(publishWorkflow, /^\s+push:$/m);
+assert.match(publishWorkflow, /branches:\s*\n\s+- main/);
+assert.match(publishWorkflow, /paths:\s*\n\s+- package\.json/);
+assert.doesNotMatch(publishWorkflow, /^\s+workflow_dispatch:$/m);
+assert.match(publishWorkflow, /github\.actor != 'dependabot\[bot\]'/);
+assert.match(publishWorkflow, /fetch-depth:\s*0/);
+assert.match(publishWorkflow, /BEFORE_SHA:/);
+assert.match(publishWorkflow, /git cat-file -e "\$\{BEFORE_SHA\}:package\.json"/);
+assert.match(publishWorkflow, /package-lock\.json/);
+assert.match(publishWorkflow, /if \[ "\$current" = "\$previous" \]; then/);
+assert.match(publishWorkflow, /changed=false/);
+assert.match(publishWorkflow, /exit 0/);
+assert.match(publishWorkflow, /needs:\s*detect-version/);
+assert.match(publishWorkflow, /needs\.detect-version\.outputs\.changed == 'true'/);
 assert.match(publishWorkflow, /^\s+id-token:\s*write$/m);
 assert.match(publishWorkflow, /^\s+environment:\s*npm$/m);
+assert.match(publishWorkflow, /node-version:\s*24/);
 assert.match(publishWorkflow, /apt-get install --yes ffmpeg/);
 assert.match(publishWorkflow, /npm ci/);
 assert.match(publishWorkflow, /npm test/);
 assert.match(publishWorkflow, /python3 -m py_compile/);
-assert.match(publishWorkflow, /npm pack --dry-run/);
-assert.match(publishWorkflow, /npm publish --access public --provenance/);
+assert.match(publishWorkflow, /npm pack --dry-run --ignore-scripts/);
+assert.match(publishWorkflow, /npm publish --ignore-scripts --access public --provenance/);
 assert.ok(
   publishWorkflow.indexOf("npm test") <
-    publishWorkflow.indexOf("npm publish --access public --provenance")
+    publishWorkflow.indexOf("npm publish --ignore-scripts --access public --provenance")
 );
 
 const help = await execFileText(process.execPath, ["src/cli.js", "--help"]);

@@ -14,7 +14,8 @@ This checklist defines the expected bar for publishing `@jterrats/ableton-live-m
 ## Initial Publication
 
 The first publication is a manual bootstrap because npm trusted publishing can
-only be configured after the package exists.
+only be configured after the package exists. Version `0.1.0` completed this
+bootstrap.
 
 1. Create the public GitHub repository `jterrats/ableton-live-mcp`.
 2. Add the repository as the local `origin`, then push the reviewed commit.
@@ -35,21 +36,23 @@ them implicitly.
 
 ## Subsequent Publications
 
-After the first package exists, configure npm trusted publishing for the GitHub
-repository and `.github/workflows/publish.yml`. Configure a protected GitHub
-environment named `npm` with required reviewers.
+Configure npm trusted publishing for `jterratsdev/ableton-live-mcp`, workflow
+`publish.yml`, environment `npm`, and the `npm publish` action. Protect the
+GitHub `npm` environment with required reviewers.
 
 The publish workflow:
 
-- is available only through `workflow_dispatch`;
-- treats `package.json` as the version source of truth and requires the
-  requested version and `package-lock.json` to match it;
-- reruns deterministic install, tests, Python compilation, and package checks;
+- runs on human pushes to `main` that modify `package.json`;
+- compares the previous and current `package.json` versions before expensive
+  setup and requires `package-lock.json` to match the new version;
+- skips publication when Dependabot is the workflow actor;
+- runs deterministic install, tests, Python compilation, and package checks
+  exactly once before publishing the already-validated contents;
 - uses GitHub OIDC and npm provenance instead of a long-lived npm token.
 
-Do not run the workflow until trusted publishing and the protected environment
-are configured. Version changes, tags, and publication remain separate,
-explicit release actions.
+Do not merge a version bump until trusted publishing and the protected
+environment are configured. A version change merged to `main` is the explicit
+release action; ordinary package metadata edits do not publish.
 
 ## Required Live Checks
 

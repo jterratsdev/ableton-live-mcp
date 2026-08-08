@@ -4987,5 +4987,43 @@
     "status": "done",
     "createdAt": "2026-08-08T08:31:07.576Z",
     "updatedAt": "2026-08-08T08:31:07.631Z"
+  },
+  {
+    "id": "ableton-push-org-npm-token-20260808",
+    "title": "Push organization npm token workflow",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Push the reviewed NPM_TOKEN publishing workflow and verify GitHub Actions behavior.",
+    "scope": "Push and post-push verification only; no version bump or npm publication.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/publish.yml",
+      "docs/release-checklist.md",
+      "scripts/check-package-release.mjs"
+    ],
+    "testStrategy": "Push main, inspect GitHub Actions runs by head SHA, and verify publish workflow has no run for the commit.",
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:40:39.438Z",
+    "updatedAt": "2026-08-08T08:42:21.873Z"
+  },
+  {
+    "id": "ableton-push-org-npm-token-20260808-release-76c6cc",
+    "title": "[RELEASE] ableton-push-org-npm-token-20260808",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:40:49.677Z",
+    "updatedAt": "2026-08-08T08:40:49.734Z"
   }
 ]

@@ -36,9 +36,10 @@ them implicitly.
 
 ## Subsequent Publications
 
-Configure npm trusted publishing for `jterratsdev/ableton-live-mcp`, workflow
-`publish.yml`, environment `npm`, and the `npm publish` action. Protect the
-GitHub `npm` environment with required reviewers.
+The `jterratsdev` organization provides the `NPM_TOKEN` Actions secret used by
+the other npm packages in the organization. Confirm that the secret is visible
+to this repository and belongs to an npm account with publish access to
+`@jterrats/ableton-live-mcp`.
 
 The publish workflow:
 
@@ -46,13 +47,15 @@ The publish workflow:
 - compares the previous and current `package.json` versions before expensive
   setup and requires `package-lock.json` to match the new version;
 - skips publication when Dependabot is the workflow actor;
+- validates `NPM_TOKEN` with `npm whoami` before running the release checks;
 - runs deterministic install, tests, Python compilation, and package checks
   exactly once before publishing the already-validated contents;
-- uses GitHub OIDC and npm provenance instead of a long-lived npm token.
+- authenticates publication with `NPM_TOKEN` and uses GitHub OIDC only to attach
+  npm provenance to the published package.
 
-Do not merge a version bump until trusted publishing and the protected
-environment are configured. A version change merged to `main` is the explicit
-release action; ordinary package metadata edits do not publish.
+Do not merge a version bump until the organization token has been validated. A
+version change merged to `main` is the explicit release action; ordinary
+package metadata edits do not publish.
 
 ## Required Live Checks
 

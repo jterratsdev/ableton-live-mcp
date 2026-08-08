@@ -49,7 +49,6 @@ jobs:
   publish:
     needs: detect-version
     if: needs.detect-version.outputs.changed == 'true'
-    environment: npm
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,8 +68,12 @@ jobs:
             sudo apt-get update
             sudo apt-get install --yes ffmpeg
           fi
-      - name: Update npm for trusted publishing
-        run: npm install --global npm@latest
+      - name: Verify npm authentication
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN"
+          npm whoami --registry=https://registry.npmjs.org
       - name: Verify detected version
         run: test "${{ needs.detect-version.outputs.current }}" = "$(node --print "require('./package.json').version")"
       - name: Install dependencies
@@ -85,3 +88,5 @@ jobs:
         run: npm pack --dry-run --ignore-scripts
       - name: Publish with provenance
         run: npm publish --ignore-scripts --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

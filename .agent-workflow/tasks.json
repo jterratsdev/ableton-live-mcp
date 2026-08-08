@@ -4950,5 +4950,42 @@
     "status": "done",
     "createdAt": "2026-08-08T08:21:43.827Z",
     "updatedAt": "2026-08-08T08:21:43.880Z"
+  },
+  {
+    "id": "ableton-use-org-npm-token-20260808",
+    "title": "Use organization NPM token for publishing",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Align npm publication with the organization NPM_TOKEN pattern already used by sibling repositories.",
+    "scope": "Publishing authentication and release documentation only; no package version bump or publication.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/publish.yml",
+      "docs/release-checklist.md"
+    ],
+    "testStrategy": "Compare sibling workflows, parse workflow YAML, run release detector simulations, npm test, and secret scan.",
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:30:56.509Z",
+    "updatedAt": "2026-08-08T08:32:58.158Z"
+  },
+  {
+    "id": "ableton-use-org-npm-token-20260808-release-9a8959",
+    "title": "[RELEASE] ableton-use-org-npm-token-20260808",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T08:31:07.576Z",
+    "updatedAt": "2026-08-08T08:31:07.631Z"
   }
 ]

@@ -22,9 +22,15 @@ for (const content of [
 }
 
 assert.match(html, /<main\s+id="main">/);
-assert.match(html, /<nav\s+aria-label="Primary navigation">/);
+assert.match(html, /<nav\b[^>]*\baria-label="Primary navigation"[^>]*>/);
+assert.match(html, /<nav\b[^>]*\baria-label="Mobile navigation"[^>]*>/);
+assert.match(html, /<summary\s+aria-label="Toggle navigation">/);
 assert.match(html, /<meta\s+name="description"/);
 assert.match(html, /<link\s+rel="canonical"\s+href="https:\/\//);
+assert.match(
+  html,
+  /<link\s+rel="stylesheet"\s+href="https:\/\/jterrats\.dev\/tokens\.css"\s*\/>/,
+);
 assert.match(html, /<img[\s\S]+alt="[^"]+"[\s\S]+width="\d+"[\s\S]+height="\d+"/);
 
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));

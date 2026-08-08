@@ -7,7 +7,8 @@
       name="description"
       content="Ableton Live MCP is an open-source local connector for inspecting and controlling Ableton Live from MCP-compatible AI clients."
     />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16171d" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Ableton Live MCP" />
     <meta
@@ -20,6 +21,7 @@
       content="https://ableton-mcp.jterrats.dev/assets/ableton-mcp-workflow.png"
     />
     <link rel="canonical" href="https://ableton-mcp.jterrats.dev/" />
+    <link rel="stylesheet" href="https://jterrats.dev/tokens.css" />
     <link rel="stylesheet" href="./styles.css" />
     <title>Ableton Live MCP | jterrats.dev</title>
   </head>
@@ -27,13 +29,27 @@
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <a class="brand" href="https://jterrats.dev">jterrats.dev</a>
-      <nav aria-label="Primary navigation">
+      <nav aria-label="Primary navigation" class="desktop-nav">
         <a href="#architecture">Architecture</a>
         <a href="#capabilities">Capabilities</a>
         <a href="#install">Install</a>
         <a href="#limits">Limits</a>
       </nav>
       <a class="header-link" href="https://github.com/jterratsdev/ableton-live-mcp">GitHub</a>
+      <details class="mobile-menu">
+        <summary aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </summary>
+        <nav aria-label="Mobile navigation" class="mobile-nav">
+          <a href="#architecture">Architecture</a>
+          <a href="#capabilities">Capabilities</a>
+          <a href="#install">Install</a>
+          <a href="#limits">Limits</a>
+          <a href="https://github.com/jterratsdev/ableton-live-mcp">GitHub</a>
+        </nav>
+      </details>
     </header>
 
     <main id="main">
@@ -61,13 +77,14 @@
           <figcaption>One local path from an MCP client to a reviewable Ableton Live session.</figcaption>
         </figure>
 
-        <dl class="release-facts" aria-label="Release facts">
-          <div><dt>Release</dt><dd>0.1.0</dd></div>
-          <div><dt>License</dt><dd>MIT</dd></div>
-          <div><dt>Transport</dt><dd>Local stdio + HTTP</dd></div>
-          <div><dt>Target</dt><dd>Ableton Live 11 / 12</dd></div>
-        </dl>
       </section>
+
+      <dl class="release-facts" aria-label="Release facts">
+        <div><dt>Release</dt><dd>0.1.0</dd></div>
+        <div><dt>License</dt><dd>MIT</dd></div>
+        <div><dt>Transport</dt><dd>Local stdio + HTTP</dd></div>
+        <div><dt>Target</dt><dd>Ableton Live 11 / 12</dd></div>
+      </dl>
 
       <section class="section" id="architecture" aria-labelledby="architecture-title">
         <div class="section-heading">

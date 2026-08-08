@@ -3908,9 +3908,9 @@
         "qa"
       ]
     },
-    "status": "in_progress",
+    "status": "done",
     "createdAt": "2026-07-29T23:21:43.593Z",
-    "updatedAt": "2026-07-29T23:30:44.921Z",
+    "updatedAt": "2026-07-29T23:33:01.468Z",
     "goal": "Record the validated 0.1.0 release preparation in Git, create its public GitHub repository, and push the current branch.",
     "scope": "Commit the currently reviewed release-preparation and Orchestra artifacts, create public GitHub repository jterrats/ableton-live-mcp, configure origin, and push the current branch with upstream. Excludes tags, GitHub releases, npm authentication, and npm publish.",
     "testStrategy": "Re-run package checks, inspect staged diff, verify commit contents, query GitHub visibility and origin, verify pushed HEAD/upstream, and inspect final worktree.",
@@ -3945,5 +3945,907 @@
     "status": "done",
     "createdAt": "2026-07-29T23:30:44.912Z",
     "updatedAt": "2026-07-29T23:30:44.952Z"
+  },
+  {
+    "id": "ableton-npm-publication-guide-20260730",
+    "title": "Define npm publication steps for 0.1.0",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "A release-readiness report lists the exact authenticated commands required to publish @jterrats/ableton-live-mcp@0.1.0 for the first time.",
+      "The report distinguishes first manual npm publication from later GitHub OIDC trusted publishing.",
+      "The report identifies which steps are already complete and which require explicit user authorization."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "docs/release-checklist.md",
+      ".github/workflows/publish.yml"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-30T21:38:35.485Z",
+    "updatedAt": "2026-07-30T21:39:41.408Z",
+    "goal": "Provide an exact, current, low-risk sequence for publishing @jterrats/ableton-live-mcp@0.1.0 to npm and optionally registering it as an MCP server.",
+    "scope": "Read-only release guidance based on current repository state and official documentation. No tag, GitHub Release, npm login, npm publish, or registry submission.",
+    "testStrategy": "Verify local package/version/workflows, npm account state and package availability without mutation, and cite official npm/MCP documentation."
+  },
+  {
+    "id": "ableton-npm-publication-guide-20260730-release-425309",
+    "title": "[RELEASE] ableton-npm-publication-guide-20260730",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-07-30T21:38:50.801Z",
+    "updatedAt": "2026-07-30T21:38:50.844Z"
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-20260803",
+    "title": "Draft open-source LinkedIn launch post",
+    "ownerRole": "product_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "The final post identifies Ableton Live MCP as open source and links to the public GitHub repository.",
+      "The final post describes verified capabilities without claiming unsupported rendering or reliable live metering.",
+      "The final post includes a concise contributor call to action and relevant hashtags."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "README.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_manager"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-08-04T04:12:26.742Z",
+    "updatedAt": "2026-08-04T04:12:56.121Z",
+    "goal": "Create a credible Spanish LinkedIn announcement for the open-source Ableton Live MCP project.",
+    "scope": "LinkedIn copy only. No repository edits or social publication.",
+    "testStrategy": "Cross-check claims against README and known runtime constraints, then review tone, link, CTA, and hashtags.",
+    "blockedReason": "Superseded because workflow goal-verification lint rejected initial acceptance wording; replacement uses observable review outcomes."
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-20260803-pm-c71dd1",
+    "title": "[PM] ableton-linkedin-open-source-launch-post-20260803",
+    "ownerRole": "product_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T04:12:46.332Z",
+    "updatedAt": "2026-08-04T04:12:46.372Z"
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-20260803-po-c71dd1",
+    "title": "[PO] ableton-linkedin-open-source-launch-post-20260803",
+    "ownerRole": "product_owner",
+    "dependencies": [
+      "ableton-linkedin-open-source-launch-post-20260803-pm-c71dd1"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-04T04:12:46.374Z",
+    "updatedAt": "2026-08-04T04:12:46.374Z"
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-v2-20260803",
+    "title": "Draft open-source LinkedIn launch post",
+    "ownerRole": "product_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Reviewing the final post confirms it says Ableton Live MCP is open source and contains https://github.com/jterrats/ableton-live-mcp.",
+      "Reviewing the final post confirms every listed capability is supported by the repository and it makes no rendering or reliable live-meter claim.",
+      "Reviewing the final post confirms it ends with a contributor call to action and relevant hashtags."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "README.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_manager"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-04T04:12:56.269Z",
+    "updatedAt": "2026-08-04T04:13:02.863Z",
+    "goal": "Create a credible Spanish LinkedIn announcement for the open-source Ableton Live MCP project.",
+    "scope": "LinkedIn copy only. No repository edits or social publication.",
+    "testStrategy": "Cross-check claims against README and known runtime constraints, then review tone, link, CTA, and hashtags."
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-v2-20260803-pm-3aecd7",
+    "title": "[PM] ableton-linkedin-open-source-launch-post-v2-20260803",
+    "ownerRole": "product_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T04:13:11.905Z",
+    "updatedAt": "2026-08-04T04:13:11.945Z"
+  },
+  {
+    "id": "ableton-linkedin-open-source-launch-post-v2-20260803-po-3aecd7",
+    "title": "[PO] ableton-linkedin-open-source-launch-post-v2-20260803",
+    "ownerRole": "product_owner",
+    "dependencies": [
+      "ableton-linkedin-open-source-launch-post-v2-20260803-pm-3aecd7"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-04T04:13:11.946Z",
+    "updatedAt": "2026-08-04T04:13:11.946Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804",
+    "title": "Build Ableton Live MCP product site",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Opening the deployed custom HTTPS hostname at desktop and mobile widths shows the Ableton Live MCP product name, open-source status, installation commands, architecture, verified capabilities, safety model, limitations, and GitHub call to action without overlap or horizontal overflow.",
+      "Running the site validation command exits 0 after checking required content, internal anchors, external HTTPS links, image assets, accessible landmarks, and metadata.",
+      "Running npm test and npm pack --dry-run exits 0 and confirms the product site does not alter the published MCP package contents.",
+      "Playwright screenshots at desktop and mobile widths show a visual system consistent with jterrats.dev and no blank, clipped, or overlapping content.",
+      "Cloudflare MCP responses and public HTTPS checks report a successful Pages deployment and active DNS for the selected jterrats.dev hostname."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "site",
+      "README.md",
+      "package.json",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner",
+        "architect",
+        "developer",
+        "qa",
+        "devops",
+        "security"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T18:22:47.797Z",
+    "updatedAt": "2026-08-06T20:09:48.125Z",
+    "goal": "Create, deploy, and route a polished product site for the open-source Ableton Live MCP connector that matches jterrats.dev while remaining isolated from the npm package runtime.",
+    "scope": "Static site source, purpose-built bitmap visual, content validation, responsive browser QA, Cloudflare Pages deployment, and DNS for an approved jterrats.dev subdomain. Blog integration is tracked separately in jterrats_dev. No npm publication or Ableton set mutation.",
+    "testStrategy": "Static contract checks, existing npm regression suite, npm pack inspection, local HTTP serving, Playwright desktop/mobile screenshots, Cloudflare deployment status, HTTPS/DNS verification, and public smoke checks.",
+    "blockedReason": "qa requested changes: Implementation, package isolation, deployment, and public Pages smoke checks pass. The approved custom domain is attached but remains pending because no CNAME exists and every available credential returned Cloudflare API 10000 for DNS writes.",
+    "architectureApproval": {
+      "proposal": "Static site in site/, deployed by cloudflare/wrangler-action@v3 using repository secrets, matching jterrats_dev/open-orchestra/setup-agents. Custom domain is attached once in Cloudflare and then verified publicly.",
+      "userApproved": true,
+      "approvedBy": "user"
+    }
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-po-9934d0",
+    "title": "[PO] ableton-connector-product-site-20260804",
+    "ownerRole": "product_owner",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-04T18:23:03.078Z",
+    "updatedAt": "2026-08-04T18:23:03.078Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-architect-9934d0",
+    "title": "[ARCHITECT] ableton-connector-product-site-20260804",
+    "ownerRole": "architect",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-po-9934d0"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T19:58:10.473Z",
+    "updatedAt": "2026-08-04T19:58:10.518Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-developer-9934d0",
+    "title": "[DEVELOPER] ableton-connector-product-site-20260804",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-architect-9934d0"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T19:58:10.519Z",
+    "updatedAt": "2026-08-04T19:58:10.560Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-qa-9934d0",
+    "title": "[QA] ableton-connector-product-site-20260804",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-developer-9934d0"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-04T19:58:10.561Z",
+    "updatedAt": "2026-08-04T19:58:10.598Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-po-902332",
+    "title": "[PO] ableton-connector-product-site-20260804",
+    "ownerRole": "product_owner",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-06T19:42:37.330Z",
+    "updatedAt": "2026-08-06T19:42:37.330Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-architect-902332",
+    "title": "[ARCHITECT] ableton-connector-product-site-20260804",
+    "ownerRole": "architect",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-po-902332"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:08:12.165Z",
+    "updatedAt": "2026-08-06T20:08:12.213Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-security-902332",
+    "title": "[SECURITY] ableton-connector-product-site-20260804",
+    "ownerRole": "security",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-architect-902332"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "security"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:08:12.214Z",
+    "updatedAt": "2026-08-06T20:09:27.223Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-developer-902332",
+    "title": "[DEVELOPER] ableton-connector-product-site-20260804",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-security-902332"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:09:27.225Z",
+    "updatedAt": "2026-08-06T20:09:27.264Z"
+  },
+  {
+    "id": "ableton-connector-product-site-20260804-qa-902332",
+    "title": "[QA] ableton-connector-product-site-20260804",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-connector-product-site-20260804-developer-902332"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:09:27.265Z",
+    "updatedAt": "2026-08-06T20:09:27.306Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806",
+    "title": "Transfer Ableton Live MCP to jterratsdev",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Transfer the public Ableton Live MCP repository to the jterratsdev organization and align local metadata, links, remote configuration, and deployment automation with the organization.",
+    "acceptanceCriteria": [
+      "Running gh repo view confirms the public repository is jterratsdev/ableton-live-mcp on main, and HTTP checks confirm the previous owner URL redirects without losing repository access.",
+      "Running git remote get-url origin and rg across tracked source confirms the origin and all product/package GitHub URLs use https://github.com/jterratsdev/ableton-live-mcp.",
+      "Running GitHub organization and repository Actions secret visibility commands confirms the shared Cloudflare secret names are available to the transferred repository, or reports the exact access restriction without exposing values.",
+      "Running npm test, npm run check:site, npm pack --dry-run, and HTTPS product-site link checks exits zero after metadata changes.",
+      "Reviewing git log, remote state, and the command history confirms no commit or push was performed without separate explicit user instruction."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "README.md",
+      "package.json",
+      "scripts/check-package-release.mjs",
+      "site",
+      ".github/workflows"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner",
+        "architect",
+        "developer",
+        "qa",
+        "security",
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:29:23.669Z",
+    "updatedAt": "2026-08-06T22:32:54.435Z",
+    "scope": "Transfer jterrats/ableton-live-mcp to jterratsdev, update this repository's owner URLs and local origin, then verify public continuity and organization-secret availability. Do not modify npm package scope, Cloudflare DNS, or unrelated repositories.",
+    "testStrategy": "Inspect repository and organization state before transfer; execute GitHub transfer; verify redirects, ownership, branch/history/issues/releases, Actions secrets visibility by name, local origin, npm tests, site contract, package dry run, and public links.",
+    "architectureApproval": {
+      "proposal": "Keep the npm package name @jterrats/ableton-live-mcp and product domain unchanged; migrate only GitHub ownership and repository URLs to jterratsdev, relying on organization Actions secrets for deployment.",
+      "userApproved": true,
+      "approvedBy": "user"
+    }
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-po-11d64c",
+    "title": "[PO] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "product_owner",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-06T20:29:29.996Z",
+    "updatedAt": "2026-08-06T20:29:29.996Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-architect-11d64c",
+    "title": "[ARCHITECT] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "architect",
+    "dependencies": [
+      "ableton-transfer-jterratsdev-20260806-po-11d64c"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:52:39.963Z",
+    "updatedAt": "2026-08-06T20:52:40.011Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-security-11d64c",
+    "title": "[SECURITY] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "security",
+    "dependencies": [
+      "ableton-transfer-jterratsdev-20260806-architect-11d64c"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "security"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:52:40.012Z",
+    "updatedAt": "2026-08-06T20:53:36.908Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-developer-11d64c",
+    "title": "[DEVELOPER] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-transfer-jterratsdev-20260806-security-11d64c"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T20:53:36.910Z",
+    "updatedAt": "2026-08-06T20:53:36.954Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-qa-11d64c",
+    "title": "[QA] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-transfer-jterratsdev-20260806-developer-11d64c"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-06T20:53:36.955Z",
+    "updatedAt": "2026-08-06T20:53:36.955Z"
+  },
+  {
+    "id": "ableton-transfer-jterratsdev-20260806-release-11d64c",
+    "title": "[RELEASE] ableton-transfer-jterratsdev-20260806",
+    "ownerRole": "release_manager",
+    "dependencies": [
+      "ableton-transfer-jterratsdev-20260806-qa-11d64c"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T22:26:36.902Z",
+    "updatedAt": "2026-08-06T22:26:36.940Z"
+  },
+  {
+    "id": "ableton-push-site-migration-20260806",
+    "title": "Commit and push product site migration",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Commit and push the validated product site, deployment workflow, repository-owner migration references, and their Orchestra evidence to jterratsdev/ableton-live-mcp main.",
+    "acceptanceCriteria": [
+      "Running git show on the new commit confirms only the validated product-site, migration, deployment-workflow, and matching Orchestra artifacts are included.",
+      "Running git status after push confirms the committed delivery files are clean while unrelated pre-existing work, if any, remains untouched.",
+      "Running gh api and git ls-remote confirms the new commit is the main branch head of jterratsdev/ableton-live-mcp and CI is triggered."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "README.md",
+      "package.json",
+      "scripts/check-package-release.mjs",
+      "scripts/check-site.mjs",
+      "site",
+      ".github/workflows",
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T22:35:07.671Z",
+    "updatedAt": "2026-08-06T22:42:02.540Z"
+  },
+  {
+    "id": "ableton-push-site-migration-20260806-release-637a92",
+    "title": "[RELEASE] ableton-push-site-migration-20260806",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T22:35:11.612Z",
+    "updatedAt": "2026-08-06T22:35:11.655Z"
+  },
+  {
+    "id": "ableton-review-pages-run-31129146351-20260806",
+    "title": "Review failed Pages workflow run",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "goal": "Identify the root cause, secondary warnings, and safe remediation for failed GitHub Actions run 31129146351 without modifying repository or production state.",
+    "acceptanceCriteria": [
+      "Reviewing the final findings confirms each issue is ordered by severity and cites the workflow line or run step that demonstrates it.",
+      "Reviewing GitHub secret metadata and failed logs confirms whether the failure is caused by credentials, workflow code, tests, or Cloudflare project state without exposing secret values.",
+      "The review provides an exact remediation and rerun command while clearly identifying any remaining operational prerequisite."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/deploy-cloudflare-pages.yml"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T22:43:32.343Z",
+    "updatedAt": "2026-08-06T22:45:09.704Z"
+  },
+  {
+    "id": "ableton-review-pages-run-31129146351-20260806-qa-b92444",
+    "title": "[QA] ableton-review-pages-run-31129146351-20260806",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T22:43:33.039Z",
+    "updatedAt": "2026-08-06T22:43:33.090Z"
+  },
+  {
+    "id": "ableton-audit-github-secrets-20260806",
+    "title": "Audit current GitHub secrets",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "goal": "Inspect the current repository and organization Actions secret names and access relevant to the Cloudflare deployment without exposing values or changing configuration.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T23:08:09.138Z",
+    "updatedAt": "2026-08-06T23:09:43.688Z",
+    "scope": "Read-only GitHub Actions secret metadata audit; no secret creation, updates, deletion, or workflow rerun.",
+    "testStrategy": "Use gh secret list for repository and organization scopes, then inspect selected-repository grants where applicable.",
+    "acceptanceCriteria": [
+      "Command output lists repository Actions secret names without exposing values.",
+      "Command output lists organization Actions secret names and visibility without exposing values.",
+      "The report identifies whether required Cloudflare deployment secrets are accessible to jterratsdev/ableton-live-mcp."
+    ]
+  },
+  {
+    "id": "ableton-audit-github-secrets-20260806-qa-5179c5",
+    "title": "[QA] ableton-audit-github-secrets-20260806",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-06T23:08:38.201Z",
+    "updatedAt": "2026-08-06T23:08:38.253Z"
+  },
+  {
+    "id": "ableton-reuse-setup-agents-cloudflare-secrets-20260807",
+    "title": "Configure Cloudflare deployment secrets",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "GitHub metadata shows CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID configured for jterratsdev/ableton-live-mcp without exposing their values.",
+      "The deployment workflow is rerun and the Deploy production job completes successfully.",
+      "The production URL returns HTTP 200 after deployment."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".github/workflows/deploy-cloudflare-pages.yml"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa",
+        "release_manager"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-07T17:12:35.489Z",
+    "updatedAt": "2026-08-07T17:12:35.489Z"
+  },
+  {
+    "id": "ableton-reuse-setup-agents-cloudflare-secrets-20260807-qa-acc578",
+    "title": "[QA] ableton-reuse-setup-agents-cloudflare-secrets-20260807",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-07T17:12:39.658Z",
+    "updatedAt": "2026-08-07T17:12:39.658Z"
+  },
+  {
+    "id": "ableton-product-site-visual-review-20260807",
+    "title": "Review product site visual design",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Desktop and mobile screenshots are inspected and findings cite concrete selectors or source lines.",
+      "The review identifies visual hierarchy, responsive, accessibility, and jterrats.dev consistency issues ordered by severity.",
+      "Each finding includes an actionable remediation and distinguishes defects from subjective preferences."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "site/index.html",
+      "site/styles.css",
+      "site/assets"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-07T19:06:59.139Z",
+    "updatedAt": "2026-08-07T19:18:22.442Z",
+    "blockedReason": "qa requested changes: High: the product site redefines the shared jterrats.dev design tokens with different accent colors, heading weight, primary CTA treatment, and brand typography even though jterrats_dev/public/tokens.css explicitly provides a subdomain import contract. Medium: mobile navigation remains a permanently expanded two-row header instead of the portal hamburger pattern. Medium: the 16:9 composite product image becomes too small to inspect at 390px and 320px. Medium: the hero consumes the first desktop viewport without revealing the next content band. Low: alternating beige/purple capability-card backgrounds diverge from the neutral shared card treatment. Low: fixed white theme-color does not match dark mode."
+  },
+  {
+    "id": "ableton-product-site-visual-review-20260807-qa-a2dfa8",
+    "title": "[QA] ableton-product-site-visual-review-20260807",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-07T19:07:06.322Z",
+    "updatedAt": "2026-08-07T19:07:06.377Z"
+  },
+  {
+    "id": "ableton-align-product-site-design-system-20260807",
+    "title": "Align product site with shared design system",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "Rendered HTML loads https://jterrats.dev/tokens.css before the local product stylesheet and local CSS no longer duplicates shared foundation tokens.",
+      "Desktop screenshots show the shared accent CTA, medium-weight headings, neutral cards, and a first-viewport hint of the release facts band without overlap.",
+      "Mobile screenshots at 390px and 320px show a compact accessible navigation menu and an inspectable product image without horizontal overflow.",
+      "Light and dark rendering use matching browser theme colors, and npm run check:site plus npm test exit successfully."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "site/index.html",
+      "site/styles.css",
+      "scripts/check-site.mjs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-07T19:19:46.741Z",
+    "updatedAt": "2026-08-08T00:28:05.000Z",
+    "scope": "Shared design token import and scoped static HTML/CSS corrections only; no MCP runtime, package API, or Cloudflare configuration changes.",
+    "testStrategy": "Static contract checks, full deterministic tests, then Chromium screenshots at 1440x1000, 390x844, and 320x568 in light mode plus dark-mode validation.",
+    "architectureApproval": {
+      "userApproved": true,
+      "approvedBy": "user"
+    }
+  },
+  {
+    "id": "ableton-align-product-site-design-system-20260807-developer-38835a",
+    "title": "[DEVELOPER] ableton-align-product-site-design-system-20260807",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-07T19:19:51.624Z",
+    "updatedAt": "2026-08-07T19:19:51.683Z"
+  },
+  {
+    "id": "ableton-align-product-site-design-system-20260807-qa-38835a",
+    "title": "[QA] ableton-align-product-site-design-system-20260807",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-align-product-site-design-system-20260807-developer-38835a"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-07T19:19:51.685Z",
+    "updatedAt": "2026-08-07T19:19:51.730Z"
+  },
+  {
+    "id": "ableton-release-design-system-alignment-20260807",
+    "title": "Release product site design alignment",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "A scoped commit contains only the three approved product-site files.",
+      "The commit is pushed to origin/main and the deploy workflow completes successfully.",
+      "The live custom domain returns HTTP 200 and screenshots confirm the updated shared-token design at desktop and mobile widths."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "site/index.html",
+      "site/styles.css",
+      "scripts/check-site.mjs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T00:31:00.966Z",
+    "updatedAt": "2026-08-08T00:41:56.940Z",
+    "scope": "Commit only scripts/check-site.mjs, site/index.html, and site/styles.css; push origin/main and validate production.",
+    "testStrategy": "Inspect staged diff, commit, push, wait for GitHub Actions, then HTTP and screenshot smoke tests on the custom domain.",
+    "architectureApproval": {
+      "userApproved": true,
+      "approvedBy": "user"
+    }
+  },
+  {
+    "id": "ableton-release-design-system-alignment-20260807-release-07b110",
+    "title": "[RELEASE] ableton-release-design-system-alignment-20260807",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T00:31:06.494Z",
+    "updatedAt": "2026-08-08T00:31:06.543Z"
+  },
+  {
+    "id": "ableton-fix-site-css-cache-20260807",
+    "title": "Bust stale product stylesheet cache",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "The local stylesheet URL includes a deterministic content version while the shared token URL remains unchanged.",
+      "The site contract resolves query-versioned local assets and passes.",
+      "After push, live desktop and mobile screenshots render the new navigation, accent CTA, and shared typography without the stale details marker."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "site/index.html",
+      "scripts/check-site.mjs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ],
+      "optionalRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T00:34:08.071Z",
+    "updatedAt": "2026-08-08T00:41:56.801Z",
+    "scope": "Implement the cache-bust correction locally; production QA remains owned by parent release task ableton-release-design-system-alignment-20260807 after push.",
+    "testStrategy": "Static contract, deterministic suite, scoped commit, push, CI, then live screenshots.",
+    "architectureApproval": {
+      "userApproved": true,
+      "approvedBy": "user"
+    },
+    "qaGate": {
+      "plan": "Push the query-versioned stylesheet URL, wait for Cloudflare deployment, then capture live desktop and mobile screenshots.",
+      "executionStatus": "deferred",
+      "deferredRationale": "Real production proof cannot exist before the already-authorized push; local contract and regression checks pass, and QA remains responsible for post-deploy screenshots.",
+      "deferredOwner": "qa"
+    }
+  },
+  {
+    "id": "ableton-fix-site-css-cache-20260807-developer-7051d6",
+    "title": "[DEVELOPER] ableton-fix-site-css-cache-20260807",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T00:34:12.594Z",
+    "updatedAt": "2026-08-08T00:37:48.927Z"
+  },
+  {
+    "id": "ableton-fix-site-css-cache-20260807-qa-7051d6",
+    "title": "[QA] ableton-fix-site-css-cache-20260807",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-fix-site-css-cache-20260807-developer-7051d6"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T00:37:48.930Z",
+    "updatedAt": "2026-08-08T00:37:48.976Z"
+  },
+  {
+    "id": "ableton-commit-orchestra-history-20260808",
+    "title": "Commit durable Orchestra project history",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Persist approvals, decisions, evidence, handoffs, reviews, and workflow ledgers generated during product-site and release work without committing ephemeral runtime sessions.",
+    "acceptanceCriteria": [
+      "The staged diff includes durable Orchestra history and excludes active-runtime.json and runtime-sessions.",
+      "A secret scan of staged paths reports no credentials or tokens.",
+      "The commit is pushed to origin/main and CI remains successful."
+    ],
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      ".agent-workflow"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-08T07:29:44.001Z",
+    "updatedAt": "2026-08-08T07:29:44.001Z"
+  },
+  {
+    "id": "ableton-commit-orchestra-history-20260808-release-651bb4",
+    "title": "[RELEASE] ableton-commit-orchestra-history-20260808",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-08T07:29:59.171Z",
+    "updatedAt": "2026-08-08T07:29:59.220Z"
   }
 ]

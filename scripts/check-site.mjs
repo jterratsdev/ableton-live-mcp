@@ -31,6 +31,7 @@ assert.match(
   html,
   /<link\s+rel="stylesheet"\s+href="https:\/\/jterrats\.dev\/tokens\.css"\s*\/>/,
 );
+assert.match(html, /<link\s+rel="stylesheet"\s+href="\.\/styles\.css\?v=[a-f0-9]+"\s*\/>/);
 assert.match(html, /<img[\s\S]+alt="[^"]+"[\s\S]+width="\d+"[\s\S]+height="\d+"/);
 
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
@@ -43,7 +44,8 @@ for (const [, href] of html.matchAll(/href="(https?:\/\/[^"]+)"/g)) {
 }
 
 for (const [, source] of html.matchAll(/(?:src|href)="\.\/([^"]+)"/g)) {
-  await access(resolve(siteRoot, source), constants.R_OK);
+  const localPath = source.split(/[?#]/, 1)[0];
+  await access(resolve(siteRoot, localPath), constants.R_OK);
 }
 
 assert.ok(

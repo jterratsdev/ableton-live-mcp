@@ -4830,9 +4830,9 @@
         "release_manager"
       ]
     },
-    "status": "pending",
+    "status": "done",
     "createdAt": "2026-08-08T07:29:44.001Z",
-    "updatedAt": "2026-08-08T07:29:44.001Z"
+    "updatedAt": "2026-08-08T08:24:56.202Z"
   },
   {
     "id": "ableton-commit-orchestra-history-20260808-release-651bb4",
@@ -4933,9 +4933,9 @@
         "release_manager"
       ]
     },
-    "status": "pending",
+    "status": "done",
     "createdAt": "2026-08-08T08:21:36.288Z",
-    "updatedAt": "2026-08-08T08:21:36.288Z"
+    "updatedAt": "2026-08-08T08:24:45.987Z"
   },
   {
     "id": "ableton-release-efficient-ci-auto-publish-20260808-release-4dfc16",

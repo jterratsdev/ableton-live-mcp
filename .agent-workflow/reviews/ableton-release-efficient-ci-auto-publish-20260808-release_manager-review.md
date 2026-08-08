@@ -2,5 +2,5 @@
 
 - Result: approve
 - Severity: info
-- Findings: The release is scoped, locally validated, and does not bump package.json. Durable Orchestra history is included; ephemeral runtime state is excluded. The organization exposes NPM_TOKEN to all repositories, but the workflow correctly prefers OIDC and does not consume the token.
-- Recommendation: Commit and push, then verify the single Node 18 CI execution succeeds and no publish workflow starts.
+- Findings: Commit 9d4c92a is on origin/main. The new CI contract executed as one successful 34-second job, and publish.yml did not run. The release therefore meets the scoped-file, no-version-bump, and reduced-minute acceptance criteria.
+- Recommendation: Close the release task and persist this final evidence in an Orchestra-only commit, which the new paths-ignore policy will skip.

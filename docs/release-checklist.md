@@ -1,6 +1,6 @@
 # Release Checklist
 
-This checklist defines the expected bar for publishing `@jterrats/ableton-live-mcp@0.1.0`.
+This checklist defines the expected bar for publishing `@jterrats/ableton-live-mcp@0.2.0`.
 
 ## Required Local Checks
 
@@ -65,6 +65,17 @@ package metadata edits do not publish.
 - Run `doctor` and confirm file freshness is `fresh`, the bridge is reachable, and stale runtime status is `not_detected`.
 - Run read-only smoke before write smoke on user projects.
 - Create a snapshot before safe-write, mastering, export, or destructive workflows.
+
+## 0.2.0 Scope
+
+- Safe Arrangement clip deletion from an exact read-only plan, with verified
+  `Song.undo` compensation after partial failure.
+- Verifiable Session clip deletion and explicit Save/Save As reporting.
+- Plugin multi-output discovery and receiver-track routing with fail-closed
+  selector handling and rollback of newly created tracks.
+- Bridge request bodies up to 1 MiB, bounded MIDI note arrays, stricter numeric
+  parameter contracts, inventory-backed presets, and pre-resolved mastering
+  chains including VST and AU devices.
 
 ## 0.1.0 Scope
 

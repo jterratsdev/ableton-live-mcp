@@ -248,9 +248,11 @@ and bridge reachability issues before deeper MCP smoke testing.
   notes through `get_notes_extended` and a replacement path such as
   `replace_selected_notes` or remove+`set_notes`. If those APIs are unavailable,
   the Remote Script returns `501` instead of reporting a successful no-op.
-- `POST /project/save` is best-effort because Ableton's Python API save methods
-  vary by version and set state. If the selected API surface cannot save, the
-  bridge returns `501`.
+- `POST /project/save` selects `save` or `save_as` from the available Song or
+  Application API, reports the invoked method, and returns `501` when no
+  compatible method exists. Host exceptions return `500`; success means the API
+  call returned without throwing, not that the bridge independently reopened the
+  `.als` file from disk.
 - Snapshot/rollback is in-memory while the Remote Script is loaded. It restores
   tempo, time signature, and MIDI clips that can be read and rewritten through
   Ableton's Python API. Device/plugin state, audio clips, routing, undo history,

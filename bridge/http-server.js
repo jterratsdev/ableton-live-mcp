@@ -1,7 +1,7 @@
 import http from "node:http";
 import { BridgeRequestError } from "./errors.js";
 
-const MAX_BODY_BYTES = 64 * 1024;
+export const MAX_BODY_BYTES = 1024 * 1024;
 
 export function createBridgeServer(adapter) {
   return http.createServer(async (req, res) => {
@@ -131,16 +131,31 @@ async function routeRequest(req, adapter) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
+    let observedBytes = 0;
+    let isRejected = false;
+
+    const advertisedBytes = Number.parseInt(req.headers["content-length"] ?? "", 10);
+    if (Number.isFinite(advertisedBytes) && advertisedBytes > MAX_BODY_BYTES) {
+      isRejected = true;
+      reject(bodyTooLargeError(advertisedBytes));
+    }
 
     req.setEncoding("utf8");
     req.on("data", (chunk) => {
+      if (isRejected) {
+        return;
+      }
       body += chunk;
-      if (body.length > MAX_BODY_BYTES) {
-        reject(new BridgeRequestError("Request body is too large", 413));
-        req.destroy();
+      observedBytes += Buffer.byteLength(chunk, "utf8");
+      if (observedBytes > MAX_BODY_BYTES) {
+        isRejected = true;
+        reject(bodyTooLargeError(observedBytes));
       }
     });
     req.on("end", () => {
+      if (isRejected) {
+        return;
+      }
       if (!body.trim()) {
         resolve({});
         return;
@@ -153,6 +168,13 @@ function readJsonBody(req) {
     });
     req.on("error", reject);
   });
+}
+
+function bodyTooLargeError(observedBytes) {
+  return new BridgeRequestError(
+    `Request body is too large: maximum ${MAX_BODY_BYTES} bytes, observed ${observedBytes} bytes`,
+    413
+  );
 }
 
 function sendJson(res, statusCode, body) {

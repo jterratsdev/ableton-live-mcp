@@ -78,11 +78,14 @@ export function validatePresetCatalog(catalog = PRESET_CATALOG) {
 
 export function matchPresetIntent(intent, options = {}) {
   const catalog = options.catalog ?? PRESET_CATALOG;
+  const inventory = Array.isArray(options.inventory) ? options.inventory : [];
   const limit = normalizeLimit(options.limit);
   const normalizedIntent = normalizePresetIntent(intent);
   const matches = catalog
     .map((entry) => scoreCatalogEntry(entry, normalizedIntent))
     .filter((match) => match.score > 0)
+    .map((match) => inventoryBackedMatch(match, inventory))
+    .filter(Boolean)
     .sort(compareMatches)
     .slice(0, limit);
 
@@ -129,7 +132,7 @@ export function normalizePresetIntent(intent) {
 function scoreCatalogEntry(entry, normalizedIntent) {
   const searchable = searchableTokens(entry);
   const matchedTokens = normalizedIntent.tokens.filter((token) => searchable.has(token));
-  let score = matchedTokens.length * 10 + Math.round(entry.realism.score * 4);
+  let score = matchedTokens.length * 10 + (matchedTokens.length > 0 ? Math.round(entry.realism.score * 4) : 0);
   const reasons = matchedTokens.map((token) => `matched:${token}`);
 
   const roleMatches = normalizedIntent.tokens.filter((token) => entry.roles.includes(token));
@@ -144,7 +147,7 @@ function scoreCatalogEntry(entry, normalizedIntent) {
     reasons.push(...productionMatches.map((token) => `intent:${token}`));
   }
 
-  if (normalizedIntent.wantsRealism) {
+  if (matchedTokens.length > 0 && normalizedIntent.wantsRealism) {
     score += Math.round(entry.realism.score * 20);
     reasons.push(`realism:${entry.realism.score.toFixed(2)}`);
   }
@@ -177,6 +180,39 @@ function scoreCatalogEntry(entry, normalizedIntent) {
     matchedTokens,
     reasons
   };
+}
+
+function inventoryBackedMatch(match, inventory) {
+  const available = inventory.find((item) => isCatalogEntryAvailable(match.load, item));
+  if (!available) {
+    return null;
+  }
+  return {
+    ...match,
+    inventory: {
+      kind: available.kind,
+      name: available.name,
+      ref: available.ref ?? available.id ?? available.path ?? available.name,
+      loadable: available.loadable !== false
+    }
+  };
+}
+
+function isCatalogEntryAvailable(load, item) {
+  if (!item || item.loadable === false || !browserKindsMatch(load.kind, item.kind)) {
+    return false;
+  }
+  const requested = normalizeInventoryText(load.query);
+  const available = normalizeInventoryText(item.name ?? item.ref ?? item.path);
+  return requested === available || requested.startsWith(`${available} `) || available.startsWith(`${requested} `);
+}
+
+function browserKindsMatch(requested, available) {
+  return requested === "any" || requested === available || (requested === "plugin" && ["vst", "au"].includes(available));
+}
+
+function normalizeInventoryText(value) {
+  return String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/gu, " ").trim();
 }
 
 function searchableTokens(entry) {

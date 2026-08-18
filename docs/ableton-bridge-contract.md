@@ -13,6 +13,11 @@ for local testing. It intentionally keeps the adapter boundary small so a real
 Ableton adapter can replace the development adapter without changing the MCP
 HTTP client.
 
+JSON request bodies may contain up to 1,048,576 bytes (1 MiB). A `413`
+response reports both this maximum and the observed body size. MIDI clip
+requests additionally allow at most 8,192 note objects, as advertised by the
+MCP tool schema.
+
 ## Endpoints
 
 ### `GET /status`
@@ -337,6 +342,9 @@ Use the diagnostic first when transport is running but meters remain silent.
 
 Saves the current Live set when the bridge runtime exposes a compatible Live API
 save method. `path` is optional and requests Save As behavior when supported.
+Successful responses identify the invoked host method and whether the request
+was a normal save or Save As; a returned result proves the host method completed
+without throwing, but does not independently inspect the `.als` file on disk.
 
 ```json
 {
@@ -346,6 +354,7 @@ save method. `path` is optional and requests Save As behavior when supported.
 ```
 
 If the host API cannot save, the bridge returns `501` with an explanatory error.
+Host save failures return `500` and never include `saved: true`.
 
 ### `POST /signature`
 
@@ -853,7 +862,8 @@ consolidation operation with a safe signature for this bridge.
 ### `DELETE /clips/midi`
 
 Deletes a clip from a track slot. The operation is idempotent: deleting an empty
-slot returns `deleted: false` instead of an error.
+slot returns `deleted: false` instead of an error. A `deleted: true` response is
+only returned after the Remote Script observes that the Live clip slot is empty.
 
 ```json
 {
@@ -1203,6 +1213,11 @@ whose names match the requested chain before loading new copies. Use
 `mode: "append"` only when duplicate/stacked processing is intentional. Use
 `mode: "replace_all"` only after explicit approval because it clears the master
 chain first.
+
+Each chain entry may declare `kind` as `audio_effect`, `rack`, `preset`, `vst`,
+`au`, or `any`. The bridge resolves every entry before `replace_all` can clear
+the existing master chain, and reports an error if any entry is unavailable or
+the resulting chain is incomplete.
 
 ```json
 {

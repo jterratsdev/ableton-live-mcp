@@ -14,25 +14,15 @@ def apply_mastering_chain(song, browser, payload):
     if mode not in ("replace_matching", "replace_all", "append"):
         raise BridgeHttpError("mode must be replace_matching, replace_all, or append")
 
+    resolved_chain = resolve_mastering_chain(browser, chain)
     master = song.master_track
     loaded = []
+    loaded_device_objects = []
     removed = []
     warnings = []
     cleared_master = False
 
-    for step in chain:
-        if not isinstance(step, dict):
-            warnings.append("Skipped mastering step that is not an object")
-            continue
-        device_name = step.get("device")
-        if not isinstance(device_name, str) or device_name.strip() == "":
-            warnings.append("Skipped mastering step without device name")
-            continue
-        item = first_browser_item(browser, device_name, "audio_effect")
-        if item is None:
-            warnings.append("No loadable browser item found for mastering device: %s" % device_name)
-            continue
-
+    for step, item, device_name in resolved_chain:
         if mode == "replace_all" and not cleared_master:
             removed.extend(delete_master_devices(master, None, warnings))
             cleared_master = True
@@ -53,6 +43,7 @@ def apply_mastering_chain(song, browser, payload):
             continue
 
         settings_result = apply_device_settings(loaded_device, step.get("settings") or {})
+        loaded_device_objects.append(loaded_device)
         loaded.append({
             "index": len(after_devices) - 1,
             "device": getattr(loaded_device, "name", getattr(item, "name", device_name)),
@@ -61,9 +52,18 @@ def apply_mastering_chain(song, browser, payload):
             "warnings": settings_result["warnings"]
         })
 
-    if not loaded:
-        detail = "; ".join(warnings) if warnings else "No mastering devices were requested"
-        raise BridgeHttpError("No mastering devices were loaded. %s" % detail, 404)
+    if len(loaded) != len(resolved_chain):
+        detail = "; ".join(warnings) if warnings else "Ableton did not load every resolved device"
+        raise BridgeHttpError(
+            "Mastering chain is incomplete: loaded %s of %s devices. %s" % (len(loaded), len(resolved_chain), detail),
+            500
+        )
+
+    if mode == "replace_all" and list(master.devices) != loaded_device_objects:
+        raise BridgeHttpError(
+            "Mastering chain is incomplete: replace_all did not produce the exact requested device order",
+            500
+        )
 
     return {
         "ok": True,
@@ -73,6 +73,34 @@ def apply_mastering_chain(song, browser, payload):
         "removedDevices": removed,
         "warnings": warnings
     }
+
+
+def resolve_mastering_chain(browser, chain):
+    if not chain:
+        raise BridgeHttpError("Mastering chain must contain at least one device")
+    resolved = []
+    missing = []
+    supported_kinds = ("audio_effect", "rack", "preset", "vst", "au", "any")
+    for index, step in enumerate(chain):
+        if not isinstance(step, dict):
+            raise BridgeHttpError("chain[%s] must be an object" % index)
+        device_name = step.get("device")
+        if not isinstance(device_name, str) or device_name.strip() == "":
+            raise BridgeHttpError("chain[%s].device must be a non-empty string" % index)
+        kind = step.get("kind") or "audio_effect"
+        if kind not in supported_kinds:
+            raise BridgeHttpError("chain[%s].kind is unsupported: %s" % (index, kind))
+        item = first_browser_item(browser, device_name, kind)
+        if item is None:
+            missing.append("%s (%s)" % (device_name, kind))
+        else:
+            resolved.append((step, item, device_name))
+    if missing:
+        raise BridgeHttpError(
+            "Mastering chain is incomplete; no loadable browser item found for: %s" % ", ".join(missing),
+            404
+        )
+    return resolved
 
 
 def delete_master_devices(master, names, warnings):

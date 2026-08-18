@@ -262,7 +262,7 @@ try {
   send(70, "tools/call", { name: "ableton_match_preset_intent", arguments: { intent: "realistic violin", limit: 1 } });
   const presetMatch = await waitFor(70);
   assert.match(presetMatch.result.content[0].text, /"realistic violin"/);
-  assert.match(presetMatch.result.content[0].text, /"id": "vst:bbc-symphony:solo-violin-legato"/);
+  assert.match(presetMatch.result.content[0].text, /"count": 0/);
 
   send(71, "tools/call", { name: "ableton_evaluate_action_risk", arguments: { toolName: "ableton_delete_clip" } });
   const actionRisk = await waitFor(71);

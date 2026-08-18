@@ -91,12 +91,18 @@ export class DevelopmentAbletonAdapter {
   }
 
   async saveProject(payload = {}) {
+    const path = typeof payload.path === "string" && payload.path.trim() ? payload.path.trim() : null;
+    const label = typeof payload.label === "string" && payload.label.trim() ? payload.label.trim() : null;
     return {
       ok: true,
       saved: true,
-      path: typeof payload.path === "string" && payload.path.trim() ? payload.path : null,
-      label: typeof payload.label === "string" && payload.label.trim() ? payload.label : null,
-      mode: "deterministic-development-save"
+      path,
+      label,
+      mode: path ? "deterministic-development-save-as" : "deterministic-development-save",
+      verification: {
+        methodInvoked: true,
+        requestedMode: path ? "save_as" : "save"
+      }
     };
   }
 

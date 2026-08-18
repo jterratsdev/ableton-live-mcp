@@ -48,6 +48,7 @@
     "smoke:bridge": "node test/bridge-smoke-report.mjs",
     "smoke:live:readonly": "node test/live-smoke-readonly.mjs",
     "smoke:live:safe-write": "node test/live-smoke-safe-write.mjs",
+    "smoke:live:contract": "node test/live-contract.mjs",
     "smoke:live:destructive": "node test/live-smoke-suite.mjs destructive",
     "test": "node test/deterministic.mjs"
   },

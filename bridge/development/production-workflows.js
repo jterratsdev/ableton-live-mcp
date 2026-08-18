@@ -173,20 +173,23 @@ export function applyMasteringChain(state, payload = {}) {
   const removedDevices = [];
   const warnings = [];
   const selectedSteps = [];
-  for (const step of chain) {
+  const supportedKinds = new Set(["audio_effect", "rack", "preset", "vst", "au", "any"]);
+  for (const [index, step] of chain.entries()) {
     if (!step || typeof step.device !== "string" || step.device.trim() === "") {
-      warnings.push("Skipped mastering step without device name");
-      continue;
+      throw new BridgeRequestError(`chain[${index}].device must be a non-empty string`);
     }
-    const plugin = state.plugins.find((candidate) => matchesPlugin(candidate, { kind: "audio_effect", query: step.device }));
+    const kind = step.kind ?? "audio_effect";
+    if (!supportedKinds.has(kind)) {
+      throw new BridgeRequestError(`chain[${index}].kind is unsupported: ${kind}`);
+    }
+    const plugin = state.plugins.find((candidate) => matchesPlugin(candidate, { kind, query: step.device }));
     if (!plugin) {
-      warnings.push(`No matching audio effect found for mastering device: ${step.device}`);
-      continue;
+      throw new BridgeRequestError(`Mastering chain is incomplete; no ${kind} browser item found for: ${step.device}`, 404);
     }
     selectedSteps.push({ step, plugin });
   }
   if (selectedSteps.length === 0) {
-    throw new BridgeRequestError(`No mastering devices were loaded. ${warnings.join("; ")}`.trim(), 404);
+    throw new BridgeRequestError("Mastering chain must contain at least one device");
   }
 
   if (mode === "replace_all") {

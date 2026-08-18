@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import { PRESET_CATALOG, PRESET_CATALOG_SCHEMA } from "../bridge/presets/catalog.js";
 import { matchPresetIntent, normalizePresetIntent, validatePresetCatalog } from "../bridge/presets/matcher.js";
 
+const AVAILABLE_INVENTORY = PRESET_CATALOG.map((entry) => ({
+  kind: entry.load.kind,
+  name: entry.load.query,
+  ref: `browser:${entry.id}`,
+  loadable: true
+}));
+
 catalogDefinesRequiredClassicalPresetFields();
 matchesRealisticViolinToSampledSoloViolin();
 matchesConcertPianoToConcertGrandVst();
@@ -9,6 +16,8 @@ matchesClassicalGuitarToNylonPreset();
 matchesFluteToOrchestralWoodwind();
 matchesConcertHallMasteringToMasterBusEffect();
 normalizesIntentAliasesDeterministically();
+excludesUnavailableCatalogEntries();
+doesNotRankPianoOrOrchestralEntriesForDrumKits();
 
 console.log("preset intelligence ok");
 
@@ -23,7 +32,7 @@ function catalogDefinesRequiredClassicalPresetFields() {
 }
 
 function matchesRealisticViolinToSampledSoloViolin() {
-  const result = matchPresetIntent("realistic violin", { limit: 3 });
+  const result = matchPresetIntent("realistic violin", { limit: 3, inventory: AVAILABLE_INVENTORY });
 
   assert.equal(result.matches[0].id, "vst:bbc-symphony:solo-violin-legato");
   assert.equal(result.matches[0].load.kind, "vst");
@@ -31,7 +40,7 @@ function matchesRealisticViolinToSampledSoloViolin() {
 }
 
 function matchesConcertPianoToConcertGrandVst() {
-  const result = matchPresetIntent("concert piano", { limit: 3 });
+  const result = matchPresetIntent("concert piano", { limit: 3, inventory: AVAILABLE_INVENTORY });
 
   assert.equal(result.matches[0].id, "vst:kontakt:concert-grand");
   assert.equal(result.matches[0].load.query, "Kontakt 8 Concert Grand");
@@ -39,7 +48,7 @@ function matchesConcertPianoToConcertGrandVst() {
 }
 
 function matchesClassicalGuitarToNylonPreset() {
-  const result = matchPresetIntent("classical guitar", { limit: 3 });
+  const result = matchPresetIntent("classical guitar", { limit: 3, inventory: AVAILABLE_INVENTORY });
 
   assert.equal(result.matches[0].id, "preset:ableton:nylon-classical-guitar");
   assert.equal(result.matches[0].deviceKind, "preset");
@@ -47,19 +56,36 @@ function matchesClassicalGuitarToNylonPreset() {
 }
 
 function matchesFluteToOrchestralWoodwind() {
-  const result = matchPresetIntent("flute", { limit: 3 });
+  const result = matchPresetIntent("flute", { limit: 3, inventory: AVAILABLE_INVENTORY });
 
   assert.equal(result.matches[0].id, "vst:bbc-symphony:flute-legato");
   assert.equal(result.matches[0].classicalIntent.ensembleRole, "solo_woodwind");
 }
 
 function matchesConcertHallMasteringToMasterBusEffect() {
-  const result = matchPresetIntent("concert hall mastering", { limit: 3 });
+  const result = matchPresetIntent("concert hall mastering", { limit: 3, inventory: AVAILABLE_INVENTORY });
 
   assert.equal(result.matches[0].id, "rack:master:concert-hall");
   assert.equal(result.matches[0].kind, "effect");
   assert.equal(result.matches[0].load.kind, "rack");
   assert.ok(result.matches[0].reasons.includes("effect-fit"));
+}
+
+function excludesUnavailableCatalogEntries() {
+  const result = matchPresetIntent("concert piano", {
+    limit: 3,
+    inventory: AVAILABLE_INVENTORY.filter((item) => item.name === "Concert Grand.adg")
+  });
+
+  assert.deepEqual(result.matches.map((match) => match.id), ["preset:ableton:concert-grand"]);
+  assert.match(result.matches[0].inventory.ref, /^browser:/u);
+}
+
+function doesNotRankPianoOrOrchestralEntriesForDrumKits() {
+  const result = matchPresetIntent("drum kit", { limit: 5, inventory: AVAILABLE_INVENTORY });
+
+  assert.equal(result.count, 0);
+  assert.equal(result.matches.some((match) => /piano|orchestra/u.test(match.name)), false);
 }
 
 function normalizesIntentAliasesDeterministically() {

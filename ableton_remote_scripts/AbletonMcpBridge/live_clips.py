@@ -80,6 +80,8 @@ def delete_clip(song, payload):
         "lengthBeats": getattr(clip, "length", None)
     }
     clip_slot.delete_clip()
+    if getattr(clip_slot, "has_clip", False):
+        raise BridgeHttpError("Ableton did not report the clip slot as empty after deletion", 500)
     return {
         "ok": True,
         "deleted": True,

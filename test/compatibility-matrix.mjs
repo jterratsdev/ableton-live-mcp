@@ -24,7 +24,7 @@ const KNOWN_UNSUPPORTED_REMOTE_SCRIPT_ROUTES = [
 ];
 
 assert.equal(metadata.schemaVersion, 1);
-assert.equal(metadata.sourceReviewedAt, "2026-07-20");
+assert.equal(metadata.sourceReviewedAt, "2026-08-17");
 assert.equal(metadata.unsupportedHttpStatus, 501);
 
 assert.deepEqual(Object.keys(metadata.editions).sort(), ["liveLite", "liveStandard", "liveSuite"]);

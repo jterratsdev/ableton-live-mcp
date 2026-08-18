@@ -27,6 +27,7 @@ except ImportError:
 from .http_bridge import BridgeHttpError, start_http_server, stop_http_server
 from .live_meter_cache import LiveMeterCache
 from .live_observability import endpoint_support_summary
+from .live_project import save_project
 from .live_api import (
     add_locator,
     apply_groove,
@@ -147,7 +148,7 @@ class AbletonMcpBridge(ControlSurface):
         if route == "POST /automation":
             raise BridgeHttpError("Automation envelope writing is not supported by this Remote Script bridge because the Live Python API does not expose a reliable cross-version envelope mutation surface", 501)
         if route == "POST /project/save":
-            return self._call_live_thread(lambda: self._save_project(payload))
+            return self._call_live_thread(lambda: save_project(self.song(), self.application(), payload))
         if route == "POST /signature":
             return self._call_live_thread(lambda: self._set_signature(payload))
         if route == "POST /tracks/midi":
@@ -384,35 +385,6 @@ class AbletonMcpBridge(ControlSurface):
             },
             "restored": result
         }
-
-    def _save_project(self, payload):
-        path = payload.get("path")
-        if path is not None and (not isinstance(path, str) or path.strip() == ""):
-            raise BridgeHttpError("path must be a non-empty string when provided")
-
-        song = self.song()
-        app = self.application()
-        try:
-            if path:
-                if hasattr(song, "save_as"):
-                    song.save_as(path)
-                    return {"ok": True, "saved": True, "path": path, "mode": "song.save_as"}
-                if hasattr(app, "save_live_set_as"):
-                    app.save_live_set_as(path)
-                    return {"ok": True, "saved": True, "path": path, "mode": "application.save_live_set_as"}
-                raise BridgeHttpError("Save As is not supported by this Ableton API", 501)
-
-            if hasattr(song, "save"):
-                song.save()
-                return {"ok": True, "saved": True, "path": None, "mode": "song.save"}
-            if hasattr(app, "save_live_set"):
-                app.save_live_set()
-                return {"ok": True, "saved": True, "path": None, "mode": "application.save_live_set"}
-            raise BridgeHttpError("Save is not supported by this Ableton API", 501)
-        except BridgeHttpError:
-            raise
-        except Exception as error:
-            raise BridgeHttpError("Unable to save project: %s" % error, 500)
 
     def _set_signature(self, payload):
         numerator = payload.get("numerator")

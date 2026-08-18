@@ -174,7 +174,7 @@ async function readFirstDeviceParameters(client, project) {
   };
 }
 
-function startMcpServer() {
+export function startMcpServer() {
   const env = { ...process.env };
   delete env.ABLETON_MCP_DRY_RUN;
 
@@ -229,7 +229,7 @@ async function waitForResponse(id, responses, stderr) {
   throw new Error(`Timed out waiting for MCP response ${id}. stderr: ${stderr.join("").trim()}`);
 }
 
-function expectJsonOk(name, result) {
+export function expectJsonOk(name, result) {
   assert.equal(result.isError, false, `${name} returned MCP error: ${result.text}`);
   assert.equal(typeof result.json, "object", `${name} must return JSON object content`);
   assert.notEqual(result.json, null, `${name} must return JSON object content`);
@@ -275,7 +275,7 @@ function assertArray(value, name) {
   assert.ok(Array.isArray(value), `${name} must be an array`);
 }
 
-function isUnsupported(result) {
+export function isUnsupported(result) {
   return result.isError && /\b501\b/.test(result.text);
 }
 

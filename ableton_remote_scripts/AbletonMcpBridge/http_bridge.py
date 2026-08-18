@@ -12,7 +12,7 @@ except ImportError:
     from urlparse import parse_qs, urlparse
 
 
-MAX_BODY_BYTES = 64 * 1024
+MAX_BODY_BYTES = 1024 * 1024
 
 
 class BridgeHttpError(Exception):
@@ -65,7 +65,10 @@ def make_handler(bridge):
         def _read_json_body(self):
             length = int(self.headers.get("Content-Length") or "0")
             if length > MAX_BODY_BYTES:
-                raise BridgeHttpError("Request body is too large", 413)
+                raise BridgeHttpError(
+                    "Request body is too large: maximum %s bytes, observed %s bytes" % (MAX_BODY_BYTES, length),
+                    413
+                )
             if length == 0:
                 return {}
             raw_body = self.rfile.read(length)

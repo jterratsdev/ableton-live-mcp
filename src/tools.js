@@ -8,9 +8,12 @@ import {
 import { getWorkflowPlan, listWorkflowPlans } from "./workflow-plans.js";
 import { collectInstalledFileMetadata, createBridgeObservabilitySnapshot } from "../bridge/observability.js";
 import { matchPresetIntent } from "../bridge/presets/matcher.js";
+import { PRESET_CATALOG } from "../bridge/presets/catalog.js";
 import { diagnosePlugins } from "./plugin-diagnostics.js";
 import { diagnosePlayback } from "./playback-diagnostics.js";
 import { analyzeAudioFile, analyzeRenderedMix } from "../bridge/audio-analysis.js";
+
+export const MAX_MIDI_CLIP_NOTES = 8192;
 
 export const tools = [
   tool("ableton_get_status", "Read Ableton Live transport and session status.", {}),
@@ -96,7 +99,7 @@ export const tools = [
   tool("ableton_set_tempo", "Set Ableton Live tempo in BPM.", {
     bpm: { type: "number", minimum: 20, maximum: 999 }
   }, ["bpm"]),
-  tool("ableton_save_project", "Save the current Ableton Live set through the bridge when supported.", {
+  tool("ableton_save_project", "Save the current Ableton Live Set, or Save As to an explicit path, and report the invoked host operation.", {
     path: stringProp("Optional absolute .als path for Save As when the bridge supports it."),
     label: stringProp("Optional human-readable save reason.")
   }),
@@ -167,6 +170,7 @@ export const tools = [
     lengthBeats: { type: "number", minimum: 0.25 },
     notes: {
       type: "array",
+      maxItems: MAX_MIDI_CLIP_NOTES,
       items: objectSchema({
         pitch: { type: "integer", minimum: 0, maximum: 127 },
         start: { type: "number", minimum: 0 },
@@ -182,7 +186,7 @@ export const tools = [
     clipSlotIndex: nonNegativeInteger(),
     name: stringProp("Optional name for the consolidated clip.")
   }, ["trackIndex", "startBeat", "lengthBeats"]),
-  tool("ableton_delete_clip", "Delete a clip from an Ableton Live track slot.", {
+  tool("ableton_delete_clip", "Delete a Session View clip and report whether Live confirms the slot is empty.", {
     trackIndex: nonNegativeInteger(),
     clipSlotIndex: nonNegativeInteger()
   }, ["trackIndex", "clipSlotIndex"]),
@@ -251,7 +255,7 @@ export const tools = [
     deviceIndex: nonNegativeInteger(),
     deviceName: { type: "string" },
     parameter: { type: "string" },
-    value: {},
+    value: { type: "number" },
     normalizedValue: { type: "number", minimum: 0, maximum: 1 }
   }, ["parameter"]),
   tool("ableton_get_device_parameters", "List parameters exposed by devices on a track, return, or master chain before changing them.", {
@@ -291,6 +295,7 @@ export const tools = [
       type: "array",
       items: objectSchema({
         device: { type: "string" },
+        kind: enumProp(["audio_effect", "rack", "preset", "vst", "au", "any"]),
         settings: { type: "object", additionalProperties: true }
       }, ["device"])
     },
@@ -374,7 +379,10 @@ export function createDispatch(bridge) {
       tools: listToolRiskClassifications(),
       endpoints: listEndpointRiskClassifications()
     }),
-    ableton_match_preset_intent: (args) => matchPresetIntent(args.intent, { limit: args.limit }),
+    ableton_match_preset_intent: async (args) => {
+      const inventory = await resolvePresetCatalogInventory(bridge);
+      return matchPresetIntent(args.intent, { limit: args.limit, inventory });
+    },
     ableton_list_workflow_plans: () => ({
       ok: true,
       count: listWorkflowPlans().length,
@@ -447,6 +455,18 @@ export function createDispatch(bridge) {
     ableton_insert_arrangement_clip: (args) => bridge.invoke("insert_arrangement_clip", args),
     ableton_add_locator: (args) => bridge.invoke("add_locator", args)
   };
+}
+
+async function resolvePresetCatalogInventory(bridge) {
+  const searches = await Promise.all(PRESET_CATALOG.map(async (entry) => {
+    const result = await bridge.invoke("search_browser", {
+      kind: entry.load.kind,
+      query: entry.load.query,
+      limit: 1
+    });
+    return Array.isArray(result?.results) ? result.results : [];
+  }));
+  return searches.flat();
 }
 
 export function validateToolInput(toolName, args) {
@@ -827,6 +847,9 @@ function validateMidiClipArgs(args) {
   }
   if (!Array.isArray(args.notes) || args.notes.length === 0) {
     throw rpcError(-32602, "notes must be a non-empty array");
+  }
+  if (args.notes.length > MAX_MIDI_CLIP_NOTES) {
+    throw rpcError(-32602, `notes must contain at most ${MAX_MIDI_CLIP_NOTES} items`);
   }
 
   args.notes.forEach((note, index) => validateMidiNote(note, index));

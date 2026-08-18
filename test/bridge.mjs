@@ -77,6 +77,15 @@ try {
   const saved = await toolCall(15, "ableton_save_project", { label: "bridge integration test" });
   assert.equal(saved.ok, true);
   assert.equal(saved.saved, true);
+  assert.deepEqual(saved.verification, { methodInvoked: true, requestedMode: "save" });
+
+  const savedAs = await toolCall(85, "ableton_save_project", {
+    path: "/tmp/ableton-mcp-bridge-contract.als",
+    label: "bridge save-as integration test"
+  });
+  assert.equal(savedAs.saved, true);
+  assert.equal(savedAs.path, "/tmp/ableton-mcp-bridge-contract.als");
+  assert.deepEqual(savedAs.verification, { methodInvoked: true, requestedMode: "save_as" });
 
   const signature = await toolCall(16, "ableton_set_signature", { numerator: 3, denominator: 4 });
   assert.equal(signature.ok, true);
@@ -453,7 +462,7 @@ try {
     chain: [{ device: "Missing Device", settings: {} }]
   }, { expectedStatus: 404 });
   assert.equal(missingMastering.ok, false);
-  assert.match(missingMastering.error, /No mastering devices were loaded/);
+  assert.match(missingMastering.error, /Mastering chain is incomplete/);
 
   const loadedMasterDevice = await toolCall(36, "ableton_load_master_device", {
     query: "EQ Eight",

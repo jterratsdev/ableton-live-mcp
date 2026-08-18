@@ -18,6 +18,7 @@ const liveModulePaths = [
   `${scriptDir}/live_devices.py`,
   `${scriptDir}/live_meter_cache.py`,
   `${scriptDir}/live_mastering.py`,
+  `${scriptDir}/live_project.py`,
   `${scriptDir}/live_mixer.py`,
   `${scriptDir}/live_snapshots.py`,
   `${scriptDir}/live_summaries.py`,

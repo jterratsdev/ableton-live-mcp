@@ -271,6 +271,13 @@ deterministic checks.
       "versionImpact": "Expected on Live 11 and Live 12."
     },
     {
+      "route": "GET /routing/plugin-outputs/plan",
+      "tier": "read",
+      "remoteScriptExpectation": "supported_with_limits",
+      "editionImpact": "Available plugin output count depends on the loaded plugin and edition track limits; discovery needs an existing routed audio receiver.",
+      "versionImpact": "Live 11 and Live 12 expose channel choices only for the receiver's currently selected input routing type."
+    },
+    {
       "route": "GET /status",
       "tier": "read",
       "remoteScriptExpectation": "supported",
@@ -471,6 +478,13 @@ deterministic checks.
       "remoteScriptExpectation": "supported",
       "editionImpact": "All editions can modify existing return tracks within their return-track limits.",
       "versionImpact": "Expected on Live 11 and Live 12."
+    },
+    {
+      "route": "POST /routing/plugin-outputs/apply",
+      "tier": "safe-write",
+      "remoteScriptExpectation": "supported_with_limits",
+      "editionImpact": "Receiver creation is bounded by the edition's audio-track limit and the plugin outputs exposed by Live.",
+      "versionImpact": "Live 11 and Live 12 require exact routing display names or identifiers; unsupported host properties fail without leaving newly created tracks."
     },
     {
       "route": "POST /signature",

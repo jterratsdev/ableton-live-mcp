@@ -129,6 +129,7 @@ classification.
 - `GET /production/report`
 - `GET /returns`
 - `GET /routing/buses`
+- `GET /routing/plugin-outputs/plan`
 - `GET /meters`
 - `GET /clips/notes`
 - `GET /devices/parameters`
@@ -148,6 +149,7 @@ classification.
 - `POST /tracks/modify`
 - `POST /returns/create`
 - `POST /returns/modify`
+- `POST /routing/plugin-outputs/apply`
 - `POST /master/modify`
 - `POST /clips/midi`
 - `POST /clips/humanize`

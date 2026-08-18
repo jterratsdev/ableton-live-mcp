@@ -98,6 +98,8 @@ The Remote Script currently implements:
 - `POST /returns/modify`
 - `DELETE /returns`
 - `GET /routing/buses`
+- `GET /routing/plugin-outputs/plan`
+- `POST /routing/plugin-outputs/apply`
 - `GET /meters`
 - `POST /master/modify`
 - `POST /arrangement/insert`

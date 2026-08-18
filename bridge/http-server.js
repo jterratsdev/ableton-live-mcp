@@ -71,6 +71,10 @@ async function routeRequest(req, adapter) {
       return adapter.deleteReturn(await readJsonBody(req));
     case "GET /routing/buses":
       return adapter.listBuses();
+    case "GET /routing/plugin-outputs/plan":
+      return adapter.planPluginOutputRouting(Object.fromEntries(url.searchParams));
+    case "POST /routing/plugin-outputs/apply":
+      return adapter.applyPluginOutputRouting(await readJsonBody(req));
     case "GET /meters":
       return adapter.getMeters();
     case "POST /master/modify":

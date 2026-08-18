@@ -32,6 +32,8 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("POST", "/returns/modify", "safe-write", "supported", "supported"),
   endpoint("DELETE", "/returns", "destructive", "supported", "conditional", "Requires Live return-track deletion support"),
   endpoint("GET", "/routing/buses", "read", "supported", "supported"),
+  endpoint("GET", "/routing/plugin-outputs/plan", "read", "supported", "conditional", "Channel discovery requires an existing audio receiver routed to the source type"),
+  endpoint("POST", "/routing/plugin-outputs/apply", "safe-write", "supported", "conditional", "Requires exact Live routing labels or identifiers and audio-track creation support"),
   endpoint("GET", "/meters", "read", "supported", "conditional", "Meter fields vary by Live version"),
   endpoint("POST", "/master/modify", "safe-write", "supported", "conditional", "Master mute and solo are not universally exposed"),
   endpoint("POST", "/arrangement/insert", "safe-write", "supported", "unsupported", "Remote Script has no reliable arrangement clip insertion API"),

@@ -28,6 +28,8 @@ const ACTIONS = {
   modify_return: { method: "POST", path: "/returns/modify" },
   delete_return: { method: "DELETE", path: "/returns" },
   list_buses: { method: "GET", path: "/routing/buses" },
+  plan_plugin_output_routing: { method: "GET", path: "/routing/plugin-outputs/plan" },
+  apply_plugin_output_routing: { method: "POST", path: "/routing/plugin-outputs/apply" },
   get_meters: { method: "GET", path: "/meters" },
   modify_master: { method: "POST", path: "/master/modify" },
   create_midi_clip: { method: "POST", path: "/clips/midi" },

@@ -12,6 +12,11 @@ import { PRESET_CATALOG } from "../bridge/presets/catalog.js";
 import { diagnosePlugins } from "./plugin-diagnostics.js";
 import { diagnosePlayback } from "./playback-diagnostics.js";
 import { analyzeAudioFile, analyzeRenderedMix } from "../bridge/audio-analysis.js";
+import {
+  createPluginOutputRoutingDispatch,
+  pluginOutputRoutingTools,
+  validatePluginOutputRoutingToolInput
+} from "./plugin-output-routing-tools.js";
 
 export const MAX_MIDI_CLIP_NOTES = 8192;
 
@@ -155,6 +160,7 @@ export const tools = [
     returnIndex: nonNegativeInteger()
   }, ["returnIndex"]),
   tool("ableton_list_buses", "List master, return buses, and track routing options.", {}),
+  ...pluginOutputRoutingTools,
   tool("ableton_get_meters", "Read observable output meters for tracks, return tracks, and the master channel.", {}),
   tool("ableton_modify_master", "Modify master mixer state such as volume, pan, or cue volume.", {
     volumeDb: { type: "number", minimum: -70, maximum: 12 },
@@ -358,6 +364,7 @@ export const tools = [
 
 export function createDispatch(bridge) {
   return {
+    ...createPluginOutputRoutingDispatch(bridge),
     ableton_get_status: () => bridge.invoke("get_status"),
     ableton_get_project: async () => annotateProjectMixerContract(await bridge.invoke("get_project")),
     ableton_get_arrangement: () => bridge.invoke("get_arrangement"),
@@ -470,6 +477,7 @@ async function resolvePresetCatalogInventory(bridge) {
 }
 
 export function validateToolInput(toolName, args) {
+  validatePluginOutputRoutingToolInput(toolName, args);
   if (toolName === "ableton_set_tempo" && !isNumberInRange(args.bpm, 20, 999)) {
     throw rpcError(-32602, "bpm must be a number between 20 and 999");
   }

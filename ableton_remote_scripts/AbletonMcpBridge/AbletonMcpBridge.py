@@ -28,6 +28,7 @@ from .http_bridge import BridgeHttpError, start_http_server, stop_http_server
 from .live_meter_cache import LiveMeterCache
 from .live_observability import endpoint_support_summary
 from .live_project import save_project
+from .live_plugin_routing import apply_plugin_output_routing, plan_plugin_output_routing
 from .live_api import (
     add_locator,
     apply_groove,
@@ -171,6 +172,15 @@ class AbletonMcpBridge(ControlSurface):
             return self._call_live_thread(lambda: delete_return_track(self.song(), payload))
         if route == "GET /routing/buses":
             return self._call_live_thread(lambda: routing_buses(self.song()))
+        if route == "GET /routing/plugin-outputs/plan":
+            return self._call_live_thread(lambda: plan_plugin_output_routing(self.song(), {
+                "sourceTrackName": first_query_value(query, "sourceTrackName"),
+                "deviceName": first_query_value(query, "deviceName"),
+                "sourceRoutingType": first_query_value(query, "sourceRoutingType"),
+                "receiverNamePrefix": first_query_value(query, "receiverNamePrefix")
+            }))
+        if route == "POST /routing/plugin-outputs/apply":
+            return self._call_live_thread(lambda: apply_plugin_output_routing(self.song(), payload))
         if route == "GET /meters":
             return self._call_live_thread(lambda: list_meters(self.song(), self._meter_cache))
         if route == "POST /master/modify":

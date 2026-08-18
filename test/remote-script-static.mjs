@@ -19,6 +19,9 @@ const liveModulePaths = [
   `${scriptDir}/live_meter_cache.py`,
   `${scriptDir}/live_mastering.py`,
   `${scriptDir}/live_project.py`,
+  `${scriptDir}/live_plugin_routing.py`,
+  `${scriptDir}/live_plugin_routing_validation.py`,
+  `${scriptDir}/live_routing_options.py`,
   `${scriptDir}/live_mixer.py`,
   `${scriptDir}/live_snapshots.py`,
   `${scriptDir}/live_summaries.py`,
@@ -70,6 +73,8 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "POST /returns/modify",
   "DELETE /returns",
   "GET /routing/buses",
+  "GET /routing/plugin-outputs/plan",
+  "POST /routing/plugin-outputs/apply",
   "GET /meters",
   "POST /master/modify",
   "POST /arrangement/insert",
@@ -113,6 +118,8 @@ assert.match(liveApiSource, /from \.live_arrangement import/);
 assert.match(liveApiSource, /from \.live_mixer import/);
 assert.match(liveApiSource, /from \.live_devices import/);
 assert.match(liveApiSource, /from \.live_track_operations import/);
+assert.match(bridgeSource, /plan_plugin_output_routing/);
+assert.match(bridgeSource, /apply_plugin_output_routing/);
 assert.match(liveBrowserSource, /def browser_item_inventory\(browser, query, kind\):/);
 assert.match(liveBrowserSource, /def browser_search_inventory\(browser, query, kind, limit\):/);
 assert.match(liveBrowserSource, /Browser category is not available in this Live version/);

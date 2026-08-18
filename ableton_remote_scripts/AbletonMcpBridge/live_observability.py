@@ -37,6 +37,8 @@ ENDPOINT_SUPPORT = (
     {"method": "POST", "path": "/returns/modify", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "DELETE", "path": "/returns", "riskTier": "destructive", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Live return-track deletion support"}},
     {"method": "GET", "path": "/routing/buses", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "GET", "path": "/routing/plugin-outputs/plan", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Channel discovery requires an existing audio receiver routed to the source type"}},
+    {"method": "POST", "path": "/routing/plugin-outputs/apply", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires exact Live routing labels or identifiers and audio-track creation support"}},
     {"method": "GET", "path": "/meters", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Meter fields vary by Live version"}},
     {"method": "POST", "path": "/master/modify", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Master mute and solo are not universally exposed"}},
     {"method": "POST", "path": "/arrangement/insert", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "Remote Script has no reliable arrangement clip insertion API"}},

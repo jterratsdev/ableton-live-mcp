@@ -21,6 +21,7 @@ import { getTrack, applyMasterPatch, applyTrackPatch, mixerWriteVerification, mi
 import { projectMeterSnapshot } from "./development/metering.js";
 import { consolidateClip, createMidiTrack, duplicateTrack, flattenTrack, freezeTrack } from "./development/track-operations.js";
 import { listPlugins, searchBrowser } from "./development/plugins.js";
+import { applyPluginOutputRouting, planPluginOutputRouting } from "./development/plugin-output-routing.js";
 import { createReturn, deleteReturn, listBuses, listReturns, modifyReturn } from "./development/returns.js";
 import { createMixerContract } from "./mixer-contract.js";
 import {
@@ -195,6 +196,14 @@ export class DevelopmentAbletonAdapter {
 
   async listBuses() {
     return listBuses(this.state);
+  }
+
+  async planPluginOutputRouting(payload) {
+    return planPluginOutputRouting(this.state, payload);
+  }
+
+  async applyPluginOutputRouting(payload) {
+    return applyPluginOutputRouting(this.state, payload);
   }
 
   async getMeters() {

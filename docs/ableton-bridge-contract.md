@@ -648,6 +648,27 @@ Lists master, return buses, and per-track routing options exposed by the bridge.
 }
 ```
 
+### `GET /routing/plugin-outputs/plan`
+
+Validates an exact source track, device name, and source routing display name or
+identifier, then returns only plugin output channels observable from an existing
+audio receiver already routed to that source. This endpoint is read-only. When
+no such receiver exists it returns `discoveryStatus: "receiver_required"`, an
+empty channel list, and a manual bootstrap diagnostic; it never changes routing
+or infers channel labels. This diagnostic is returned only after the requested
+source routing type is found in Live's available options. Duplicate display
+names with different identifiers are rejected as ambiguous; an exact identifier
+selects the corresponding source option. See [SSD5 multi-output routing](ssd5-multi-output.md).
+
+### `POST /routing/plugin-outputs/apply`
+
+Accepts an explicit `routes` array of exact `outputChannel` and `trackName`
+pairs. Each missing audio receiver is configured with the requested source
+routing type, exact channel label, and Monitor In. The response includes
+observed routing and monitoring readback. Existing exact matches are reused;
+same-name conflicts fail. Any partial failure deletes every track created by
+that request while preserving pre-existing tracks.
+
 ### `GET /meters`
 
 Reads observable output meter values for regular tracks, return tracks, and the

@@ -6,6 +6,7 @@ const deterministicSuites = [
   "./remote-script-static.mjs",
   "./live-mastering.mjs",
   "./project-lifecycle.mjs",
+  "./plugin-output-routing.mjs",
   "./arrangement-clip-delete.mjs",
   "./live-meter-cache.mjs",
   "./live-volume-write.mjs",

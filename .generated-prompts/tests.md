@@ -52,7 +52,92 @@
 ```
 
 <!-- Entries below this line are maintained by agents -->
+## SSD5 Plugin Output Routing QA Evidence
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 2
+- **Task:** ableton-ssd-multi-output-workflow-20260817
+- **Role:** qa
+- **Paths:** .agent-workflow/handoffs/ableton-ssd-multi-output-workflow-20260817-wfrun-1787002057777-44ad19-qa-qa-runtime-handoff.md
 
+### Key decisions
+- Independently execute the focused Node and fake-Live Python suites plus the complete deterministic gate without calling the active Ableton bridge.
+- Treat duplicate exact routing display names with different identifiers as ambiguous and require fail-closed behavior instead of first-match selection.
+- Revalidate the remediated ambiguous-source, exact-identifier, unavailable-source, and ambiguous-output cases by explicit unittest name before approving the aggregate suites.
+- Approve all four acceptance criteria after the Remote Script and development adapter reject ambiguous/unavailable selectors without mutation; retain real Ableton install/restart and active-Set apply as an explicit external deferral.
+
+### Evidence
+- Four named fail-closed Python cases passed: ambiguous source, exact identifier precedence, unavailable source, and ambiguous output rollback.
+- `node test/plugin-output-routing.mjs`, `python3 test/live_plugin_routing_test.py` (15 tests), and `npm test` exited 0 after remediation.
+- Static Remote Script, risk-policy, observability, Python compilation, and diff checks exited 0.
+
+### Prompt
+````
+Revalidate the SSD5 fail-closed remediation against every acceptance criterion, explicitly proving ambiguous labels and unavailable selectors preserve state while exact identifiers remain selectable, then run focused and full gates without calling a mutating endpoint on the active Ableton Set.
+````
+---
+## SSD5 Plugin Output Routing Contracts
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 2
+- **Task:** ableton-ssd-multi-output-workflow-20260817
+- **Role:** developer
+- **Paths:** test/plugin-output-routing.mjs, test/live_plugin_routing_test.py, test/remote-script-static.mjs, test/compatibility-matrix.mjs, test/deterministic.mjs
+
+### Key decisions
+- Use deterministic Node and fake-Live Python fixtures, including modern routing dictionaries with display names and identifiers.
+- Assert no-mutation planning, manual-bootstrap diagnostics, exact routing/readback, Monitor In on every receiver, duplicate rejection, idempotence, name conflicts, unsupported outputs, and rollback after routing or name-assignment failures.
+- Exercise the listed MCP dispatch through an ephemeral development bridge only; never call the active Ableton bridge.
+- Regress ambiguous source/channel display names, exact identifier precedence, and unavailable source selectors with zero-mutation assertions.
+
+### Evidence
+- `node test/plugin-output-routing.mjs` passed through an ephemeral localhost bridge.
+- `python3 test/live_plugin_routing_test.py` passed 15 cases after QA remediation.
+- `npm test` passed all deterministic suites.
+
+### Prompt
+````
+Prove SSD5 plan/apply behavior with deterministic Node and fake-Live tests, including bootstrap limits and atomic rollback, without invoking a mutating endpoint on the user's running Ableton instance.
+````
+---
+## project-lifecycle-contract-tests
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-clip-delete-project-save-20260817
+- **Role:** developer
+- **Paths:** test/project-lifecycle.mjs, test/live_project_clip_test.py, test/bridge.mjs, test/deterministic.mjs, test/remote-script-static.mjs
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Assert tool exposure, confirmed clip deletion, idempotent empty deletion, save versus save-as mode, and Remote Script error handling using development fixtures and Python fakes.
+````
+---
+## GitHub issues 1-5 contract suites
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** qa
+- **Paths:** test/bridge.mjs, test/contracts.mjs, test/deterministic.mjs, test/live-contract.mjs, test/live-mastering.mjs, test/live-smoke-suite.mjs, test/live_mastering_test.py, test/preset-intelligence.mjs, test/smoke.mjs
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Add deterministic and opt-in Live round-trip regression coverage for schema forwarding, inventory truthfulness, mastering atomicity/order, realistic MIDI payloads, cleanup, and explicit mutation deferral.
+````
+---
 ## Ableton MCP Regression Tests
 - **Created:** 2026-07-16
 - **Updated:** 2026-07-16

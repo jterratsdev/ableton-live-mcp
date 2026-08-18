@@ -52,7 +52,69 @@
 ```
 
 <!-- Entries below this line are maintained by agents -->
+## SSD5 Plugin Output Routing Runtime
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 2
+- **Task:** ableton-ssd-multi-output-workflow-20260817
+- **Role:** developer
+- **Paths:** src/plugin-output-routing-tools.js, bridge/development/plugin-output-routing.js, bridge/development/routing-options.js, ableton_remote_scripts/AbletonMcpBridge/live_plugin_routing.py, ableton_remote_scripts/AbletonMcpBridge/live_plugin_routing_validation.py, ableton_remote_scripts/AbletonMcpBridge/live_routing_options.py
 
+### Key decisions
+- Keep planning read-only and return a structured receiver bootstrap diagnostic when Live cannot expose channel choices without selecting a receiver input type.
+- Match the source routing type by exact display name or identifier, match output channels by exact display name, and never fuzzy-match or infer labels.
+- Make apply idempotent through verified exact reuse and rollback every newly created track by object identity on any partial failure.
+- Keep large entrypoints thin by placing routing behavior and collection validation in focused modules below 300 lines.
+- Fail closed when one display name maps to different identifiers, while giving an exact identifier precedence; reject unavailable plan source selectors before returning bootstrap diagnostics.
+
+### Evidence
+- `node test/plugin-output-routing.mjs` passed.
+- `python3 test/live_plugin_routing_test.py` passed 15 tests after QA remediation.
+- `npm test` passed the complete deterministic suite.
+
+### Prompt
+````
+Implement safe SSD5 multi-output planning and explicit apply behavior with exact routing contracts, observable readback, idempotence, and rollback, without mutating the active Ableton Set during automated validation.
+````
+---
+## project-lifecycle-runtime
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-clip-delete-project-save-20260817
+- **Role:** developer
+- **Paths:** ableton_remote_scripts/AbletonMcpBridge/live_project.py, ableton_remote_scripts/AbletonMcpBridge/AbletonMcpBridge.py, ableton_remote_scripts/AbletonMcpBridge/live_clips.py, bridge/development-adapter.js, src/tools.js
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Implement verified MCP clip deletion and explicit save/save-as reporting without mutating a real Ableton Set.
+````
+---
+## src/tools.js
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+- **Paths:** src/tools.js
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Update MCP schemas and dispatch for numeric parameter values, bounded MIDI notes, mastering kinds, and exact inventory-backed preset matching.
+````
+---
 ## MCP Server Entrypoint And Tool Modules
 - **Created:** 2026-07-16
 - **Updated:** 2026-07-16
@@ -162,5 +224,54 @@ Implement the Orchestra child assignment for installer verification and stale br
 ### Prompt
 ````
 Execute the Orchestra child assignment for snapshot rollback: document current rollback coverage and gaps, improve deterministic snapshot coverage for devices, mixer state, sends, returns, and master chain, and keep Remote Script limitations explicit instead of claiming unsupported rollback safety.
+````
+---
+
+## GitHub Issues 1-5 Contract Fixes
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+
+### Key decisions
+- Declare raw device parameter values as numeric and preserve falsy numeric values through dispatch.
+- Resolve preset catalog candidates against exact, loadable browser inventory before returning recommendations.
+- Pre-resolve complete mastering chains, support explicit VST/AU kinds, and fail when `replace_all` cannot produce the exact requested order.
+- Raise the finite HTTP body ceiling to 1 MiB and bound MIDI clips to 8,192 notes.
+- Keep real Live round-trip validation behind explicit disposable-Set and empty-slot gates.
+
+### Evidence
+- `node test/contracts.mjs`, `node test/live-mastering.mjs`, `node test/preset-intelligence.mjs`, and `node test/remote-script-static.mjs` passed.
+- `npm test` passed the complete deterministic suite.
+- `test/live-contract.mjs` provides opt-in real Live write/read/compare coverage and was intentionally not invoked.
+
+### Prompt
+````
+Fix GitHub issues 1-5: correct the numeric MCP schema, make preset recommendations inventory-backed and relevant, make mastering resolution complete and atomic before destructive replacement, replace the undocumented 64 KiB request ceiling with documented finite limits, and add deterministic plus opt-in real Live round-trip contracts without touching the active Set during automated QA.
+````
+---
+
+## Arrangement Clip Deletion Undo Compensation
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-arrangement-clip-delete-20260817
+- **Role:** developer
+- **Paths:** ableton_remote_scripts/AbletonMcpBridge/live_arrangement_delete.py, test/live_arrangement_delete_test.py, docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md
+
+### Key decisions
+- Require callable `Song.undo` during whole-selection preflight before any `Track.delete_clip` mutation.
+- On a later deletion exception, invoke undo exactly once per completed deletion and reread the complete Arrangement state.
+- Verify restoration with track/index/name/start/length fingerprints rather than ephemeral Live Python proxy identities; report undo, readback, or fingerprint mismatch explicitly as rollback failure.
+
+### Evidence
+- `node test/arrangement-clip-delete.mjs` passed and invoked the fake-Live Python contract without calling the active bridge.
+- `python3 test/live_arrangement_delete_test.py` passed callable-undo preflight, multi-undo restoration, recreated-proxy verification, undo failure, and readback mismatch cases.
+- `npm test` passed the complete deterministic suite.
+
+### Prompt
+````
+Add compensating Song.undo handling for mid-delete Arrangement clip failures, verify the original observable timeline independently of proxy identity, report rollback failures explicitly, and validate only with local Node/Python fixtures so the user's active Ableton Set is untouched.
 ````
 ---

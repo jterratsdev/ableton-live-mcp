@@ -5025,5 +5025,873 @@
     "status": "done",
     "createdAt": "2026-08-08T08:40:49.677Z",
     "updatedAt": "2026-08-08T08:40:49.734Z"
+  },
+  {
+    "id": "ableton-meter-sdk-update-research-20260811",
+    "title": "Research SDK updates for improved meter readings",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "goal": "Determine whether an available SDK or Ableton API update can provide more reliable or higher-quality track and master meter readings, with evidence and an upgrade recommendation.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "package-lock.json",
+      "ableton_remote_scripts",
+      "src",
+      "README.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-12T03:33:10.567Z",
+    "updatedAt": "2026-08-12T03:36:12.460Z",
+    "scope": "Read-only investigation of the repository dependency/API path and current upstream Ableton releases; no package upgrades, code edits, Live control, or deployment.",
+    "testStrategy": "Cross-check local code and manifests against official Ableton documentation and release notes; record commands and cited sources as evidence.",
+    "acceptanceCriteria": [
+      "Repository inspection identifies the exact API or SDK currently used to obtain meter values and its relevant version constraints.",
+      "Upstream release notes and official API documentation are checked for newer meter capabilities or fixes, with source links.",
+      "The conclusion states whether an update alone improves meters and recommends the lowest-risk next step."
+    ]
+  },
+  {
+    "id": "ableton-meter-sdk-update-research-20260811-architect-04cb6e",
+    "title": "[ARCHITECT] ableton-meter-sdk-update-research-20260811",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-12T03:33:40.445Z",
+    "updatedAt": "2026-08-12T03:33:40.493Z"
+  },
+  {
+    "id": "ableton-live-1243-meter-validation-20260811",
+    "title": "Update Live Lite to 12.4.3 and validate meters",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "System inspection confirms Ableton Live 12 Lite reports version 12.4.3 after an explicitly approved official update.",
+      "A read-only baseline on 12.4.2 and post-update samples on 12.4.3 record transport state, meter capability, raw direct/cache values, polling errors, and whether any non-zero track or master signal is observed during audible playback.",
+      "The comparison states whether 12.4.3 improves meter delivery without changing the Live Set, mixer, devices, clips, or project files."
+    ],
+    "assumptions": [
+      "Track output meter properties may only update while Live is rendering the corresponding visual meters; official LOM documentation ties left/right values to meters shown in Live and warns of GUI load",
+      "but does not explicitly guarantee or document a strict Session-visibility requirement."
+    ],
+    "risks": [
+      "Application replacement may require Live to close and may trigger macOS authorization; preserve the existing app until the official installer and target version are verified."
+    ],
+    "paths": [
+      "ableton_remote_scripts",
+      "docs",
+      "test"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa",
+        "release_manager"
+      ]
+    },
+    "verifierContract": {
+      "version": 1,
+      "entries": [
+        {
+          "id": "live-version-1243",
+          "surface": "api",
+          "setup": "Official Ableton Live 12.4.3 Lite update is installed after user approval.",
+          "action": "Read CFBundleShortVersionString from the installed application.",
+          "expectedObservable": "Installed Ableton Live 12 Lite version begins with 12.4.3.",
+          "assertionType": "equals",
+          "evidenceArtifact": "/Applications/Ableton Live 12 Lite.app/Contents/Info.plist",
+          "ownerRole": "release_manager",
+          "required": true,
+          "acceptanceCriteria": [
+            "System inspection confirms Ableton Live 12 Lite reports version 12.4.3 after an explicitly approved official update."
+          ]
+        },
+        {
+          "id": "meter-post-update",
+          "surface": "api",
+          "setup": "Live 12.4.3 is running with AbletonMcpBridge loaded and the user has started audible playback in the existing Set.",
+          "action": "Sample GET /status and GET /meters repeatedly without writes.",
+          "expectedObservable": "Evidence identifies whether any output_meter_left/right/level direct or cached value is non-zero and reports reliableForMixing and meterCapability.status.",
+          "assertionType": "custom",
+          "evidenceArtifact": "GET /meters response log",
+          "ownerRole": "qa",
+          "required": true,
+          "acceptanceCriteria": [
+            "A read-only baseline on 12.4.2 and post-update samples on 12.4.3 record transport state",
+            "meter capability",
+            "raw direct/cache values",
+            "polling errors",
+            "and whether any non-zero track or master signal is observed during audible playback."
+          ]
+        }
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-08-12T03:43:36.190Z",
+    "updatedAt": "2026-08-12T03:48:10.457Z",
+    "scope": "Official Ableton application update plus read-only meter validation only. Do not modify repository source, the active Live Set, mixer values, devices, clips, routing, or project files.",
+    "testStrategy": "Capture the existing read-only 12.4.2 baseline; install official 12.4.3 Lite after approval; restart Live with AbletonMcpBridge; during user-confirmed audible playback sample /meters with Session View meters visible, then with Arrangement View or tracks not visually rendered; compare output_meter_left/right/level direct/cache values, listeners, polling errors, and capability. Do not change Set content or mixer state.",
+    "qaGate": {
+      "plan": "Baseline 12.4.2 evidence is recorded. After the user installs official Live 12.4.3 Lite and relaunches the existing Set with AbletonMcpBridge, verify Info.plist, bridge status, repeated meter samples during audible playback, raw/cache values, and capability.",
+      "executionStatus": "deferred",
+      "deferredRationale": "Official installer download requires the user's Ableton account, and installing/restarting Live requires the user to save or intentionally discard any unsaved Set changes. Browser automation is unavailable and Codex will not enter credentials or close the active application without confirmation.",
+      "deferredOwner": "user"
+    },
+    "blockedReason": "qa requested changes: 12.4.2 baseline evidence is complete, but release transition remains blocked until official 12.4.3 installation and post-update meter samples exist. User supplied a UI-rendering dependency hypothesis that should be incorporated into the read-only post-update test matrix; no gate approval is granted."
+  },
+  {
+    "id": "ableton-live-1243-meter-validation-20260811-qa-5aca8f",
+    "title": "[QA] ableton-live-1243-meter-validation-20260811",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-12T03:44:09.775Z",
+    "updatedAt": "2026-08-12T03:44:09.775Z"
+  },
+  {
+    "id": "ableton-github-bug-triage-20260817",
+    "title": "Review open GitHub bug reports",
+    "ownerRole": "product_owner",
+    "dependencies": [],
+    "goal": "Review the repository's open GitHub bug reports and produce an evidence-backed triage with validity, severity, reproducibility, dependencies, and recommended next action.",
+    "assumptions": [
+      "User hypothesis: the MCP or bridge transport may fail when a bridge payload reaches approximately 64 KiB; validate this against issue evidence",
+      "framing code",
+      "buffer limits",
+      "and tests rather than treating it as confirmed."
+    ],
+    "risks": [
+      "A 64 KiB symptom may originate in HTTP/socket chunking",
+      "Content-Length handling",
+      "line-delimited framing",
+      "an intermediary buffer",
+      "or response truncation; correlation alone must not be reported as root cause."
+    ],
+    "paths": [
+      ".github",
+      "src",
+      "ableton_remote_scripts",
+      "test",
+      "README.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-08-17T18:20:57.592Z",
+    "updatedAt": "2026-08-17T18:32:08.254Z",
+    "scope": "Read-only triage of open GitHub issues labeled bug and relevant repository code or tests. Do not edit source files, comments, labels, issues, milestones, or pull requests.",
+    "testStrategy": "Query GitHub metadata and issue bodies/comments, map claims to the current repository, run only read-only or non-mutating diagnostics where useful, and record an evidence-backed triage.",
+    "acceptanceCriteria": [
+      "A comparison of the GitHub issue-list query against the detailed review asserts that every open issue carrying the bug label is included exactly once.",
+      "A checklist assertion for every included issue verifies that its review contains evidence, affected area, reproducibility or missing information, severity, priority, and a recommended next action.",
+      "A final classification table visibly assigns every included issue to confirmed defect, needs clarification, duplicate, or stale, and records an ordered remediation recommendation without any GitHub or source mutation."
+    ],
+    "blockedReason": "Read-only triage and QA evidence are complete, but workflow run wfrun-1786990879170-d5a629 cached the first parent-execution handoff before explicit no-change traceability and deferred Live proof were added. Three resumes returned the identical developer handoff validation block; closing and benchmarking are deferred until Orchestra can regenerate or replay the corrected phase output."
+  },
+  {
+    "id": "ableton-github-bug-triage-20260817-po-d5a629",
+    "title": "[PO] ableton-github-bug-triage-20260817",
+    "ownerRole": "product_owner",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "product_owner"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T18:21:19.310Z",
+    "updatedAt": "2026-08-17T18:21:19.310Z"
+  },
+  {
+    "id": "ableton-github-bug-triage-20260817-architect-d5a629",
+    "title": "[ARCHITECT] ableton-github-bug-triage-20260817",
+    "ownerRole": "architect",
+    "dependencies": [
+      "ableton-github-bug-triage-20260817-po-d5a629"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T18:26:30.360Z",
+    "updatedAt": "2026-08-17T18:26:30.585Z"
+  },
+  {
+    "id": "ableton-github-bug-triage-20260817-developer-d5a629",
+    "title": "[DEVELOPER] ableton-github-bug-triage-20260817",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-github-bug-triage-20260817-architect-d5a629"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T18:26:30.593Z",
+    "updatedAt": "2026-08-17T18:26:30.593Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817",
+    "title": "Fix GitHub issues 1 through 5",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "acceptanceCriteria": [
+      "A schema assertion verifies ableton_set_device_parameter declares value as a number, and MCP dispatch tests verify value 0 and -1 reach the bridge unchanged.",
+      "Preset-intent tests verify unavailable catalog entries are not returned as actionable matches, available matches are backed by bridge inventory, and a drum-kit intent does not rank unrelated piano or orchestral entries.",
+      "Mastering tests verify VST and AU entries use the same browser resolution contract as individual master-device loading, every chain entry is resolved before replace_all mutates the master chain, and incomplete chains return an error rather than ok true.",
+      "HTTP bridge tests verify a realistic MIDI clip request larger than 65536 bytes succeeds within the documented new limit, oversized requests report both maximum and observed byte counts, and the MIDI notes schema exposes a deterministic maximum item count.",
+      "Running node test/contracts.mjs and npm test exits successfully after assertions compare parameter writes, realistic-scale clip contents, mastering chain order and completeness, and inventory-backed preset recommendations."
+    ],
+    "assumptions": [
+      "The current issue reports and main branch at 03d3dbd are the baseline; real Live destructive contract validation requires a disposable Set and separate confirmation."
+    ],
+    "risks": [
+      "Mastering-chain tests must use fakes or the development adapter because applying replace_all against an active Set is destructive; request-size changes must retain a finite DoS guard; preset availability checks must not turn dry-run behavior into false installation claims."
+    ],
+    "paths": [
+      "src/tools.js",
+      "bridge/presets",
+      "bridge/http-server.js",
+      "ableton_remote_scripts/AbletonMcpBridge/http_bridge.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_mastering.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_devices.py",
+      "ableton_remote_scripts/AbletonMcpBridge/live_browser.py",
+      "test",
+      "package.json",
+      "docs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T18:44:27.559Z",
+    "updatedAt": "2026-08-17T19:24:56.766Z",
+    "scope": "Implement repository fixes for GitHub issues 1 through 4 and deterministic plus opt-in Live contract coverage for issue 5. Do not alter the user's active Ableton Set during automated QA, and do not comment on, label, close, push, publish, or release GitHub changes.",
+    "testStrategy": "Add focused Node and Python tests for schema forwarding, inventory-backed matching, atomic pre-resolution, request-size boundaries, and round-trip outcomes; run targeted suites and npm test. Provide an opt-in Live contract script but do not invoke mutating Live endpoints without explicit approval.",
+    "blockedReason": "Parent result contract corrected with structured architectural concerns, concrete changed-file declaration, command evidence, and updated AC5.",
+    "qaGate": {
+      "plan": "Run deterministic Node/Python round-trip contracts and npm test locally; run test/live-contract.mjs only on a disposable Live Set with explicit user confirmation.",
+      "executionStatus": "deferred",
+      "deferredRationale": "Automated deterministic QA passed. Real Live proof would mutate mixer values, a MIDI clip slot, device parameters, and optionally the master chain; it is intentionally deferred until the user provides a disposable Set and explicit mutation confirmation.",
+      "deferredOwner": "user"
+    }
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-developer-e7fa9f",
+    "title": "[DEVELOPER] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T18:44:58.550Z",
+    "updatedAt": "2026-08-17T18:44:58.550Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-architect-c0964f",
+    "title": "[ARCHITECT] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T19:19:28.447Z",
+    "updatedAt": "2026-08-17T19:19:28.680Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-developer-c0964f",
+    "title": "[DEVELOPER] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-fix-gh-issues-1-5-20260817-architect-c0964f"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T19:19:28.687Z",
+    "updatedAt": "2026-08-17T19:19:28.687Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-architect-1b6422",
+    "title": "[ARCHITECT] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T19:22:27.948Z",
+    "updatedAt": "2026-08-17T19:22:28.181Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-developer-1b6422",
+    "title": "[DEVELOPER] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "developer",
+    "dependencies": [
+      "ableton-fix-gh-issues-1-5-20260817-architect-1b6422"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T19:22:28.188Z",
+    "updatedAt": "2026-08-17T19:23:03.218Z"
+  },
+  {
+    "id": "ableton-fix-gh-issues-1-5-20260817-qa-1b6422",
+    "title": "[QA] ableton-fix-gh-issues-1-5-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-fix-gh-issues-1-5-20260817-developer-1b6422"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T19:23:03.224Z",
+    "updatedAt": "2026-08-17T19:24:12.330Z"
+  },
+  {
+    "id": "ableton-clip-delete-project-save-20260817",
+    "title": "Verify clip deletion and project save over MCP",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Make clip deletion and project saving explicit, verifiable MCP operations against both the development bridge and Ableton Remote Script.",
+    "acceptanceCriteria": [
+      "An MCP contract test lists ableton_delete_clip and verifies deleting an existing MIDI clip returns deleted=true, then a read of the same track and slot reports no clip.",
+      "An MCP contract test lists ableton_save_project and verifies label-only save uses the current Set save operation while an explicit path uses save-as when supported, returning the requested mode and an observable saved result.",
+      "Remote Script tests verify deleting an empty slot is an idempotent deleted=false result, save errors are returned instead of ok=true, and save responses do not claim success when the Live API lacks a supported save method.",
+      "Command output asserts the targeted contract tests and npm test exit successfully, while evidence confirms no mutating endpoint was invoked on the user's active Ableton Set."
+    ],
+    "assumptions": [
+      "Both tools already exist in the registry",
+      "but their real-Live success contracts may be too weak or stale installs may hide them from clients."
+    ],
+    "risks": [
+      "Saving can overwrite disk state and deleting a clip is destructive; automated QA must use development fixtures and Python fakes only."
+    ],
+    "paths": [
+      "src/tools.js",
+      "src/bridge.js",
+      "bridge",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "test",
+      "docs",
+      "package.json"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T19:53:04.442Z",
+    "updatedAt": "2026-08-17T20:03:42.963Z",
+    "scope": "Strengthen existing MCP delete/save contracts and Remote Script verification. Do not delete any real clip, save the active Set, push, publish, or mutate GitHub.",
+    "testStrategy": "Add focused Node dispatch/integration assertions and Python fake-Live tests for success, unsupported, and failure paths; run npm test. Defer real Live mutation to separate explicit user confirmation."
+  },
+  {
+    "id": "ableton-clip-delete-project-save-20260817-developer-d7adc6",
+    "title": "[DEVELOPER] ableton-clip-delete-project-save-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T19:53:29.603Z",
+    "updatedAt": "2026-08-17T19:53:29.603Z"
+  },
+  {
+    "id": "ableton-clip-delete-project-save-20260817-developer-ee07d0",
+    "title": "[DEVELOPER] ableton-clip-delete-project-save-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-17T20:00:53.437Z",
+    "updatedAt": "2026-08-17T20:00:53.437Z"
+  },
+  {
+    "id": "ableton-clip-delete-project-save-20260817-developer-96cbd7",
+    "title": "[DEVELOPER] ableton-clip-delete-project-save-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T20:02:14.303Z",
+    "updatedAt": "2026-08-17T20:02:41.011Z"
+  },
+  {
+    "id": "ableton-clip-delete-project-save-20260817-qa-96cbd7",
+    "title": "[QA] ableton-clip-delete-project-save-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-clip-delete-project-save-20260817-developer-96cbd7"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T20:02:41.017Z",
+    "updatedAt": "2026-08-17T20:03:34.328Z"
+  },
+  {
+    "id": "ableton-live-plugin-parameter-audit-20260817",
+    "title": "Audit plugin parameter access in active Ableton Set",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "goal": "Compare the plugin parameter surface exposed by the active Ableton Set through MCP with the Live Remote Script implementation and identify concrete access limitations.",
+    "assumptions": [
+      "The active Ableton instance has AbletonMcpBridge loaded and its local HTTP endpoint is reachable."
+    ],
+    "risks": [
+      "Third-party VST/AU parameter exposure varies by plugin and Live version; absence in Live's device.parameters collection may not be fixable from the Remote Script."
+    ],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "test",
+      "docs"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T20:46:55.051Z",
+    "updatedAt": "2026-08-17T20:49:40.972Z",
+    "scope": "Read-only inspection of the active Ableton Set, bridge responses, and repository implementation. Do not set parameters, alter devices, transport, mixer, clips, routing, or save the Set.",
+    "testStrategy": "Call only GET/read-only MCP or bridge operations against the active Set, inspect local source contracts, and record raw response evidence. No parameter write probes.",
+    "acceptanceCriteria": [
+      "A read-only status and project inventory response confirms the active bridge version and lists every device location inspected.",
+      "For every device in the open Set, a parameter inventory request records the exposed parameter count, names, values, ranges, quantization, enablement, and display strings when available.",
+      "A source-to-runtime comparison visibly classifies missing plugin parameters as Live API exposure, Remote Script serialization, MCP schema, or stale-install limitations and recommends the smallest next implementation step."
+    ]
+  },
+  {
+    "id": "ableton-live-plugin-parameter-audit-20260817-qa-ac6e6a",
+    "title": "[QA] ableton-live-plugin-parameter-audit-20260817",
+    "ownerRole": "qa",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T20:47:09.435Z",
+    "updatedAt": "2026-08-17T20:49:35.486Z"
+  },
+  {
+    "id": "ableton-hidden-plugin-parameters-research-20260817",
+    "title": "Research alternatives for hidden plugin parameters",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "goal": "Identify supported and practical ways to access or control third-party plugin parameters that Ableton Live does not expose through Device.parameters.",
+    "assumptions": [
+      "The prior active-Set audit accurately observed SSD5",
+      "Ample Bass",
+      "and Youlean with one exposed parameter and TDR Nova with one or two."
+    ],
+    "risks": [
+      "Private Live APIs",
+      "GUI automation",
+      "and direct plugin hosting may be brittle or unsafe; do not recommend them as supported without evidence."
+    ],
+    "paths": [
+      "docs",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "src",
+      "bridge"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T21:10:56.822Z",
+    "updatedAt": "2026-08-17T21:12:40.535Z",
+    "scope": "Read-only research covering Live Configure/default configurations, Racks/macros, Max for Live/LOM, MIDI or OSC/plugin APIs, and direct AU/VST hosting. No code changes, plugin configuration, Set mutation, installation, or external publication.",
+    "testStrategy": "Use primary vendor and standards documentation, compare alternatives against the observed active-Set parameter counts, and clearly label inference or unavailable vendor documentation.",
+    "acceptanceCriteria": [
+      "A source matrix cites authoritative documentation and asserts whether each alternative can expose hidden controls to the existing MCP, requires manual setup, or requires a new architecture.",
+      "A plugin-specific assessment visibly recommends a path for SSD5, Ample Bass, TDR Nova, and Youlean based on their control and metering needs.",
+      "A ranked recommendation identifies the safest near-term solution, its limitations, and a separately scoped experimental option without claiming undocumented Live API capabilities."
+    ]
+  },
+  {
+    "id": "ableton-hidden-plugin-parameters-research-20260817-architect-a4ffec",
+    "title": "[ARCHITECT] ableton-hidden-plugin-parameters-research-20260817",
+    "ownerRole": "architect",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "architect"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T21:11:06.690Z",
+    "updatedAt": "2026-08-17T21:11:06.908Z"
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817",
+    "title": "Add safe SSD5 multi-output MCP workflow",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Provide a verified MCP workflow that discovers SSD5 output routing and can create named Live audio receiver tracks for selected plugin outputs.",
+    "assumptions": [
+      "Live exposes SSD5 sub-outputs through available_input_routing_types and available_input_routing_channels on audio tracks after internal SSD5 mixer outputs are assigned."
+    ],
+    "risks": [
+      "Routing labels vary by Live/plugin format; resolve exact labels and fail closed rather than fuzzy-route. Audio track creation is mutating and must rollback on partial failure."
+    ],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "test",
+      "docs",
+      "package.json"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T21:27:19.310Z",
+    "updatedAt": "2026-08-18T00:26:49.263Z",
+    "scope": "Add read-only planning plus explicitly requested apply behavior using supported Live routing APIs. Do not configure SSD5 internal mixer assignments, mutate the active Set during automated QA, push, publish, or deploy.",
+    "testStrategy": "Use development adapter fixtures and Python fake Live routing objects for planning, apply, verification, idempotence, and rollback; run full deterministic suite. Defer active Set apply until the updated Remote Script is installed and the user confirms the proposed map.",
+    "acceptanceCriteria": [
+      "A listed MCP planning tool asserts the SSD5 source track and available plugin output channels, returning a proposed receiver-track map without changing project state.",
+      "A listed MCP apply tool accepts an explicit output-to-track map and tests assert it creates audio tracks with exact names, source routing type/channel, Monitor In state, and observable readback.",
+      "Tests assert unsupported output names and partial routing failures return errors without leaving newly created receiver tracks behind, and repeated setup avoids duplicate receiver tracks.",
+      "Running the targeted Node and Python fake-Live tests plus npm test produces exit code 0, and captured request logs contain zero calls to a mutating endpoint on the user's active Ableton Set."
+    ],
+    "blockedReason": "",
+    "qaGate": {
+      "plan": "Deterministic Node MCP-to-bridge and Python fake-Live routing tests cover discovery, exact routing, Monitor In, readback, idempotence, ambiguity rejection, unavailable selectors, and atomic rollback. Real Live validation is deferred until the updated Remote Script is installed and Ableton restarted; then run only the read-only plan before any separately approved apply.",
+      "executionStatus": "deferred",
+      "deferredRationale": "User explicitly approved the qa-to-release gate on 2026-08-17 while accepting that real Live validation remains deferred until Remote Script reinstall/restart and manual receiver bootstrap. No active-Set apply is authorized by this acceptance.",
+      "deferredOwner": "user"
+    },
+    "riskGate": {
+      "impactAreas": [
+        "live-runtime-routing",
+        "remote-script-installation"
+      ],
+      "acceptance": {
+        "acceptedBy": "product_owner",
+        "rationale": "Product Owner records the user's explicit approval to advance qa-to-release with real Live install/restart validation deferred; active-Set apply remains separately approval-gated."
+      }
+    },
+    "architectureApproval": {
+      "userApproved": true,
+      "approvedBy": "product_owner"
+    }
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817-developer-44ad19",
+    "title": "[DEVELOPER] ableton-ssd-multi-output-workflow-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "canceled",
+    "createdAt": "2026-08-17T21:27:37.870Z",
+    "updatedAt": "2026-08-18T00:21:10.443Z"
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817-qa-44ad19",
+    "title": "[QA] ableton-ssd-multi-output-workflow-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-ssd-multi-output-workflow-20260817-developer-44ad19"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-17T22:04:45.928Z",
+    "updatedAt": "2026-08-17T22:16:37.471Z"
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817-developer-201e5d",
+    "title": "[DEVELOPER] ableton-ssd-multi-output-workflow-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "canceled",
+    "createdAt": "2026-08-18T00:21:18.861Z",
+    "updatedAt": "2026-08-18T00:24:57.038Z"
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817-developer-5b9d38",
+    "title": "[DEVELOPER] ableton-ssd-multi-output-workflow-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T00:25:00.182Z",
+    "updatedAt": "2026-08-18T00:25:59.840Z"
+  },
+  {
+    "id": "ableton-ssd-multi-output-workflow-20260817-qa-5b9d38",
+    "title": "[QA] ableton-ssd-multi-output-workflow-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-ssd-multi-output-workflow-20260817-developer-5b9d38"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T00:25:59.846Z",
+    "updatedAt": "2026-08-18T00:26:36.467Z"
+  },
+  {
+    "id": "ableton-arrangement-clip-delete-20260817",
+    "title": "Add safe Arrangement clip deletion to MCP",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "goal": "Provide a verified MCP workflow that previews and deletes exact Arrangement clips without affecting Session clips or non-selected Arrangement material.",
+    "acceptanceCriteria": [
+      "A listed read-only MCP planning tool returns exact Arrangement clip candidates with stable track and clip identity, start beat, and length, while tests confirm project state is unchanged.",
+      "A separately listed destructive MCP tool accepts only exact pre-resolved Arrangement clip identities and tests confirm it deletes every selected clip while preserving all unselected Arrangement and Session clips.",
+      "Tests confirm stale, missing, duplicated, ambiguous, or partially unsupported selections fail closed before mutation; if a later Track.delete_clip call fails, Song.undo restores every clip already deleted and readback verifies the original Arrangement state, otherwise the response reports rollback failure explicitly.",
+      "Running focused Node and Python fake-Live tests plus npm test produces exit code 0 without invoking a mutating endpoint on the user's active Ableton Set."
+    ],
+    "assumptions": [
+      "Live 12 exposes Arrangement clip objects or another supported operation that can delete a precise timeline clip; if the LOM lacks such a primitive",
+      "the implementation must report unsupported rather than simulate deletion through GUI automation."
+    ],
+    "risks": [
+      "Arrangement clip object identity may be unstable across mutations",
+      "and Live API support may differ by version. Resolve exact targets immediately before deletion",
+      "reject stale or ambiguous selectors",
+      "delete in a deterministic order",
+      "and verify by rereading the timeline."
+    ],
+    "paths": [
+      "src",
+      "bridge",
+      "ableton_remote_scripts/AbletonMcpBridge",
+      "test",
+      "docs",
+      "package.json"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "developer",
+        "qa"
+      ]
+    },
+    "status": "blocked",
+    "createdAt": "2026-08-18T00:45:55.284Z",
+    "updatedAt": "2026-08-18T01:52:33.618Z",
+    "scope": "Add read-only preview and exact destructive deletion for Arrangement clips only, including compensating Song.undo rollback and restoration readback after mid-delete runtime failures. Do not delete any clip from the active Set during implementation or automated QA; do not change Session clip deletion semantics, transport, mixer, devices, or project save behavior.",
+    "testStrategy": "Use Node MCP-to-bridge fixtures and Python fake-Live tracks covering no-mutation preview, exact selection, preservation of Session/unselected clips, stale and ambiguous selectors, partial support, deterministic ordering, mid-delete exceptions, one undo per completed deletion, rollback verification success/failure, and full npm test. Defer active-Set deletion until install/restart, read-only preview, and separate exact-candidate approval.",
+    "qaGate": {
+      "plan": "Local Node/Python fake-Live and full deterministic suite first; real Live uses read-only preview only after installation/restart. Any actual Arrangement deletion requires separate user approval of exact clip identities.",
+      "executionStatus": "deferred",
+      "deferredRationale": "User explicitly approved release readiness with real Live validation deferred. The next real-Live action is read-only preview after install/restart; deleting the eleven Arrangement clips requires separate approval of the exact candidate identities.",
+      "deferredOwner": "user"
+    },
+    "riskGate": {
+      "impactAreas": [
+        "active-set-data-loss",
+        "live-runtime-compatibility"
+      ],
+      "acceptance": {
+        "acceptedBy": "product_owner",
+        "rationale": "User explicitly approved QA-to-Release on 2026-08-17 with real Live validation deferred until Remote Script install/restart and a read-only deletion preview. This approval does not authorize deleting any Arrangement clip from the active Set."
+      }
+    },
+    "architectureApproval": {
+      "proposal": "Expose GET /arrangement/clips/delete-plan and DELETE /arrangement/clips. The plan enumerates only Track.arrangement_clips and issues short-lived exact selector tokens bound to track identity and observable clip fingerprint. Delete preflights the entire selection against current timeline state, rejects stale/ambiguous/unsupported targets before mutation, calls Track.delete_clip(clip) in deterministic reverse timeline order, then rereads Arrangement clips and reports per-target verification. Session deletion remains isolated at DELETE /clips/midi. No GUI automation.",
+      "userApproved": true,
+      "approvedBy": "product_owner"
+    },
+    "blockedReason": "release_manager requested changes: The High partial-deletion risk is resolved: callable Song.undo is preflighted, one undo runs per completed deletion, complete observable Arrangement restoration is reread and verified across recreated proxies, and undo/readback/fingerprint failures are explicit rollback-failed responses. Independent QA and full suite pass. Remaining release blocker is packaging only: the shared worktree still mixes unrelated task changes and no Arrangement-only release diff/commit has been isolated. Real Live preview remains deferred as previously user-approved."
+  },
+  {
+    "id": "ableton-arrangement-clip-delete-20260817-developer-aaf633",
+    "title": "[DEVELOPER] ableton-arrangement-clip-delete-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "canceled",
+    "createdAt": "2026-08-18T00:46:24.547Z",
+    "updatedAt": "2026-08-18T01:39:50.758Z"
+  },
+  {
+    "id": "ableton-arrangement-clip-delete-20260817-qa-aaf633",
+    "title": "[QA] ableton-arrangement-clip-delete-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-arrangement-clip-delete-20260817-developer-aaf633"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T00:57:42.671Z",
+    "updatedAt": "2026-08-18T01:00:47.026Z"
+  },
+  {
+    "id": "ableton-arrangement-clip-delete-20260817-developer-ecb6ee",
+    "title": "[DEVELOPER] ableton-arrangement-clip-delete-20260817",
+    "ownerRole": "developer",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "developer"
+      ]
+    },
+    "status": "pending",
+    "createdAt": "2026-08-18T01:39:51.004Z",
+    "updatedAt": "2026-08-18T01:39:51.004Z"
+  },
+  {
+    "id": "ableton-arrangement-clip-delete-20260817-qa-ecb6ee",
+    "title": "[QA] ableton-arrangement-clip-delete-20260817",
+    "ownerRole": "qa",
+    "dependencies": [
+      "ableton-arrangement-clip-delete-20260817-developer-ecb6ee"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "qa"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T01:46:13.099Z",
+    "updatedAt": "2026-08-18T01:51:06.555Z"
+  },
+  {
+    "id": "ableton-release-0-2-0-20260817",
+    "title": "Prepare npm release 0.2.0",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "goal": "Bump the npm package from 0.1.0 to 0.2.0, validate the exact package contents, and prepare the version commit that triggers publication only when pushed to main.",
+    "assumptions": [],
+    "risks": [],
+    "paths": [
+      "package.json",
+      "package-lock.json",
+      "docs/release-checklist.md"
+    ],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ],
+      "phaseSequence": [
+        "release"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T02:37:07.501Z",
+    "updatedAt": "2026-08-18T02:40:16.997Z",
+    "scope": "Version metadata, deterministic package validation, and local release commit only; no push, tag, or npm publish in this task.",
+    "testStrategy": "Run npm test, Python py_compile, npm run check:package, npm pack --dry-run, and inspect the tarball manifest before committing.",
+    "acceptanceCriteria": [
+      "package.json and package-lock.json both report version 0.2.0.",
+      "npm test, Python compilation, package release check, and npm pack dry-run exit zero.",
+      "The release commit contains the version bump and reviewed generated records, while temporary artifacts are excluded."
+    ]
+  },
+  {
+    "id": "ableton-release-0-2-0-20260817-release-f43cc8",
+    "title": "[RELEASE] ableton-release-0-2-0-20260817",
+    "ownerRole": "release_manager",
+    "dependencies": [],
+    "workflow": {
+      "requiredRoles": [
+        "release_manager"
+      ]
+    },
+    "status": "done",
+    "createdAt": "2026-08-18T02:37:24.611Z",
+    "updatedAt": "2026-08-18T02:37:24.868Z"
   }
 ]

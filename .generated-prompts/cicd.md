@@ -52,3 +52,22 @@
 ```
 
 <!-- Entries below this line are maintained by agents -->
+## package.json
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+- **Paths:** package.json
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Expose the mutation-gated smoke:live:contract command without adding it to the deterministic npm test gate.
+````
+---

@@ -52,7 +52,86 @@
 ```
 
 <!-- Entries below this line are maintained by agents -->
+## SSD5 Multi-Output Routing Guide And Contracts
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 2
+- **Task:** ableton-ssd-multi-output-workflow-20260817
+- **Role:** developer
+- **Paths:** docs/ssd5-multi-output.md, docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md, docs/ableton-compatibility.md, docs/risk-policy.md
 
+### Key decisions
+- Document the two-step plan/apply workflow and the exact-label, fail-closed contract.
+- State that Live exposes channel choices only for the receiver's currently selected input type, requiring a manual receiver bootstrap when no routed observer exists.
+- Defer active-Set apply until the Remote Script is reinstalled/restarted and the user reviews the proposed map.
+- Distinguish an unavailable source selector from a valid source that needs a receiver bootstrap, and document ambiguous display-name rejection.
+
+### Evidence
+- `node test/compatibility-matrix.mjs` passed.
+- `npm test` passed documentation-backed compatibility and risk-policy checks.
+
+### Prompt
+````
+Document the safe SSD5 multi-output workflow, atomicity guarantees, Live channel-discovery limitation, and explicit active-Set next step without overstating runtime verification.
+````
+---
+## project-lifecycle-docs
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-clip-delete-project-save-20260817
+- **Role:** developer
+- **Paths:** docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Document confirmed-empty delete semantics and the observable guarantees and limits of save/save-as responses.
+````
+---
+## docs/live-smoke-suite.md
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+- **Paths:** docs/live-smoke-suite.md
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Document the mutation-gated real Live round-trip contract suite, cleanup behavior, explicit target selection, and optional destructive mastering check.
+````
+---
+## docs/ableton-bridge-contract.md
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+- **Paths:** docs/ableton-bridge-contract.md
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Document the finite HTTP and MIDI limits plus complete mastering-chain resolution semantics for GitHub issues 3 and 4.
+````
+---
 ## Ableton MCP README And Bridge Contract
 - **Created:** 2026-07-16
 - **Updated:** 2026-07-16
@@ -156,5 +235,29 @@ Document how to install and verify the Ableton Python Remote Script adapter, inc
 ### Prompt
 ````
 Create focused snapshot rollback documentation that maps tempo, signature, clips, devices, routing, sends, returns, and master chain coverage across the deterministic development bridge and Python Remote Script bridge, with unsupported rollback gaps stated plainly.
+````
+---
+
+## Bridge Limits And Live Contract Runbook
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 1
+- **Task:** ableton-fix-gh-issues-1-5-20260817
+- **Role:** developer
+
+### Key decisions
+- Document the 1 MiB HTTP request ceiling and 8,192-note schema bound alongside the bridge contract.
+- Document mastering kinds and the all-entries pre-resolution guarantee.
+- Treat real Live round-trip checks as a separate, mutation-gated tier with explicit track and empty clip-slot selection.
+- Keep master-chain validation optional and warn that generic rollback is unavailable.
+
+### Evidence
+- `node --check test/live-contract.mjs` passed.
+- `npm test` passed.
+- `orchestra doc-sync audit --task ableton-fix-gh-issues-1-5-20260817` records documentation synchronization status.
+
+### Prompt
+````
+Synchronize the bridge contract and Live smoke runbook with the request-size, MIDI-note, preset-inventory, parameter round-trip, and mastering-chain guarantees, preserving explicit safety gates and deferred real Live execution.
 ````
 ---

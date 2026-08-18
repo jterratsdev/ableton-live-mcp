@@ -53,6 +53,29 @@
 
 <!-- Entries below this line are maintained by agents -->
 
+## SSD5 Plugin Output Routing Service
+- **Created:** 2026-08-17
+- **Updated:** 2026-08-17
+- **Iterations:** 2
+- **Task:** ableton-ssd-multi-output-workflow-20260817
+- **Role:** developer
+
+### Key decisions
+- Expose `GET /routing/plugin-outputs/plan` as read-only and `POST /routing/plugin-outputs/apply` as safe-write.
+- Resolve modern Live routing dictionaries and legacy routing fields through one adapter contract, with exact identifier/display matching and verified readback.
+- Preflight all observable channels and existing receiver conflicts, then rollback only tracks created by the current request on failure.
+- Give exact identifiers precedence over display labels and reject display labels that map to distinct identifiers; validate source availability before bootstrap diagnostics.
+
+### Evidence
+- Focused Node/Python routing tests and the full deterministic suite passed.
+- Risk policy, observability, Remote Script static routes, and compatibility metadata remain synchronized.
+
+### Prompt
+````
+Add a truthful two-step plugin output routing service that separates read-only discovery from explicit atomic application and handles modern and legacy Live routing contracts safely.
+````
+---
+
 ## Ableton Bridge Configuration And Requests
 - **Created:** 2026-07-16
 - **Updated:** 2026-07-16

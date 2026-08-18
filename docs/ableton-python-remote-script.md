@@ -70,6 +70,8 @@ The Remote Script currently implements:
 - `GET /status`
 - `GET /project`
 - `GET /arrangement`
+- `GET /arrangement/clips/delete-plan`
+- `DELETE /arrangement/clips`
 - `POST /project/snapshot`
 - `POST /project/rollback`
 - `GET /plugins?kind=...&query=...`
@@ -185,6 +187,19 @@ and bridge reachability issues before deeper MCP smoke testing.
   and reports arrangement clips only when the running Live API exposes an
   arrangement clip collection on tracks. Missing arrangement clip access returns
   an empty `clips` array with a warning, not session-clip guesses.
+- `GET /arrangement/clips/delete-plan` reads only `Track.arrangement_clips` and
+  returns exact track/clip identities, start beat, length, and a short-lived
+  plan token without changing the Set.
+- `DELETE /arrangement/clips` accepts only identities from a current plan,
+  validates the whole selection before mutation, calls `Track.delete_clip(clip)`
+  on exact track-owned objects in reverse timeline order, and rereads the
+  timeline for per-clip verification. Missing capabilities return `501`; stale,
+  duplicated, missing, or ambiguous selections fail closed. The endpoint also
+  requires callable `Song.undo` before mutation. If a later deletion fails, it
+  undoes every completed deletion and verifies the full original Arrangement
+  state with observable fingerprints that do not depend on Python proxy
+  identity. Undo/readback/fingerprint failures are returned explicitly as
+  rollback failures.
 - `POST /arrangement/locators` uses `song.set_or_delete_cue` and
   `song.cue_points` when exposed. Unsupported cue creation/updating returns
   `501`.

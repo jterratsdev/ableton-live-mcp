@@ -3,6 +3,7 @@ import { analyzeAudioFile, analyzeRenderedMix } from "./audio-analysis.js";
 import { exportDevelopmentRender } from "./development/render.js";
 import { analyzeAndApplyMastering, applyMasteringChain, bounceTracks, productionSessionReport } from "./development/production-workflows.js";
 import { addOrUpdateLocator, arrangementSnapshot, insertArrangementClip } from "./development/arrangement.js";
+import { deleteArrangementClips, planArrangementClipDeletion } from "./development/arrangement-clip-delete.js";
 import { setAutomation } from "./development/automation.js";
 import { applyGrooveToClipNotes, humanizeClipNotes, quantizeClipNotes } from "./development/clip-notes.js";
 import { createMidiClip, deleteClip, getClipNotes, importMidiFile, launchClip, launchScene } from "./development/clips.js";
@@ -59,6 +60,14 @@ export class DevelopmentAbletonAdapter {
 
   async getArrangement() {
     return arrangementSnapshot(this.state);
+  }
+
+  async planArrangementClipDeletion() {
+    return planArrangementClipDeletion(this.state);
+  }
+
+  async deleteArrangementClips(payload) {
+    return deleteArrangementClips(this.state, payload);
   }
 
   async setTempo(payload) {

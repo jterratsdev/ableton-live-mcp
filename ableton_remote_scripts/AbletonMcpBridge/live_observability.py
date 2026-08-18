@@ -14,6 +14,8 @@ ENDPOINT_SUPPORT = (
     {"method": "GET", "path": "/status", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/project", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/arrangement", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "GET", "path": "/arrangement/clips/delete-plan", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Track.arrangement_clips and exact Clip timing identity fields"}},
+    {"method": "DELETE", "path": "/arrangement/clips", "riskTier": "destructive", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Track.delete_clip and a current exact deletion plan"}},
     {"method": "POST", "path": "/project/snapshot", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/project/rollback", "riskTier": "destructive", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/plugins", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},

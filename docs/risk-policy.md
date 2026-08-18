@@ -121,6 +121,7 @@ classification.
 - `GET /status`
 - `GET /project`
 - `GET /arrangement`
+- `GET /arrangement/clips/delete-plan`
 - `GET /plugins`
 - `GET /browser/search`
 - `POST /analysis/audio`
@@ -168,6 +169,7 @@ classification.
 - `DELETE /returns`
 - `POST /clips/consolidate`
 - `DELETE /clips/midi`
+- `DELETE /arrangement/clips`
 - `DELETE /devices`
 - `POST /mastering/remove-reverb`
 

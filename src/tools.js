@@ -16,6 +16,16 @@ export const tools = [
   tool("ableton_get_status", "Read Ableton Live transport and session status.", {}),
   tool("ableton_get_project", "Read project structure: tracks, clips, devices, locators, routing, and mixer state.", {}),
   tool("ableton_get_arrangement", "Read arrangement timeline clips, locators, song length, and derived sections.", {}),
+  tool("ableton_plan_arrangement_clip_deletion", "Read exact Arrangement clip identities and a short-lived deletion plan token without changing the Set.", {}),
+  tool("ableton_delete_arrangement_clips", "Delete only exact Arrangement clips from a current read-only deletion plan and verify each is absent.", {
+    planToken: stringProp("Short-lived token returned by ableton_plan_arrangement_clip_deletion."),
+    clipIdentities: {
+      type: "array",
+      minItems: 1,
+      uniqueItems: true,
+      items: stringProp("Exact clip identity returned by ableton_plan_arrangement_clip_deletion.")
+    }
+  }, ["planToken", "clipIdentities"]),
   tool("ableton_create_snapshot", "Save a project snapshot before broad edits.", {
     label: stringProp("Human-readable reason for the snapshot.")
   }, ["label"]),
@@ -346,6 +356,8 @@ export function createDispatch(bridge) {
     ableton_get_status: () => bridge.invoke("get_status"),
     ableton_get_project: async () => annotateProjectMixerContract(await bridge.invoke("get_project")),
     ableton_get_arrangement: () => bridge.invoke("get_arrangement"),
+    ableton_plan_arrangement_clip_deletion: () => bridge.invoke("plan_arrangement_clip_deletion"),
+    ableton_delete_arrangement_clips: (args) => bridge.invoke("delete_arrangement_clips", args),
     ableton_create_snapshot: (args) => bridge.invoke("create_snapshot", args),
     ableton_rollback_snapshot: (args) => bridge.invoke("rollback_snapshot", args),
     ableton_list_plugins: (args) => bridge.invoke("list_plugins", args),
@@ -512,6 +524,21 @@ export function validateToolInput(toolName, args) {
 
   if (toolName === "ableton_get_workflow_plan" && isBlank(args.workflowId)) {
     throw rpcError(-32602, "workflowId must be a non-empty string");
+  }
+
+  if (toolName === "ableton_delete_arrangement_clips") {
+    if (isBlank(args.planToken)) {
+      throw rpcError(-32602, "planToken must be a non-empty string");
+    }
+    if (!Array.isArray(args.clipIdentities) || args.clipIdentities.length === 0) {
+      throw rpcError(-32602, "clipIdentities must be a non-empty array");
+    }
+    if (args.clipIdentities.some((identity) => isBlank(identity))) {
+      throw rpcError(-32602, "clipIdentities must contain only non-empty strings");
+    }
+    if (new Set(args.clipIdentities).size !== args.clipIdentities.length) {
+      throw rpcError(-32602, "clipIdentities must not contain duplicates");
+    }
   }
 
   if (toolName === "ableton_get_bridge_observability" && args.installedFilePaths !== undefined) {

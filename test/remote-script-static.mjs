@@ -11,6 +11,7 @@ const httpPath = `${scriptDir}/http_bridge.py`;
 const liveApiPath = `${scriptDir}/live_api.py`;
 const liveModulePaths = [
   `${scriptDir}/live_arrangement.py`,
+  `${scriptDir}/live_arrangement_delete.py`,
   `${scriptDir}/live_browser.py`,
   `${scriptDir}/live_clips.py`,
   `${scriptDir}/live_core.py`,
@@ -47,6 +48,8 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "GET /status",
   "GET /project",
   "GET /arrangement",
+  "GET /arrangement/clips/delete-plan",
+  "DELETE /arrangement/clips",
   "POST /project/snapshot",
   "POST /project/rollback",
   "GET /plugins",

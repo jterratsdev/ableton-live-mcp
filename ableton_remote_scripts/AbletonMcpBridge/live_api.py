@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function
 
 from .live_arrangement import add_locator, arrangement_snapshot, insert_arrangement_clip
+from .live_arrangement_delete import delete_arrangement_clips, plan_arrangement_clip_deletion
 from .live_browser import browser_item_inventory, browser_search_inventory, find_browser_items, first_browser_item
 from .live_clips import apply_groove, create_midi_clip, delete_clip, get_clip_notes, humanize_clip, launch_clip, launch_scene, quantize_clip
 from .live_core import first_query_value

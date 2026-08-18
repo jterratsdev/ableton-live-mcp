@@ -36,6 +36,7 @@ from .live_api import (
     consolidate_clip,
     cue_points,
     delete_clip,
+    delete_arrangement_clips,
     delete_device,
     delete_return_track,
     delete_first_instrument,
@@ -48,6 +49,7 @@ from .live_api import (
     freeze_track,
     get_clip_notes,
     arrangement_snapshot,
+    plan_arrangement_clip_deletion,
     get_device_parameters,
     humanize_clip,
     insert_arrangement_clip,
@@ -126,6 +128,10 @@ class AbletonMcpBridge(ControlSurface):
             return self._call_live_thread(self._get_project)
         if route == "GET /arrangement":
             return self._call_live_thread(lambda: arrangement_snapshot(self.song()))
+        if route == "GET /arrangement/clips/delete-plan":
+            return self._call_live_thread(lambda: plan_arrangement_clip_deletion(self.song()))
+        if route == "DELETE /arrangement/clips":
+            return self._call_live_thread(lambda: delete_arrangement_clips(self.song(), payload))
         if route == "POST /project/snapshot":
             return self._call_live_thread(lambda: self._create_snapshot(payload))
         if route == "POST /project/rollback":

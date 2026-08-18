@@ -104,6 +104,31 @@ exposed by the running Live API; when arrangement clips are not exposed, it
 returns an empty `clips` array plus a warning instead of fabricating timeline
 clips from session slots.
 
+### `GET /arrangement/clips/delete-plan`
+
+Returns a read-only snapshot of exact Arrangement candidates. Each candidate
+includes `trackIdentity`, `clipIdentity`, `trackIndex`, `arrangementIndex`,
+`startBeat`, `lengthBeats`, and `deletionSupported`, plus a plan-wide
+`planToken`. The token is short-lived: any timeline identity change requires a
+new plan.
+
+### `DELETE /arrangement/clips`
+
+Accepts only a `planToken` and a non-empty, duplicate-free `clipIdentities`
+array returned by the planning endpoint. The bridge validates the entire
+selection against a fresh `Track.arrangement_clips` read before deleting any
+clip, invokes `Track.delete_clip(clip)` on exact track-owned objects in reverse
+timeline order, and returns per-identity `deleted` and `verifiedAbsent` results.
+Session clips are never consulted or mutated. Unsupported capability returns
+`501`; stale, missing, or ambiguous identity returns `409` before mutation.
+Callable `Song.undo` is also required before mutation. If a later
+`Track.delete_clip` call fails, the Remote Script invokes `Song.undo` once for
+every completed deletion and rereads the complete Arrangement timeline. It
+verifies restoration with observable track/index/name/start/length fingerprints
+because Live may expose new Python proxy identities after undo. A verified
+restoration returns the original deletion failure; an undo exception, readback
+error, or fingerprint mismatch is reported explicitly as `rollback failed`.
+
 ### `POST /project/snapshot`
 
 Saves a copy/checkpoint before broad edits.

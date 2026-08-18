@@ -3,6 +3,7 @@ const deterministicSuites = [
   "./regression.mjs",
   "./bridge.mjs",
   "./remote-script-static.mjs",
+  "./arrangement-clip-delete.mjs",
   "./live-meter-cache.mjs",
   "./live-volume-write.mjs",
   "../scripts/check-doctor-diagnostics.mjs",

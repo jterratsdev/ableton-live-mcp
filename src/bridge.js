@@ -4,6 +4,8 @@ const ACTIONS = {
   get_status: { method: "GET", path: "/status" },
   get_project: { method: "GET", path: "/project" },
   get_arrangement: { method: "GET", path: "/arrangement" },
+  plan_arrangement_clip_deletion: { method: "GET", path: "/arrangement/clips/delete-plan" },
+  delete_arrangement_clips: { method: "DELETE", path: "/arrangement/clips" },
   create_snapshot: { method: "POST", path: "/project/snapshot" },
   rollback_snapshot: { method: "POST", path: "/project/rollback" },
   list_plugins: { method: "GET", path: "/plugins" },

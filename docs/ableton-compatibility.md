@@ -105,7 +105,7 @@ deterministic checks.
 ```json compatibility-metadata
 {
   "schemaVersion": 1,
-  "sourceReviewedAt": "2026-07-20",
+  "sourceReviewedAt": "2026-08-17",
   "unsupportedHttpStatus": 501,
   "editions": {
     "liveLite": {
@@ -168,6 +168,14 @@ deterministic checks.
       "versionImpact": "Expected on Live 11 and Live 12."
     },
     {
+      "route": "DELETE /arrangement/clips",
+      "tier": "destructive",
+      "remoteScriptExpectation": "host_dependent_501",
+      "unsupportedStatus": 501,
+      "editionImpact": "All editions can contain Arrangement clips; deletion is limited to clips exposed by the Live Object Model.",
+      "versionImpact": "Requires Track.arrangement_clips and Track.delete_clip; unsupported hosts fail with 501 before mutation."
+    },
+    {
       "route": "DELETE /devices",
       "tier": "destructive",
       "remoteScriptExpectation": "host_dependent_501",
@@ -189,6 +197,14 @@ deterministic checks.
       "remoteScriptExpectation": "supported_with_limits",
       "editionImpact": "All editions expose arrangement/cue-point state where the Live API makes it observable.",
       "versionImpact": "Expected on Live 11 and Live 12; arrangement clips can be empty with a warning when not exposed."
+    },
+    {
+      "route": "GET /arrangement/clips/delete-plan",
+      "tier": "read",
+      "remoteScriptExpectation": "host_dependent_501",
+      "unsupportedStatus": 501,
+      "editionImpact": "All editions can expose Arrangement clips; the operation is read-only.",
+      "versionImpact": "Requires Track.arrangement_clips plus Clip start_time, end_time, and is_arrangement_clip."
     },
     {
       "route": "GET /browser/search",

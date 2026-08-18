@@ -25,6 +25,10 @@ async function routeRequest(req, adapter) {
       return adapter.getProject();
     case "GET /arrangement":
       return adapter.getArrangement();
+    case "GET /arrangement/clips/delete-plan":
+      return adapter.planArrangementClipDeletion();
+    case "DELETE /arrangement/clips":
+      return adapter.deleteArrangementClips(await readJsonBody(req));
     case "POST /project/snapshot":
       return adapter.createSnapshot(await readJsonBody(req));
     case "POST /project/rollback":

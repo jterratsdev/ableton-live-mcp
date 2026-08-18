@@ -9,6 +9,8 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("GET", "/status", "read", "supported", "supported"),
   endpoint("GET", "/project", "read", "supported", "supported"),
   endpoint("GET", "/arrangement", "read", "supported", "supported"),
+  endpoint("GET", "/arrangement/clips/delete-plan", "read", "supported", "conditional", "Requires Track.arrangement_clips and exact Clip timing identity fields"),
+  endpoint("DELETE", "/arrangement/clips", "destructive", "supported", "conditional", "Requires Track.delete_clip and a current exact deletion plan"),
   endpoint("POST", "/project/snapshot", "safe-write", "supported", "supported"),
   endpoint("POST", "/project/rollback", "destructive", "supported", "supported"),
   endpoint("GET", "/plugins", "read", "supported", "supported"),

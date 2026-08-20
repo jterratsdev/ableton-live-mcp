@@ -1,4 +1,5 @@
 import { classifyToolRisk, hasToolRiskClassification } from "./risk-policy.js";
+import { TOOL_CAPABILITY_REGISTRY, toolAvailability } from "./tool-capabilities.js";
 
 export const WORKFLOW_IDS = Object.freeze({
   CLASSICAL_SESSION_SETUP: "classical_session_setup",
@@ -189,16 +190,16 @@ export function getWorkflowPlanIds() {
   return [...WORKFLOW_ORDER];
 }
 
-export function listWorkflowPlans() {
-  return WORKFLOW_ORDER.map((workflowId) => getWorkflowPlan(workflowId));
+export function listWorkflowPlans(capabilityView) {
+  return WORKFLOW_ORDER.map((workflowId) => getWorkflowPlan(workflowId, capabilityView));
 }
 
-export function getWorkflowPlan(workflowId) {
+export function getWorkflowPlan(workflowId, capabilityView) {
   const definition = WORKFLOW_DEFINITIONS[workflowId];
   if (!definition) {
     throw new Error(`Unknown workflow plan: ${workflowId}`);
   }
-  return clonePlan(materializeWorkflow(definition));
+  return clonePlan(materializeWorkflow(definition, capabilityView));
 }
 
 export function validateWorkflowPlans() {
@@ -214,6 +215,9 @@ export function validateWorkflowPlans() {
     for (const planStep of definition.steps) {
       if (!hasToolRiskClassification(planStep.toolName)) {
         errors.push(`${workflowId}.${planStep.id} references unknown tool ${planStep.toolName}`);
+      }
+      if (!TOOL_CAPABILITY_REGISTRY[planStep.toolName]) {
+        errors.push(`${workflowId}.${planStep.id} references tool without capability policy ${planStep.toolName}`);
       }
     }
   }
@@ -250,8 +254,8 @@ function renderArgs(outputPath, scope) {
   };
 }
 
-function materializeWorkflow(definition) {
-  const steps = definition.steps.map(materializeStep);
+function materializeWorkflow(definition, capabilityView) {
+  const steps = definition.steps.map((planStep) => materializeStep(planStep, capabilityView));
   const riskTiers = [...new Set(steps.map((planStep) => planStep.riskTier))];
   return {
     id: definition.id,
@@ -263,12 +267,19 @@ function materializeWorkflow(definition) {
   };
 }
 
-function materializeStep(planStep) {
+function materializeStep(planStep, capabilityView) {
   const risk = classifyToolRisk(planStep.toolName);
+  const capability = capabilityView ? toolAvailability(planStep.toolName, capabilityView) : null;
 
   return {
     ...planStep,
     riskTier: risk.tier,
+    ...(capability ? {
+      availability: capability.status === "unsupported" ? "blocked" : capability.status,
+      executable: capability.available,
+      capabilityReason: capability.reason,
+      capabilityProbe: capability.probeTool
+    } : {}),
     risk: {
       tier: risk.tier,
       blockedByDefault: risk.blockedByDefault,

@@ -96,7 +96,6 @@ classification.
 ### Destructive
 
 - `ableton_rollback_snapshot`
-- `ableton_save_project`
 - `ableton_flatten_track`
 - `ableton_delete_return_track`
 - `ableton_consolidate_clip`
@@ -166,7 +165,6 @@ classification.
 ### Destructive
 
 - `POST /project/rollback`
-- `POST /project/save`
 - `POST /tracks/flatten`
 - `DELETE /returns`
 - `POST /clips/consolidate`

@@ -1,9 +1,14 @@
 import { loadBridgeConfig } from "./config.js";
+import { createCapabilityDocument } from "../bridge/observability.js";
 
-const ACTIONS = {
+export const ACTIONS = Object.freeze({
+  get_capabilities: { method: "GET", path: "/capabilities" },
   get_status: { method: "GET", path: "/status" },
   get_project: { method: "GET", path: "/project" },
   get_arrangement: { method: "GET", path: "/arrangement" },
+  get_scene_tempo_signature_capabilities: { method: "GET", path: "/scenes/tempo-signature-capabilities" },
+  set_scene_tempo_signature_overrides: { method: "POST", path: "/scenes/tempo-signature-overrides" },
+  get_arrangement_insertion_capabilities: { method: "GET", path: "/arrangement/insertion-capabilities" },
   plan_arrangement_clip_deletion: { method: "GET", path: "/arrangement/clips/delete-plan" },
   delete_arrangement_clips: { method: "DELETE", path: "/arrangement/clips" },
   create_snapshot: { method: "POST", path: "/project/snapshot" },
@@ -14,7 +19,6 @@ const ACTIONS = {
   analyze_mix: { method: "POST", path: "/analysis/mix" },
   get_production_report: { method: "GET", path: "/production/report" },
   set_tempo: { method: "POST", path: "/tempo" },
-  save_project: { method: "POST", path: "/project/save" },
   set_signature: { method: "POST", path: "/signature" },
   start_transport: { method: "POST", path: "/transport/start" },
   stop_transport: { method: "POST", path: "/transport/stop" },
@@ -55,7 +59,7 @@ const ACTIONS = {
   insert_arrangement_clip: { method: "POST", path: "/arrangement/insert" },
   add_locator: { method: "POST", path: "/arrangement/locators" },
   get_device_parameters: { method: "GET", path: "/devices/parameters" }
-};
+});
 
 export class AbletonBridge {
   constructor(options = {}) {
@@ -72,6 +76,9 @@ export class AbletonBridge {
     }
 
     if (this.dryRun) {
+      if (actionName === "get_capabilities") {
+        return createCapabilityDocument("development");
+      }
       return {
         ok: true,
         dryRun: true,

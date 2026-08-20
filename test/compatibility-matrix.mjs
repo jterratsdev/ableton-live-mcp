@@ -14,7 +14,6 @@ const REMOTE_SCRIPT_EXPECTATIONS = new Set([
 ]);
 
 const KNOWN_UNSUPPORTED_REMOTE_SCRIPT_ROUTES = [
-  "POST /arrangement/insert",
   "POST /automation",
   "POST /devices/reorder",
   "POST /mastering/analyze-and-apply",

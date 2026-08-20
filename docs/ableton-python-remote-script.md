@@ -67,9 +67,13 @@ http://127.0.0.1:9789
 
 The Remote Script currently implements:
 
+- `GET /capabilities`
 - `GET /status`
 - `GET /project`
 - `GET /arrangement`
+- `GET /scenes/tempo-signature-capabilities?sceneIndex=...`
+- `POST /scenes/tempo-signature-overrides`
+- `GET /arrangement/insertion-capabilities?trackIndex=...`
 - `GET /arrangement/clips/delete-plan`
 - `DELETE /arrangement/clips`
 - `POST /project/snapshot`
@@ -77,7 +81,6 @@ The Remote Script currently implements:
 - `GET /plugins?kind=...&query=...`
 - `GET /browser/search?kind=...&query=...&limit=...`
 - `POST /tempo`
-- `POST /project/save`
 - `POST /signature`
 - `POST /transport/start`
 - `POST /transport/stop`
@@ -88,6 +91,12 @@ The Remote Script currently implements:
 - `POST /tracks/flatten`
 - `POST /devices/load`
 - `POST /devices/load-master`
+
+`GET /capabilities` is read-only and does not enter the Live thread. It reports
+`mode: "ableton-remote-script"` plus every mapped route's `supported`,
+`conditional`, or `unsupported` status and a non-empty reason. MCP discovery
+uses this response to hide hard-unsupported actions and label conditional
+actions with the exact reason and target probe where one exists.
 - `GET /devices/parameters?target=track|return|master&trackIndex=...&returnIndex=...&deviceIndex=...`
 - `POST /devices/parameter`
 - `POST /devices/reorder`
@@ -176,9 +185,29 @@ and bridge reachability issues before deeper MCP smoke testing.
   `fire()` APIs. They change playback state only; they do not create, delete, or
   edit clips. Use `ableton_diagnose_playback` first when transport is running
   but meters are silent.
+- `GET /scenes/tempo-signature-capabilities` probes static descriptors and
+  reads each Scene override property independently without calling a setter.
+  `POST /scenes/tempo-signature-overrides` validates an exact zero-based Scene
+  index, preflights every requested property, writes in deterministic order,
+  reacquires the exact index for readback, and compensates attempted setters in
+  reverse order on failure. Empty and duplicate names are valid because names
+  are descriptive only. These overrides take effect only after that Session
+  Scene is later launched explicitly. Neither endpoint launches a Scene,
+  changes global Song tempo/signature, or creates Arrangement tempo envelopes
+  or time-signature markers.
 - `POST /tracks/duplicate` uses Ableton's `duplicate_track` API when exposed
-  and verifies that Live reports a new track. Unsupported duplication returns
-  `501`.
+  and resolves the result only at the documented insertion position immediately
+  after the source. It rereads the complete track-name sequence so recreated
+  Python proxies cannot make track 0 look newly created. A callable `Song.undo`
+  is required before mutation; failed count, position, rename, or detail
+  verification is rolled back and checked against the original observable track
+  fingerprint. Unsupported duplication returns `501`.
+- `GET /status` reports edition-detection provenance and observable audio/MIDI
+  track capacity. `POST /tracks/midi` and `POST /tracks/duplicate` reject with a
+  structured `409 edition_track_capacity_reached` before mutation when an exact
+  Lite (8) or Intro (16) installation path is at capacity. Standard, Suite, and
+  unknown installations receive no artificial finite cap. See
+  [Ableton edition capabilities](ableton-editions.md).
 - `POST /tracks/freeze` and `POST /tracks/flatten` call real freeze/flatten
   methods only when the running Live API exposes them. If no compatible method
   exists, the endpoint returns `501` rather than a simulated success.
@@ -191,7 +220,9 @@ and bridge reachability issues before deeper MCP smoke testing.
   an empty `clips` array with a warning, not session-clip guesses.
 - `GET /arrangement/clips/delete-plan` reads only `Track.arrangement_clips` and
   returns exact track/clip identities, start beat, length, and a short-lived
-  plan token without changing the Set.
+  plan token without changing the Set. Identities are hashes of stable observable
+  coordinates and timing; they never contain Python `id()` values, so repeated
+  reads remain stable when Live recreates wrapper objects.
 - `DELETE /arrangement/clips` accepts only identities from a current plan,
   validates the whole selection before mutation, calls `Track.delete_clip(clip)`
   on exact track-owned objects in reverse timeline order, and rereads the
@@ -200,15 +231,22 @@ and bridge reachability issues before deeper MCP smoke testing.
   requires callable `Song.undo` before mutation. If a later deletion fails, it
   undoes every completed deletion and verifies the full original Arrangement
   state with observable fingerprints that do not depend on Python proxy
-  identity. Undo/readback/fingerprint failures are returned explicitly as
-  rollback failures.
+  identity. Each delete is reread immediately; a successful API call that leaves
+  the clip present is an explicit failure and is never counted as deleted.
+  Undo/readback/fingerprint failures are returned explicitly as rollback
+  failures.
 - `POST /arrangement/locators` uses `song.set_or_delete_cue` and
   `song.cue_points` when exposed. Unsupported cue creation/updating returns
   `501`.
-- `POST /arrangement/insert` returns `501` in the Remote Script because this
-  bridge does not currently have a reliable Ableton Python API surface for
-  placing clips into arrangement view. The deterministic development bridge
-  supports insertion as in-memory timeline references for tests.
+- `GET /arrangement/insertion-capabilities` probes callable methods on the exact
+  destination track without changing the Set and distinguishes callable,
+  applicable, and safely executable behavior.
+- `POST /arrangement/insert` requires one explicit `midi_notes`, `session_clip`,
+  or `audio_file` mode. It uses only callable host methods, requires callable
+  `Song.undo`, compares complete observable Arrangement fingerprints, verifies
+  one exact clip delta, and performs bounded undo with full restoration readback
+  after every post-mutation failure. Modern Live MIDI writing uses
+  `add_new_notes`; `set_notes` is a capability-gated legacy fallback.
 - `GET /devices/parameters` lists current parameter names, values, ranges, and
   enablement before mutation. `POST /devices/parameter` applies an existing
   device parameter by normalized parameter name. Plugin parameter names vary by
@@ -250,11 +288,6 @@ and bridge reachability issues before deeper MCP smoke testing.
   notes through `get_notes_extended` and a replacement path such as
   `replace_selected_notes` or remove+`set_notes`. If those APIs are unavailable,
   the Remote Script returns `501` instead of reporting a successful no-op.
-- `POST /project/save` selects `save` or `save_as` from the available Song or
-  Application API, reports the invoked method, and returns `501` when no
-  compatible method exists. Host exceptions return `500`; success means the API
-  call returned without throwing, not that the bridge independently reopened the
-  `.als` file from disk.
 - Snapshot/rollback is in-memory while the Remote Script is loaded. It restores
   tempo, time signature, and MIDI clips that can be read and rewritten through
   Ableton's Python API. Device/plugin state, audio clips, routing, undo history,

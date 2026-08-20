@@ -16,9 +16,10 @@ MAX_BODY_BYTES = 1024 * 1024
 
 
 class BridgeHttpError(Exception):
-    def __init__(self, message, status_code=400):
+    def __init__(self, message, status_code=400, details=None):
         Exception.__init__(self, message)
         self.status_code = status_code
+        self.details = details or {}
 
 
 def start_http_server(host, port, bridge):
@@ -57,7 +58,9 @@ def make_handler(bridge):
                 result = bridge.handle_request(method, parsed.path, query, payload)
                 self._send_json(200, result)
             except BridgeHttpError as error:
-                self._send_json(error.status_code, {"ok": False, "error": str(error)})
+                response = {"ok": False, "error": str(error)}
+                response.update(error.details)
+                self._send_json(error.status_code, response)
             except Exception as error:
                 bridge._log(traceback.format_exc())
                 self._send_json(500, {"ok": False, "error": "Internal bridge error: %s" % error})

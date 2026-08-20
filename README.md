@@ -22,11 +22,19 @@ unsupported bridge operations.
 
 ## Tools
 
+The exact `tools/list` response is capability-aware. It reads the active
+bridge's read-only `GET /capabilities` contract, hides hard-unsupported bridge
+actions, keeps MCP-local analysis/risk/workflow tools, and labels
+target-dependent tools `Conditional`. Clients should re-list tools after
+reconnecting or changing bridges. An unavailable or malformed handshake fails
+closed and does not advertise unverified Live writes.
+
 Read and inspect:
 
 - `ableton_get_status`
 - `ableton_get_project`
 - `ableton_get_arrangement`
+- `ableton_get_scene_tempo_signature_capabilities`
 - `ableton_list_plugins`
 - `ableton_search_browser`
 - `ableton_diagnose_plugins`
@@ -53,8 +61,8 @@ Project, transport, track, and clip editing:
 - `ableton_create_snapshot`
 - `ableton_rollback_snapshot`
 - `ableton_set_tempo`
-- `ableton_save_project`
 - `ableton_set_signature`
+- `ableton_set_scene_tempo_signature_overrides`
 - `ableton_start_transport`
 - `ableton_stop_transport`
 - `ableton_create_midi_track`
@@ -217,22 +225,25 @@ in [docs/ableton-python-remote-script.md](docs/ableton-python-remote-script.md).
 That script runs inside Ableton and exposes the same bridge endpoints on
 `127.0.0.1:9789`.
 
-On this machine Ableton Live was detected at `/Applications/Ableton Live 12 Lite.app`.
-Install the bundled Remote Script with:
+On this machine Ableton Live Lite and Suite were detected. Install the bundled
+Remote Script into the edition you actually launch, for example Suite:
 
 ```bash
-npx -y @jterrats/ableton-live-mcp install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"
+npx -y @jterrats/ableton-live-mcp install-remote-script --app-path "/Applications/Ableton Live 12 Suite.app"
 ```
 
 If macOS rejects writes to `/Applications` with `Operation not permitted`, close
 Ableton and retry with `sudo -E npx -y @jterrats/ableton-live-mcp
-install-remote-script --app-path "/Applications/Ableton Live 12 Lite.app"`.
+install-remote-script --app-path "/Applications/Ableton Live 12 Suite.app"`.
 If sudo is still blocked, grant App Management or Full Disk Access to your
 terminal app in System Settings -> Privacy & Security, then rerun the installer.
 Finder manual copy with authentication is also valid.
 
 Release readiness checks are documented in
 [docs/release-checklist.md](docs/release-checklist.md).
+
+Edition detection, Lite/Intro capacity guards, and Standard/Suite behavior are
+documented in [docs/ableton-editions.md](docs/ableton-editions.md).
 
 Keep the bridge local-only. Do not bind it to a public network interface unless
 you add authentication and understand the risk of remote DAW control.

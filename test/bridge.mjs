@@ -74,19 +74,6 @@ try {
   const tempo = await toolCall(4, "ableton_set_tempo", { bpm: 132 });
   assert.equal(tempo.tempo, 132);
 
-  const saved = await toolCall(15, "ableton_save_project", { label: "bridge integration test" });
-  assert.equal(saved.ok, true);
-  assert.equal(saved.saved, true);
-  assert.deepEqual(saved.verification, { methodInvoked: true, requestedMode: "save" });
-
-  const savedAs = await toolCall(85, "ableton_save_project", {
-    path: "/tmp/ableton-mcp-bridge-contract.als",
-    label: "bridge save-as integration test"
-  });
-  assert.equal(savedAs.saved, true);
-  assert.equal(savedAs.path, "/tmp/ableton-mcp-bridge-contract.als");
-  assert.deepEqual(savedAs.verification, { methodInvoked: true, requestedMode: "save_as" });
-
   const signature = await toolCall(16, "ableton_set_signature", { numerator: 3, denominator: 4 });
   assert.equal(signature.ok, true);
   assert.equal(signature.timeSignature, "3/4");
@@ -249,18 +236,19 @@ try {
   assert.equal(invalidMaster.error, "volumeDb must be a number between -70 and 12");
 
   const insertedArrangementClip = await toolCall(43, "ableton_insert_arrangement_clip", {
+    mode: "session_clip",
     trackIndex: 0,
-    clipSlotIndex: 0,
+    sourceTrackIndex: 0,
+    sourceClipSlotIndex: 0,
     startBeat: 16,
-    lengthBeats: 8,
-    name: "Verse Arrangement"
   });
   assert.equal(insertedArrangementClip.ok, true);
-  assert.equal(insertedArrangementClip.inserted, true);
+  assert.equal(insertedArrangementClip.mode, "session_clip");
   assert.equal(insertedArrangementClip.clip.trackIndex, 0);
   assert.equal(insertedArrangementClip.clip.source.type, "sessionClip");
   assert.equal(insertedArrangementClip.clip.startBeat, 16);
-  assert.equal(insertedArrangementClip.arrangement.lengthBeats, 24);
+  assert.equal(insertedArrangementClip.clip.lengthBeats, 16);
+  assert.equal(insertedArrangementClip.deltaCount, 1);
 
   const addedLocator = await toolCall(44, "ableton_add_locator", { beat: 16, name: "Verse" });
   assert.equal(addedLocator.ok, true);
@@ -272,7 +260,7 @@ try {
   assert.deepEqual(updatedLocator.locator, { beat: 16, name: "Verse 2" });
 
   const arrangementAfterMutations = await getJson(`${bridgeUrl}/arrangement`);
-  assert.equal(arrangementAfterMutations.clips[0].name, "Verse Arrangement");
+  assert.equal(arrangementAfterMutations.clips[0].name, "Verse");
   assert.ok(arrangementAfterMutations.locators.some((locator) => locator.name === "Verse 2"));
 
   const projectAfterLocator = await toolCall(45, "ableton_get_project");
@@ -284,7 +272,8 @@ try {
     lengthBeats: 4
   }, { expectedStatus: 400 });
   assert.equal(missingArrangementSource.ok, false);
-  assert.equal(missingArrangementSource.error, "clipSlotIndex, sourcePath, or sourceRef is required");
+  assert.equal(missingArrangementSource.error, "An explicit Arrangement insertion mode is required");
+  assert.equal(missingArrangementSource.errorCode, "legacy_payload_unsupported");
 
   const parameter = await toolCall(28, "ableton_set_device_parameter", {
     trackIndex: 0,

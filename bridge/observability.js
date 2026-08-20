@@ -4,11 +4,20 @@ import { readFile, stat } from "node:fs/promises";
 
 export const OBSERVABILITY_SCHEMA_VERSION = "1.0.0";
 export const DEFAULT_BRIDGE_VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+export const CAPABILITY_SCHEMA_VERSION = "1.0.0";
+export const BRIDGE_MODES = Object.freeze({
+  development: "deterministic-development",
+  remoteScript: "ableton-remote-script"
+});
 
 export const ENDPOINT_SUPPORT = Object.freeze([
+  endpoint("GET", "/capabilities", "read", "supported", "supported"),
   endpoint("GET", "/status", "read", "supported", "supported"),
   endpoint("GET", "/project", "read", "supported", "supported"),
   endpoint("GET", "/arrangement", "read", "supported", "supported"),
+  endpoint("GET", "/scenes/tempo-signature-capabilities", "read", "supported", "supported"),
+  endpoint("POST", "/scenes/tempo-signature-overrides", "safe-write", "supported", "conditional", "Requires readable and structurally writable properties on the exact target Scene; probe the target first"),
+  endpoint("GET", "/arrangement/insertion-capabilities", "read", "supported", "supported"),
   endpoint("GET", "/arrangement/clips/delete-plan", "read", "supported", "conditional", "Requires Track.arrangement_clips and exact Clip timing identity fields"),
   endpoint("DELETE", "/arrangement/clips", "destructive", "supported", "conditional", "Requires Track.delete_clip and a current exact deletion plan"),
   endpoint("POST", "/project/snapshot", "safe-write", "supported", "supported"),
@@ -20,7 +29,6 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("GET", "/production/report", "read", "supported", "supported"),
   endpoint("POST", "/tempo", "safe-write", "supported", "supported"),
   endpoint("POST", "/automation", "safe-write", "supported", "unsupported", "Live Python API does not expose reliable cross-version envelope mutation"),
-  endpoint("POST", "/project/save", "safe-write", "supported", "conditional", "Save methods vary by Live version and set state"),
   endpoint("POST", "/signature", "safe-write", "supported", "supported"),
   endpoint("POST", "/tracks/midi", "safe-write", "supported", "supported"),
   endpoint("POST", "/tracks/duplicate", "safe-write", "supported", "conditional", "Requires Live duplicate_track support"),
@@ -36,7 +44,7 @@ export const ENDPOINT_SUPPORT = Object.freeze([
   endpoint("POST", "/routing/plugin-outputs/apply", "safe-write", "supported", "conditional", "Requires exact Live routing labels or identifiers and audio-track creation support"),
   endpoint("GET", "/meters", "read", "supported", "conditional", "Meter fields vary by Live version"),
   endpoint("POST", "/master/modify", "safe-write", "supported", "conditional", "Master mute and solo are not universally exposed"),
-  endpoint("POST", "/arrangement/insert", "safe-write", "supported", "unsupported", "Remote Script has no reliable arrangement clip insertion API"),
+  endpoint("POST", "/arrangement/insert", "safe-write", "supported", "conditional", "Requires exact-track host callability, full readback, and callable Song.undo"),
   endpoint("POST", "/arrangement/locators", "safe-write", "supported", "conditional", "Requires Live cue point mutation support"),
   endpoint("POST", "/transport/start", "safe-write", "supported", "supported"),
   endpoint("POST", "/transport/stop", "safe-write", "supported", "supported"),
@@ -109,13 +117,47 @@ export function endpointSupportSummary(endpoints = ENDPOINT_SUPPORT) {
   };
 }
 
+export function createCapabilityDocument(runtimeKey) {
+  const mode = BRIDGE_MODES[runtimeKey];
+  if (!mode) {
+    throw new Error(`Unknown bridge runtime: ${runtimeKey}`);
+  }
+  return {
+    ok: true,
+    schemaVersion: CAPABILITY_SCHEMA_VERSION,
+    mode,
+    routes: ENDPOINT_SUPPORT.map((entry) => ({
+      method: entry.method,
+      path: entry.path,
+      status: entry[runtimeKey].status,
+      reason: entry[runtimeKey].reason
+    }))
+  };
+}
+
+export function routeKey(method, path) {
+  return `${String(method).toUpperCase()} ${path}`;
+}
+
 function endpoint(method, path, riskTier, developmentStatus, remoteScriptStatus, note = undefined) {
+  const key = routeKey(method, path);
   return {
     method,
     path,
     riskTier,
-    development: { status: developmentStatus },
-    remoteScript: { status: remoteScriptStatus, note }
+    development: {
+      status: developmentStatus,
+      reason: developmentStatus === "supported"
+        ? `Deterministic development bridge implements ${key}.`
+        : `Deterministic development bridge does not implement ${key}.`
+    },
+    remoteScript: {
+      status: remoteScriptStatus,
+      reason: note ?? (remoteScriptStatus === "supported"
+        ? `Ableton Remote Script implements ${key}.`
+        : `Ableton Remote Script does not implement ${key}.`),
+      note
+    }
   };
 }
 

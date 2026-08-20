@@ -43,6 +43,9 @@ const HTTP_ENDPOINT_RISKS = Object.freeze({
   "GET /status": read("Read transport and session status."),
   "GET /project": read("Read project structure and mixer state."),
   "GET /arrangement": read("Read arrangement timeline metadata."),
+  "GET /scenes/tempo-signature-capabilities": read("Read per-property override capabilities for one exact Session Scene without mutation."),
+  "POST /scenes/tempo-signature-overrides": safeWrite("Set or clear exact Session Scene launch-time tempo and time-signature overrides without launching it."),
+  "GET /arrangement/insertion-capabilities": read("Read exact-track Arrangement insertion capabilities without mutation."),
   "GET /arrangement/clips/delete-plan": read("Read exact Arrangement clip identities without mutating Live."),
   "DELETE /arrangement/clips": destructive("Delete exact pre-resolved Arrangement clips."),
   "POST /project/snapshot": safeWrite("Create rollback metadata before broader edits."),
@@ -53,7 +56,6 @@ const HTTP_ENDPOINT_RISKS = Object.freeze({
   "POST /analysis/mix": read("Analyze rendered master and stem artifacts without mutating Live."),
   "GET /production/report": read("Read derived production diagnostics."),
   "POST /tempo": safeWrite("Change song tempo."),
-  "POST /project/save": destructive("Persist the current Live set and potentially overwrite disk state."),
   "POST /signature": safeWrite("Change song time signature."),
   "POST /transport/start": safeWrite("Change playback state."),
   "POST /transport/stop": safeWrite("Change playback state."),
@@ -98,9 +100,12 @@ const HTTP_ENDPOINT_RISKS = Object.freeze({
 });
 
 const MCP_TOOL_RISKS = Object.freeze({
+  ableton_get_scene_tempo_signature_capabilities: tool("GET /scenes/tempo-signature-capabilities"),
+  ableton_set_scene_tempo_signature_overrides: tool("POST /scenes/tempo-signature-overrides"),
   ableton_get_status: tool("GET /status"),
   ableton_get_project: tool("GET /project"),
   ableton_get_arrangement: tool("GET /arrangement"),
+  ableton_get_arrangement_insertion_capabilities: tool("GET /arrangement/insertion-capabilities"),
   ableton_plan_arrangement_clip_deletion: tool("GET /arrangement/clips/delete-plan"),
   ableton_delete_arrangement_clips: tool("DELETE /arrangement/clips"),
   ableton_create_snapshot: tool("POST /project/snapshot"),
@@ -143,7 +148,6 @@ const MCP_TOOL_RISKS = Object.freeze({
     endpoint: null
   },
   ableton_set_tempo: tool("POST /tempo"),
-  ableton_save_project: tool("POST /project/save"),
   ableton_set_signature: tool("POST /signature"),
   ableton_start_transport: tool("POST /transport/start"),
   ableton_stop_transport: tool("POST /transport/stop"),

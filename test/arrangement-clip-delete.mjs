@@ -80,10 +80,9 @@ async function invalidSelectionsFailClosedBeforeMutation() {
   const replaced = new DevelopmentAbletonAdapter(fixtureState());
   const replacedPlan = await replaced.planArrangementClipDeletion();
   replaced.state.arrangement.clips[0] = structuredClone(replaced.state.arrangement.clips[0]);
-  await assert.rejects(replaced.deleteArrangementClips({
-    planToken: replacedPlan.planToken,
-    clipIdentities: [replacedPlan.candidates[0].clipIdentity]
-  }), /stale/u);
+  const equivalentPlan = await replaced.planArrangementClipDeletion();
+  assert.equal(equivalentPlan.planToken, replacedPlan.planToken);
+  assert.equal(equivalentPlan.candidates[0].clipIdentity, replacedPlan.candidates[0].clipIdentity);
 
   const partial = new DevelopmentAbletonAdapter(fixtureState());
   partial.state.tracks[1].arrangementDeleteSupported = false;

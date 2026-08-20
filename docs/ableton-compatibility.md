@@ -70,6 +70,12 @@ to work across Lite, Standard, and Suite on Live 11 and Live 12.
 For example, Lite exposes less bundled content than Standard or Suite, and clip
 note reads depend on the running Live API exposing editable MIDI note access.
 
+`GET /scenes/tempo-signature-capabilities` is supported as an exact-target,
+read-only property probe. `POST /scenes/tempo-signature-overrides` is
+target-conditional: it is executable only when every property required by the
+requested set or clear action is readable and structurally writable. Support is
+probed from the Scene object and is never inferred from Live edition.
+
 ### Expected Supported Writes With Limits
 
 Transport, tempo, signature, track creation/modification, MIDI clip creation,
@@ -87,7 +93,6 @@ The current Remote Script has explicit `501` expectations for:
 - `POST /render/export`
 - `POST /tracks/bounce`
 - `POST /mastering/analyze-and-apply`
-- `POST /arrangement/insert`
 - `POST /devices/reorder`
 
 Other host-dependent mutation routes, such as Save As, track flattening,
@@ -207,6 +212,13 @@ deterministic checks.
       "versionImpact": "Requires Track.arrangement_clips plus Clip start_time, end_time, and is_arrangement_clip."
     },
     {
+      "route": "GET /arrangement/insertion-capabilities",
+      "tier": "read",
+      "remoteScriptExpectation": "supported_with_limits",
+      "editionImpact": "Reports exact-target callability rather than inferring support from edition.",
+      "versionImpact": "Callable methods can vary by Live version and exact track; discovery itself is read-only."
+    },
+    {
       "route": "GET /browser/search",
       "tier": "read",
       "remoteScriptExpectation": "supported_with_limits",
@@ -301,10 +313,10 @@ deterministic checks.
     {
       "route": "POST /arrangement/insert",
       "tier": "safe-write",
-      "remoteScriptExpectation": "unsupported_501",
+      "remoteScriptExpectation": "host_dependent_501",
       "unsupportedStatus": 501,
-      "editionImpact": "Edition is not the limiting factor; the current Remote Script lacks a reliable arrangement insertion surface.",
-      "versionImpact": "Expected 501 in the current Remote Script on Live 11 and Live 12."
+      "editionImpact": "Support follows exact-track callable methods; it is not inferred from edition.",
+      "versionImpact": "Requires the mode-specific callable host method, observable Arrangement clips, and callable Song.undo; unsupported hosts fail before mutation."
     },
     {
       "route": "POST /arrangement/locators",
@@ -442,14 +454,6 @@ deterministic checks.
       "versionImpact": "Expected on Live 11 and Live 12 within the documented snapshot surface."
     },
     {
-      "route": "POST /project/save",
-      "tier": "destructive",
-      "remoteScriptExpectation": "host_dependent_501",
-      "unsupportedStatus": 501,
-      "editionImpact": "All editions can save sets when authorized and the Live API exposes save or save-as.",
-      "versionImpact": "May return 501 when save or Save As is not exposed by the running Live API."
-    },
-    {
       "route": "POST /project/snapshot",
       "tier": "safe-write",
       "remoteScriptExpectation": "supported_with_limits",
@@ -485,6 +489,20 @@ deterministic checks.
       "remoteScriptExpectation": "supported_with_limits",
       "editionImpact": "Receiver creation is bounded by the edition's audio-track limit and the plugin outputs exposed by Live.",
       "versionImpact": "Live 11 and Live 12 require exact routing display names or identifiers; unsupported host properties fail without leaving newly created tracks."
+    },
+    {
+      "route": "GET /scenes/tempo-signature-capabilities",
+      "tier": "read",
+      "remoteScriptExpectation": "supported",
+      "editionImpact": "Support is probed from the exact Session Scene properties rather than inferred from edition.",
+      "versionImpact": "Missing, read-only, descriptor-incompatible, or exception-raising properties are reported per property without mutation."
+    },
+    {
+      "route": "POST /scenes/tempo-signature-overrides",
+      "tier": "safe-write",
+      "remoteScriptExpectation": "supported_with_limits",
+      "editionImpact": "The complete requested transaction fails before mutation when any required Scene property is unavailable.",
+      "versionImpact": "Overrides take effect only after a later explicit Session Scene launch; no Scene launch, Arrangement automation/marker, or global Song fallback is performed."
     },
     {
       "route": "POST /signature",

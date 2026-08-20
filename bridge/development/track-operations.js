@@ -1,8 +1,10 @@
 import { BridgeRequestError } from "../errors.js";
 import { getTrack } from "./mixer.js";
 import { clone, isFiniteNumber, nextClipSlot, requireNonNegativeInteger, reindexDevices } from "./utils.js";
+import { requireAudioMidiTrackCapacity } from "./edition-capabilities.js";
 
 export function createMidiTrack(state, payload = {}) {
+  requireAudioMidiTrackCapacity(state, "create_midi_track");
   const index = state.tracks.length;
   const track = {
     index,
@@ -26,6 +28,7 @@ export function createMidiTrack(state, payload = {}) {
 export function duplicateTrack(state, payload = {}) {
   const sourceTrackIndex = requireNonNegativeInteger(payload.trackIndex, "trackIndex");
   const source = getTrack(state, sourceTrackIndex);
+  requireAudioMidiTrackCapacity(state, "duplicate_track");
   const newTrackIndex = sourceTrackIndex + 1;
   const track = clone(source);
   track.index = newTrackIndex;

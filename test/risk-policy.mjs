@@ -19,6 +19,8 @@ assert.deepEqual(missingToolPolicies, []);
 assert.deepEqual(listToolRiskClassifications().map((classification) => classification.subject), allToolNames);
 
 assert.equal(classifyToolRisk("ableton_get_project").tier, RISK_TIERS.READ);
+assert.equal(classifyToolRisk("ableton_get_scene_tempo_signature_capabilities").tier, RISK_TIERS.READ);
+assert.equal(classifyToolRisk("ableton_set_scene_tempo_signature_overrides").tier, RISK_TIERS.SAFE_WRITE);
 assert.equal(classifyToolRisk("ableton_set_tempo").tier, RISK_TIERS.SAFE_WRITE);
 assert.equal(classifyToolRisk("ableton_delete_clip").tier, RISK_TIERS.DESTRUCTIVE);
 assert.equal(classifyToolRisk("ableton_export_render").tier, RISK_TIERS.EXPORT);
@@ -27,6 +29,8 @@ assert.equal(classifyToolRisk("ableton_import_midi").tier, RISK_TIERS.SAFE_WRITE
 assert.equal(classifyToolRisk("unknown_tool").tier, RISK_TIERS.UNSUPPORTED);
 
 assert.equal(classifyEndpointRisk("GET", "/project").tier, RISK_TIERS.READ);
+assert.equal(classifyEndpointRisk("GET", "/scenes/tempo-signature-capabilities").tier, RISK_TIERS.READ);
+assert.equal(classifyEndpointRisk("POST", "/scenes/tempo-signature-overrides").tier, RISK_TIERS.SAFE_WRITE);
 assert.equal(classifyEndpointRisk("post", "/tempo").tier, RISK_TIERS.SAFE_WRITE);
 assert.equal(classifyEndpointRisk("DELETE /clips/midi").tier, RISK_TIERS.DESTRUCTIVE);
 assert.equal(classifyEndpointRisk("POST /render/export").tier, RISK_TIERS.EXPORT);

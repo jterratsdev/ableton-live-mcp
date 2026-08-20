@@ -2,9 +2,6 @@ import { createHash } from "node:crypto";
 import { BridgeRequestError } from "../errors.js";
 import { clone } from "./utils.js";
 
-const objectIdentities = new WeakMap();
-let nextObjectIdentity = 1;
-
 export function planArrangementClipDeletion(state) {
   const candidates = arrangementCandidates(state).map(publicCandidate);
 
@@ -65,11 +62,13 @@ function arrangementClipCandidate(state, clip, arrangementIndex) {
   const track = state.tracks.find((candidate) => candidate.index === trackIndex);
   const startBeat = clip.startBeat;
   const lengthBeats = clip.lengthBeats;
-  const identityFields = [trackIndex, arrangementIndex, objectIdentity(clip), clip.name ?? "", startBeat, lengthBeats];
+  const trackName = track?.name ?? clip.trackName ?? "";
+  const trackIdentity = tokenFor([trackIndex, trackName]);
+  const identityFields = [trackIdentity, arrangementIndex, clip.name ?? "", startBeat, lengthBeats];
   return {
     trackIndex,
-    trackIdentity: tokenFor([trackIndex, track ? objectIdentity(track) : "", track?.name ?? clip.trackName ?? ""]),
-    trackName: track?.name ?? clip.trackName ?? "",
+    trackIdentity,
+    trackName,
     arrangementIndex,
     clipIdentity: tokenFor(identityFields),
     name: clip.name ?? "",
@@ -122,14 +121,4 @@ function reverseTimelineOrder(left, right) {
 
 function tokenFor(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
-}
-
-function objectIdentity(value) {
-  let identity = objectIdentities.get(value);
-  if (identity === undefined) {
-    identity = nextObjectIdentity;
-    nextObjectIdentity += 1;
-    objectIdentities.set(value, identity);
-  }
-  return identity;
 }

@@ -7,13 +7,18 @@ import time
 
 
 OBSERVABILITY_SCHEMA_VERSION = "1.0.0"
+CAPABILITY_SCHEMA_VERSION = "1.0.0"
 DEFAULT_BRIDGE_VERSION = "0.1.0"
 
 
 ENDPOINT_SUPPORT = (
+    {"method": "GET", "path": "/capabilities", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/status", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/project", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/arrangement", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "GET", "path": "/scenes/tempo-signature-capabilities", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
+    {"method": "POST", "path": "/scenes/tempo-signature-overrides", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires readable and structurally writable properties on the exact target Scene; probe the target first"}},
+    {"method": "GET", "path": "/arrangement/insertion-capabilities", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "GET", "path": "/arrangement/clips/delete-plan", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Track.arrangement_clips and exact Clip timing identity fields"}},
     {"method": "DELETE", "path": "/arrangement/clips", "riskTier": "destructive", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Track.delete_clip and a current exact deletion plan"}},
     {"method": "POST", "path": "/project/snapshot", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
@@ -25,7 +30,6 @@ ENDPOINT_SUPPORT = (
     {"method": "GET", "path": "/production/report", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/tempo", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/automation", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "Live Python API does not expose reliable cross-version envelope mutation"}},
-    {"method": "POST", "path": "/project/save", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Save methods vary by Live version and set state"}},
     {"method": "POST", "path": "/signature", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/tracks/midi", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/tracks/duplicate", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Live duplicate_track support"}},
@@ -41,7 +45,7 @@ ENDPOINT_SUPPORT = (
     {"method": "POST", "path": "/routing/plugin-outputs/apply", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires exact Live routing labels or identifiers and audio-track creation support"}},
     {"method": "GET", "path": "/meters", "riskTier": "read", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Meter fields vary by Live version"}},
     {"method": "POST", "path": "/master/modify", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Master mute and solo are not universally exposed"}},
-    {"method": "POST", "path": "/arrangement/insert", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "unsupported", "note": "Remote Script has no reliable arrangement clip insertion API"}},
+    {"method": "POST", "path": "/arrangement/insert", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires exact-track host callability, full readback, and callable Song.undo"}},
     {"method": "POST", "path": "/arrangement/locators", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "conditional", "note": "Requires Live cue point mutation support"}},
     {"method": "POST", "path": "/transport/start", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
     {"method": "POST", "path": "/transport/stop", "riskTier": "safe-write", "development": {"status": "supported"}, "remoteScript": {"status": "supported"}},
@@ -125,6 +129,40 @@ def endpoint_support_summary():
         "development": count_statuses(endpoints, "development"),
         "remoteScript": count_statuses(endpoints, "remoteScript"),
         "endpoints": endpoints
+    }
+
+
+def capability_document(runtime_key="remoteScript"):
+    modes = {
+        "development": "deterministic-development",
+        "remoteScript": "ableton-remote-script"
+    }
+    if runtime_key not in modes:
+        raise ValueError("Unknown bridge runtime: %s" % runtime_key)
+    return {
+        "ok": True,
+        "schemaVersion": CAPABILITY_SCHEMA_VERSION,
+        "mode": modes[runtime_key],
+        "routes": [capability_route(endpoint, runtime_key) for endpoint in ENDPOINT_SUPPORT]
+    }
+
+
+def capability_route(endpoint, runtime_key):
+    support = endpoint[runtime_key]
+    route = "%s %s" % (endpoint["method"], endpoint["path"])
+    reason = support.get("note")
+    if not reason:
+        if runtime_key == "development":
+            reason = ("Deterministic development bridge implements %s." if support["status"] == "supported"
+                      else "Deterministic development bridge does not implement %s.") % route
+        else:
+            reason = ("Ableton Remote Script implements %s." if support["status"] == "supported"
+                      else "Ableton Remote Script does not implement %s.") % route
+    return {
+        "method": endpoint["method"],
+        "path": endpoint["path"],
+        "status": support["status"],
+        "reason": reason
     }
 
 

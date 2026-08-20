@@ -37,23 +37,60 @@ def delete_arrangement_clips(song, payload):
     original_fingerprint = observable_arrangement_fingerprint(current_plan["candidates"])
 
     results = []
-    try:
-        for candidate in sorted(selected, key=reverse_timeline_key, reverse=True):
+    for candidate in sorted(selected, key=reverse_timeline_key, reverse=True):
+        try:
             track = list(getattr(song, "tracks", []) or [])[candidate["trackIndex"]]
             clip = resolve_exact_clip(track, candidate)
             track.delete_clip(clip)
-            results.append(candidate["clipIdentity"])
-    except Exception as error:
-        rollback_deletion_failure(song, undo, len(results), original_fingerprint, error)
+        except Exception as error:
+            completed_count = len(results)
+            try:
+                identities_after_error = set(
+                    current["clipIdentity"] for current in arrangement_clip_candidates(song)
+                )
+                if candidate["clipIdentity"] not in identities_after_error:
+                    completed_count += 1
+            except Exception:
+                completed_count += 1
+            rollback_deletion_failure(song, undo, completed_count, original_fingerprint, error)
+        try:
+            remaining_after_delete = set(
+                current["clipIdentity"] for current in arrangement_clip_candidates(song)
+            )
+        except Exception as readback_error:
+            rollback_deletion_failure(
+                song,
+                undo,
+                len(results) + 1,
+                original_fingerprint,
+                BridgeHttpError(
+                    "Arrangement deletion readback failed after deleting %s: %s" % (
+                        candidate["clipIdentity"],
+                        readback_error
+                    ),
+                    500
+                )
+            )
+        if candidate["clipIdentity"] in remaining_after_delete:
+            rollback_deletion_failure(
+                song,
+                undo,
+                len(results),
+                original_fingerprint,
+                BridgeHttpError(
+                    "Ableton Live did not remove Arrangement clip %s" % candidate["clipIdentity"],
+                    500
+                )
+            )
+        results.append(candidate["clipIdentity"])
 
-    remaining = set(candidate["clipIdentity"] for candidate in arrangement_clip_candidates(song))
     return {
         "ok": True,
         "deletedCount": len(results),
         "results": [{
             "clipIdentity": clip_identity,
-            "deleted": clip_identity not in remaining,
-            "verifiedAbsent": clip_identity not in remaining
+            "deleted": True,
+            "verifiedAbsent": True
         } for clip_identity in requested_identities]
     }
 
@@ -80,12 +117,14 @@ def clip_candidate(track_index, track, arrangement_index, clip):
     if not is_arrangement_clip or not is_number(start_beat) or not is_number(end_beat) or end_beat < start_beat:
         raise BridgeHttpError("Arrangement clip identity is unsupported or invalid for track %s" % track_index, 501)
 
+    track_name = getattr(track, "name", "")
     name = getattr(clip, "name", "")
-    identity_fields = [track_index, arrangement_index, id(clip), name, start_beat, end_beat]
+    track_identity = token_for([track_index, track_name])
+    identity_fields = [track_identity, arrangement_index, name, start_beat, end_beat]
     return {
         "trackIndex": track_index,
-        "trackIdentity": token_for([track_index, id(track), getattr(track, "name", "")]),
-        "trackName": getattr(track, "name", ""),
+        "trackIdentity": track_identity,
+        "trackName": track_name,
         "arrangementIndex": arrangement_index,
         "clipIdentity": token_for(identity_fields),
         "name": name,

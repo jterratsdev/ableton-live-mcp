@@ -67,6 +67,71 @@ class FakeSong(object):
         track.arrangement_clips.insert(arrangement_index, restored)
 
 
+class RewrappedClip(object):
+    def __init__(self, model):
+        self.model = model
+
+    @property
+    def name(self):
+        return self.model.name
+
+    @property
+    def start_time(self):
+        return self.model.start_time
+
+    @property
+    def end_time(self):
+        return self.model.end_time
+
+    @property
+    def is_arrangement_clip(self):
+        return self.model.is_arrangement_clip
+
+
+class RewrappedTrack(object):
+    def __init__(self, model, song):
+        self.model = model
+        self.song = song
+
+    @property
+    def name(self):
+        return self.model.name
+
+    @property
+    def arrangement_clips(self):
+        return [RewrappedClip(clip) for clip in self.model.arrangement_clips]
+
+    def delete_clip(self, clip):
+        if self.model.no_op_delete:
+            return
+        arrangement_index = self.model.arrangement_clips.index(clip.model)
+        self.model.arrangement_clips.remove(clip.model)
+        self.song.undo_stack.append((self.model, arrangement_index, clip.model))
+
+
+class RewrappedTrackModel(object):
+    def __init__(self, name, clips, no_op_delete=False):
+        self.name = name
+        self.arrangement_clips = list(clips)
+        self.no_op_delete = no_op_delete
+
+
+class RewrappedSong(object):
+    def __init__(self, track_models):
+        self.track_models = list(track_models)
+        self.undo_stack = []
+        self.undo_calls = 0
+
+    @property
+    def tracks(self):
+        return [RewrappedTrack(track, self) for track in self.track_models]
+
+    def undo(self):
+        self.undo_calls += 1
+        track, arrangement_index, clip = self.undo_stack.pop()
+        track.arrangement_clips.insert(arrangement_index, clip)
+
+
 def assert_error_status(callback, status_code):
     try:
         callback()
@@ -146,7 +211,7 @@ def test_stale_missing_duplicate_and_partial_support_fail_before_mutation():
     }), 409)
     assert supported_track.arrangement_clips == [first]
 
-    replacement = FakeClip("Changed", 0.0, 4.0)
+    replacement = FakeClip("Changed", 0.0, 5.0)
     replacement_plan = plan_arrangement_clip_deletion(song)
     supported_track.arrangement_clips[0] = replacement
     assert_error_status(lambda: delete_arrangement_clips(song, {
@@ -154,6 +219,50 @@ def test_stale_missing_duplicate_and_partial_support_fail_before_mutation():
         "clipIdentities": [replacement_plan["candidates"][0]["clipIdentity"]]
     }), 409)
     assert supported_track.arrangement_clips == [replacement]
+
+
+def test_recreated_proxies_keep_plan_and_exact_identity_stable():
+    track_model = RewrappedTrackModel("Piano", [
+        FakeClip("Intro", 0.0, 8.0),
+        FakeClip("Verse", 8.0, 24.0)
+    ])
+    song = RewrappedSong([track_model])
+
+    plans = [plan_arrangement_clip_deletion(song) for _ in range(3)]
+    assert len(set(plan["planToken"] for plan in plans)) == 1
+    assert len(set(plan["candidates"][0]["trackIdentity"] for plan in plans)) == 1
+    assert len(set(plan["candidates"][0]["clipIdentity"] for plan in plans)) == 1
+
+    selected = plans[0]["candidates"][1]["clipIdentity"]
+    result = delete_arrangement_clips(song, {
+        "planToken": plans[0]["planToken"],
+        "clipIdentities": [selected]
+    })
+    assert [clip.name for clip in track_model.arrangement_clips] == ["Intro"]
+    assert result["deletedCount"] == 1
+    assert result["results"][0]["verifiedAbsent"] is True
+
+
+def test_no_op_delete_is_detected_without_undoing_unrelated_history():
+    clip = FakeClip("No op", 0.0, 4.0)
+    track_model = RewrappedTrackModel("Audio", [clip], no_op_delete=True)
+    song = RewrappedSong([track_model])
+    plan = plan_arrangement_clip_deletion(song)
+
+    try:
+        delete_arrangement_clips(song, {
+            "planToken": plan["planToken"],
+            "clipIdentities": [plan["candidates"][0]["clipIdentity"]]
+        })
+    except BridgeHttpError as error:
+        assert error.status_code == 500
+        assert "did not remove Arrangement clip" in str(error)
+        assert "rollback verified" in str(error)
+    else:
+        raise AssertionError("Expected no-op deletion verification failure")
+
+    assert song.undo_calls == 0
+    assert track_model.arrangement_clips == [clip]
 
 
 def test_mid_delete_failure_undoes_each_completed_delete_and_verifies_observable_state():
@@ -245,6 +354,8 @@ if __name__ == "__main__":
     test_plan_is_read_only_and_returns_exact_timing()
     test_exact_multi_delete_preserves_unselected_and_session_clips()
     test_stale_missing_duplicate_and_partial_support_fail_before_mutation()
+    test_recreated_proxies_keep_plan_and_exact_identity_stable()
+    test_no_op_delete_is_detected_without_undoing_unrelated_history()
     test_mid_delete_failure_undoes_each_completed_delete_and_verifies_observable_state()
     test_mid_delete_failure_reports_undo_failure_explicitly()
     test_mid_delete_failure_reports_restoration_readback_mismatch()

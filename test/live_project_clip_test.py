@@ -29,7 +29,6 @@ load_module("http_bridge")
 load_module("live_core")
 load_module("live_summaries")
 LIVE_CLIPS = load_module("live_clips")
-LIVE_PROJECT = load_module("live_project")
 
 
 class FakeClip(object):
@@ -58,22 +57,6 @@ class FakeTrack(object):
 class FakeSong(object):
     def __init__(self, slot=None):
         self.tracks = [FakeTrack(slot)] if slot is not None else []
-        self.calls = []
-
-    def save(self):
-        self.calls.append(("save", None))
-
-    def save_as(self, path):
-        self.calls.append(("save_as", path))
-
-
-class FakeApplication(object):
-    pass
-
-
-class FailingSong(FakeSong):
-    def save(self):
-        raise RuntimeError("disk unavailable")
 
 
 class ProjectLifecycleTest(unittest.TestCase):
@@ -91,26 +74,6 @@ class ProjectLifecycleTest(unittest.TestCase):
         with self.assertRaises(LIVE_CLIPS.BridgeHttpError) as raised:
             LIVE_CLIPS.delete_clip(FakeSong(FakeClipSlot(retain=True)), {"trackIndex": 0, "clipSlotIndex": 0})
         self.assertEqual(raised.exception.status_code, 500)
-
-    def test_save_and_save_as_report_the_invoked_operation(self):
-        song = FakeSong()
-        saved = LIVE_PROJECT.save_project(song, FakeApplication(), {"label": "checkpoint"})
-        saved_as = LIVE_PROJECT.save_project(song, FakeApplication(), {"path": "/tmp/copy.als", "label": "copy"})
-        self.assertEqual(song.calls, [("save", None), ("save_as", "/tmp/copy.als")])
-        self.assertEqual(saved["verification"]["requestedMode"], "save")
-        self.assertEqual(saved["label"], "checkpoint")
-        self.assertEqual(saved_as["verification"]["requestedMode"], "save_as")
-        self.assertEqual(saved_as["path"], "/tmp/copy.als")
-
-    def test_save_failure_and_unsupported_api_do_not_claim_success(self):
-        with self.assertRaises(LIVE_PROJECT.BridgeHttpError) as failed:
-            LIVE_PROJECT.save_project(FailingSong(), FakeApplication(), {})
-        self.assertEqual(failed.exception.status_code, 500)
-
-        with self.assertRaises(LIVE_PROJECT.BridgeHttpError) as unsupported:
-            LIVE_PROJECT.save_project(object(), object(), {})
-        self.assertEqual(unsupported.exception.status_code, 501)
-
 
 if __name__ == "__main__":
     unittest.main()

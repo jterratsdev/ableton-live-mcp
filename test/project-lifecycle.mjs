@@ -4,8 +4,8 @@ import { createDispatch, tools } from "../src/tools.js";
 import { spawnSync } from "node:child_process";
 
 toolsExposeProjectLifecycleOperations();
-await dispatchPreservesDeleteAndSaveArguments();
-await developmentAdapterProvesDeleteReadBackAndSaveModes();
+await dispatchPreservesDeleteArgumentsAndRejectsRemovedSave();
+await developmentAdapterProvesDeleteReadBack();
 pythonRemoteScriptContractsPass();
 
 console.log("project lifecycle contracts ok");
@@ -13,10 +13,10 @@ console.log("project lifecycle contracts ok");
 function toolsExposeProjectLifecycleOperations() {
   const names = new Set(tools.map((tool) => tool.name));
   assert.equal(names.has("ableton_delete_clip"), true);
-  assert.equal(names.has("ableton_save_project"), true);
+  assert.equal(names.has("ableton_save_project"), false);
 }
 
-async function dispatchPreservesDeleteAndSaveArguments() {
+async function dispatchPreservesDeleteArgumentsAndRejectsRemovedSave() {
   const calls = [];
   const dispatch = createDispatch({ invoke: async (action, payload) => {
     calls.push({ action, payload });
@@ -24,15 +24,13 @@ async function dispatchPreservesDeleteAndSaveArguments() {
   } });
 
   await dispatch.ableton_delete_clip({ trackIndex: 2, clipSlotIndex: 7 });
-  await dispatch.ableton_save_project({ path: "/tmp/contract.als", label: "contract save" });
-
+  assert.equal(dispatch.ableton_save_project, undefined);
   assert.deepEqual(calls, [
-    { action: "delete_clip", payload: { trackIndex: 2, clipSlotIndex: 7 } },
-    { action: "save_project", payload: { path: "/tmp/contract.als", label: "contract save" } }
+    { action: "delete_clip", payload: { trackIndex: 2, clipSlotIndex: 7 } }
   ]);
 }
 
-async function developmentAdapterProvesDeleteReadBackAndSaveModes() {
+async function developmentAdapterProvesDeleteReadBack() {
   const adapter = new DevelopmentAbletonAdapter();
   await adapter.createMidiClip({
     trackIndex: 0,
@@ -45,16 +43,6 @@ async function developmentAdapterProvesDeleteReadBackAndSaveModes() {
   assert.equal(deleted.deleted, true);
   await assert.rejects(adapter.getClipNotes({ trackIndex: 0, clipSlotIndex: 7 }), /does not contain a clip/u);
   assert.equal((await adapter.deleteClip({ trackIndex: 0, clipSlotIndex: 7 })).deleted, false);
-
-  const saved = await adapter.saveProject({ label: "checkpoint" });
-  assert.deepEqual(saved.verification, { methodInvoked: true, requestedMode: "save" });
-  assert.equal(saved.mode, "deterministic-development-save");
-  assert.equal(saved.label, "checkpoint");
-
-  const savedAs = await adapter.saveProject({ path: "/tmp/project-lifecycle.als", label: "copy" });
-  assert.deepEqual(savedAs.verification, { methodInvoked: true, requestedMode: "save_as" });
-  assert.equal(savedAs.mode, "deterministic-development-save-as");
-  assert.equal(savedAs.path, "/tmp/project-lifecycle.als");
 }
 
 function pythonRemoteScriptContractsPass() {

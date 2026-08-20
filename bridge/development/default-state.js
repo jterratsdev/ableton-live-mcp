@@ -123,11 +123,18 @@ const DEFAULT_ARRANGEMENT = {
   clips: []
 };
 
+const DEFAULT_SCENES = [
+  { name: "Intro", retainedTempo: 124, tempoEnabled: false, retainedNumerator: 4, retainedDenominator: 4, timeSignatureEnabled: false },
+  { name: "Verse", retainedTempo: 128, tempoEnabled: true, retainedNumerator: 7, retainedDenominator: 8, timeSignatureEnabled: true }
+];
+
 export function createDevelopmentState(state = {}) {
   return {
     tempo: state.tempo ?? 124,
     timeSignature: state.timeSignature ?? "4/4",
+    scenes: clone(state.scenes ?? DEFAULT_SCENES),
     playing: state.playing ?? false,
+    liveEdition: state.liveEdition ?? "unknown",
     tracks: clone(state.tracks ?? DEFAULT_TRACKS),
     returns: clone(state.returns ?? DEFAULT_RETURNS),
     master: clone(state.master ?? { name: "Master", volumeDb: 0, pan: 0, cueVolumeDb: -12, devices: [] }),

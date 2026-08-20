@@ -19,10 +19,6 @@ def arrangement_snapshot(song):
     }
 
 
-def insert_arrangement_clip(song, payload):
-    raise BridgeHttpError("Arrangement clip insertion is not supported by this Ableton Remote Script API", 501)
-
-
 def add_locator(song, payload):
     beat = require_number_range(payload.get("beat"), "beat", 0, 1000000)
     name = require_non_empty_string(payload.get("name"), "name")

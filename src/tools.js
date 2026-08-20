@@ -17,10 +17,23 @@ import {
   pluginOutputRoutingTools,
   validatePluginOutputRoutingToolInput
 } from "./plugin-output-routing-tools.js";
+import {
+  arrangementInsertionTools,
+  createArrangementInsertionDispatch,
+  validateArrangementInsertionToolInput
+} from "./arrangement-insertion.js";
+import { MAX_MIDI_CLIP_NOTES } from "./midi-constants.js";
+import {
+  createSceneTempoSignatureDispatch,
+  sceneTempoSignatureTools,
+  validateSceneTempoSignatureToolInput
+} from "./scene-tempo-signature-tools.js";
 
-export const MAX_MIDI_CLIP_NOTES = 8192;
+export { MAX_MIDI_CLIP_NOTES } from "./midi-constants.js";
 
 export const tools = [
+  ...arrangementInsertionTools,
+  ...sceneTempoSignatureTools,
   tool("ableton_get_status", "Read Ableton Live transport and session status.", {}),
   tool("ableton_get_project", "Read project structure: tracks, clips, devices, locators, routing, and mixer state.", {}),
   tool("ableton_get_arrangement", "Read arrangement timeline clips, locators, song length, and derived sections.", {}),
@@ -104,10 +117,6 @@ export const tools = [
   tool("ableton_set_tempo", "Set Ableton Live tempo in BPM.", {
     bpm: { type: "number", minimum: 20, maximum: 999 }
   }, ["bpm"]),
-  tool("ableton_save_project", "Save the current Ableton Live Set, or Save As to an explicit path, and report the invoked host operation.", {
-    path: stringProp("Optional absolute .als path for Save As when the bridge supports it."),
-    label: stringProp("Optional human-readable save reason.")
-  }),
   tool("ableton_set_signature", "Set Ableton Live time signature.", {
     numerator: { type: "integer", minimum: 1, maximum: 32 },
     denominator: { type: "integer", enum: [1, 2, 4, 8, 16, 32] }
@@ -345,26 +354,18 @@ export const tools = [
       }, ["device"])
     }
   }, ["targetLufs", "truePeakDb"]),
-  tool("ableton_insert_arrangement_clip", "Place an existing clip or audio/MIDI reference on the arrangement timeline.", {
-    trackIndex: nonNegativeInteger(),
-    clipSlotIndex: nonNegativeInteger(),
-    sourceClipSlotIndex: nonNegativeInteger(),
-    sourcePath: stringProp("Optional audio or MIDI file path/reference for insertion."),
-    sourceRef: stringProp("Optional bridge/browser source reference for insertion."),
-    startBeat: { type: "number", minimum: 0 },
-    lengthBeats: { type: "number", exclusiveMinimum: 0 },
-    name: { type: "string" },
-    kind: enumProp(["audio", "midi", "clip"])
-  }, ["trackIndex", "startBeat"]),
   tool("ableton_add_locator", "Add or update an arrangement locator/marker.", {
     beat: { type: "number", minimum: 0 },
     name: { type: "string" }
   }, ["beat", "name"])
 ];
 
-export function createDispatch(bridge) {
+export function createDispatch(bridge, options = {}) {
+  const resolveCapabilities = options.resolveCapabilities;
   return {
     ...createPluginOutputRoutingDispatch(bridge),
+    ...createArrangementInsertionDispatch(bridge),
+    ...createSceneTempoSignatureDispatch(bridge),
     ableton_get_status: () => bridge.invoke("get_status"),
     ableton_get_project: async () => annotateProjectMixerContract(await bridge.invoke("get_project")),
     ableton_get_arrangement: () => bridge.invoke("get_arrangement"),
@@ -390,20 +391,16 @@ export function createDispatch(bridge) {
       const inventory = await resolvePresetCatalogInventory(bridge);
       return matchPresetIntent(args.intent, { limit: args.limit, inventory });
     },
-    ableton_list_workflow_plans: () => ({
+    ableton_list_workflow_plans: async () => {
+      const capabilityView = resolveCapabilities ? await resolveCapabilities() : undefined;
+      const workflows = listWorkflowPlans(capabilityView);
+      return { ok: true, count: workflows.length, workflows };
+    },
+    ableton_get_workflow_plan: async (args) => ({
       ok: true,
-      count: listWorkflowPlans().length,
-      workflows: listWorkflowPlans()
-    }),
-    ableton_get_workflow_plan: (args) => ({
-      ok: true,
-      workflow: getWorkflowPlan(args.workflowId)
+      workflow: getWorkflowPlan(args.workflowId, resolveCapabilities ? await resolveCapabilities() : undefined)
     }),
     ableton_set_tempo: (args) => bridge.invoke("set_tempo", { bpm: args.bpm }),
-    ableton_save_project: (args) => bridge.invoke("save_project", {
-      path: args.path,
-      label: args.label
-    }),
     ableton_set_signature: (args) => bridge.invoke("set_signature", {
       numerator: args.numerator,
       denominator: args.denominator
@@ -459,7 +456,6 @@ export function createDispatch(bridge) {
     ableton_export_render: (args) => bridge.invoke("export_render", args),
     ableton_bounce_tracks: (args) => bridge.invoke("bounce_tracks", args),
     ableton_analyze_and_apply_mastering: (args) => bridge.invoke("analyze_and_apply_mastering", args),
-    ableton_insert_arrangement_clip: (args) => bridge.invoke("insert_arrangement_clip", args),
     ableton_add_locator: (args) => bridge.invoke("add_locator", args)
   };
 }
@@ -478,6 +474,12 @@ async function resolvePresetCatalogInventory(bridge) {
 
 export function validateToolInput(toolName, args) {
   validatePluginOutputRoutingToolInput(toolName, args);
+  if (validateArrangementInsertionToolInput(toolName, args)) {
+    return;
+  }
+  if (validateSceneTempoSignatureToolInput(toolName, args)) {
+    return;
+  }
   if (toolName === "ableton_set_tempo" && !isNumberInRange(args.bpm, 20, 999)) {
     throw rpcError(-32602, "bpm must be a number between 20 and 999");
   }
@@ -738,10 +740,6 @@ export function validateToolInput(toolName, args) {
     throw rpcError(-32602, "mode must be replace_matching, replace_all, or append");
   }
 
-  if (toolName === "ableton_insert_arrangement_clip") {
-    validateArrangementInsertArgs(args);
-  }
-
   if (toolName === "ableton_add_locator") {
     requireNumberInRange(args.beat, "beat", 0, Number.POSITIVE_INFINITY);
     if (isBlank(args.name)) {
@@ -869,35 +867,6 @@ function validateConsolidateClipArgs(args) {
   requirePositiveNumber(args.lengthBeats, "lengthBeats");
   if (args.clipSlotIndex !== undefined) {
     requireNonNegativeInteger(args.clipSlotIndex, "clipSlotIndex");
-  }
-}
-
-function validateArrangementInsertArgs(args) {
-  requireTrackIndex(args);
-  requireNumberInRange(args.startBeat, "startBeat", 0, Number.POSITIVE_INFINITY);
-  if (args.lengthBeats !== undefined) {
-    requirePositiveNumber(args.lengthBeats, "lengthBeats");
-  }
-  if (args.clipSlotIndex !== undefined) {
-    requireNonNegativeInteger(args.clipSlotIndex, "clipSlotIndex");
-  }
-  if (args.sourceClipSlotIndex !== undefined) {
-    requireNonNegativeInteger(args.sourceClipSlotIndex, "sourceClipSlotIndex");
-  }
-  if (args.sourcePath !== undefined && isBlank(args.sourcePath)) {
-    throw rpcError(-32602, "sourcePath must be a non-empty string");
-  }
-  if (args.sourceRef !== undefined && isBlank(args.sourceRef)) {
-    throw rpcError(-32602, "sourceRef must be a non-empty string");
-  }
-  if (args.name !== undefined && isBlank(args.name)) {
-    throw rpcError(-32602, "name must be a non-empty string");
-  }
-  if (args.kind !== undefined && !["audio", "midi", "clip"].includes(args.kind)) {
-    throw rpcError(-32602, "kind must be audio, midi, or clip");
-  }
-  if (args.clipSlotIndex === undefined && args.sourceClipSlotIndex === undefined && args.sourcePath === undefined && args.sourceRef === undefined) {
-    throw rpcError(-32602, "clipSlotIndex, sourcePath, or sourceRef is required");
   }
 }
 

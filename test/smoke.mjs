@@ -40,7 +40,7 @@ try {
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_get_arrangement"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_create_snapshot"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_rollback_snapshot"));
-  assert.ok(list.result.tools.some((tool) => tool.name === "ableton_save_project"));
+  assert.ok(!list.result.tools.some((tool) => tool.name === "ableton_save_project"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_set_signature"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_duplicate_track"));
   assert.ok(list.result.tools.some((tool) => tool.name === "ableton_freeze_track"));
@@ -105,7 +105,8 @@ try {
 
   send(8, "tools/call", { name: "ableton_save_project", arguments: { label: "smoke" } });
   const save = await waitFor(8);
-  assert.match(save.result.content[0].text, /"save_project"/);
+  assert.equal(save.error.code, -32602);
+  assert.match(save.error.message, /Unknown tool: ableton_save_project/);
 
   send(9, "tools/call", { name: "ableton_set_signature", arguments: { numerator: 3, denominator: 4 } });
   const signature = await waitFor(9);
@@ -295,11 +296,11 @@ try {
   send(39, "tools/call", {
     name: "ableton_insert_arrangement_clip",
     arguments: {
+      mode: "session_clip",
       trackIndex: 0,
-      clipSlotIndex: 0,
+      sourceTrackIndex: 0,
+      sourceClipSlotIndex: 0,
       startBeat: 16,
-      lengthBeats: 4,
-      name: "Dry Arrangement Clip"
     }
   });
   const arrangementInsert = await waitFor(39);

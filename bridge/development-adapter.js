@@ -2,7 +2,8 @@ import { BridgeRequestError } from "./errors.js";
 import { analyzeAudioFile, analyzeRenderedMix } from "./audio-analysis.js";
 import { exportDevelopmentRender } from "./development/render.js";
 import { analyzeAndApplyMastering, applyMasteringChain, bounceTracks, productionSessionReport } from "./development/production-workflows.js";
-import { addOrUpdateLocator, arrangementSnapshot, insertArrangementClip } from "./development/arrangement.js";
+import { addOrUpdateLocator, arrangementSnapshot } from "./development/arrangement.js";
+import { arrangementInsertionCapabilities, insertArrangementClip } from "./development/arrangement-insert.js";
 import { deleteArrangementClips, planArrangementClipDeletion } from "./development/arrangement-clip-delete.js";
 import { setAutomation } from "./development/automation.js";
 import { applyGrooveToClipNotes, humanizeClipNotes, quantizeClipNotes } from "./development/clip-notes.js";
@@ -24,6 +25,9 @@ import { listPlugins, searchBrowser } from "./development/plugins.js";
 import { applyPluginOutputRouting, planPluginOutputRouting } from "./development/plugin-output-routing.js";
 import { createReturn, deleteReturn, listBuses, listReturns, modifyReturn } from "./development/returns.js";
 import { createMixerContract } from "./mixer-contract.js";
+import { editionCapabilities } from "./development/edition-capabilities.js";
+import { sceneTempoSignatureCapabilities, setSceneTempoSignatureOverrides } from "./development/scene-tempo-signature.js";
+import { createCapabilityDocument } from "./observability.js";
 import {
   clone,
   isValidTempo,
@@ -36,11 +40,16 @@ export class DevelopmentAbletonAdapter {
     this.state = createDevelopmentState(state);
   }
 
+  async getCapabilities() {
+    return createCapabilityDocument("development");
+  }
+
   async getStatus() {
     return {
       ok: true,
       tempo: this.state.tempo,
       playing: this.state.playing,
+      editionCapabilities: editionCapabilities(this.state),
       tracks: this.state.tracks.map(({ index, name, type }) => ({ index, name, type }))
     };
   }
@@ -63,12 +72,24 @@ export class DevelopmentAbletonAdapter {
     return arrangementSnapshot(this.state);
   }
 
+  async getSceneTempoSignatureCapabilities(sceneIndex) {
+    return sceneTempoSignatureCapabilities(this.state, sceneIndex);
+  }
+
+  async setSceneTempoSignatureOverrides(payload) {
+    return setSceneTempoSignatureOverrides(this.state, payload);
+  }
+
   async planArrangementClipDeletion() {
     return planArrangementClipDeletion(this.state);
   }
 
   async deleteArrangementClips(payload) {
     return deleteArrangementClips(this.state, payload);
+  }
+
+  async getArrangementInsertionCapabilities(trackIndex) {
+    return arrangementInsertionCapabilities(this.state, trackIndex);
   }
 
   async setTempo(payload) {
@@ -89,22 +110,6 @@ export class DevelopmentAbletonAdapter {
 
   async rollbackSnapshot(payload) {
     return rollbackDevelopmentSnapshot(this.state, payload);
-  }
-
-  async saveProject(payload = {}) {
-    const path = typeof payload.path === "string" && payload.path.trim() ? payload.path.trim() : null;
-    const label = typeof payload.label === "string" && payload.label.trim() ? payload.label.trim() : null;
-    return {
-      ok: true,
-      saved: true,
-      path,
-      label,
-      mode: path ? "deterministic-development-save-as" : "deterministic-development-save",
-      verification: {
-        methodInvoked: true,
-        requestedMode: path ? "save_as" : "save"
-      }
-    };
   }
 
   async setSignature(payload) {

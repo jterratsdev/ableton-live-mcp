@@ -332,25 +332,43 @@ states. It does not mutate Live.
 Both launch endpoints are safe-write actions because they change playback state.
 Use the diagnostic first when transport is running but meters remain silent.
 
+### Session Scene Tempo And Time-Signature Overrides
+
+`GET /scenes/tempo-signature-capabilities?sceneIndex=0` is a read-only probe for
+one exact zero-based Session Scene index. The index is authoritative even when
+scene names are empty or duplicated. It reports independent readable, writable,
+and reason fields for `tempo`, `tempo_enabled`, both time-signature components,
+and `time_signature_enabled`, plus normalized and raw observations. Disabled
+values are normalized to `null` while their exact Live `-1` sentinels remain in
+`raw`. The probe never tests writability by assigning a value and never launches
+the scene.
+
+`POST /scenes/tempo-signature-overrides` accepts at least one tagged action:
+
+```json
+{
+  "sceneIndex": 0,
+  "tempo": { "action": "set", "bpm": 128 },
+  "timeSignature": { "action": "clear" }
+}
+```
+
+Set actions write values before their enable flag; clear actions write only the
+enable flag and retain the hidden value. Combined requests preflight and commit
+as one transaction. Any setter, target, or fresh-readback failure compensates
+attempted setters in reverse order and reports the original failure, journal,
+rollback failures, final observation, and verification result. Names are
+descriptive only; every readback and rollback reacquires the same exact index.
+
+These overrides affect playback only when the Session Scene is later launched
+by the user or another explicit launch operation. This endpoint does not launch
+the Scene, change global Song tempo/signature, or create or edit Arrangement
+tempo envelopes or Arrangement time-signature markers.
+
 ### `POST /tempo`
 
 ```json
 { "bpm": 124 }
-```
-
-### `POST /project/save`
-
-Saves the current Live set when the bridge runtime exposes a compatible Live API
-save method. `path` is optional and requests Save As behavior when supported.
-Successful responses identify the invoked host method and whether the request
-was a normal save or Save As; a returned result proves the host method completed
-without throwing, but does not independently inspect the `.als` file on disk.
-
-```json
-{
-  "path": "/Users/example/Music/song.als",
-  "label": "after separated MIDI import"
-}
 ```
 
 If the host API cannot save, the bridge returns `501` with an explanatory error.
@@ -426,8 +444,20 @@ renames only the duplicated track.
 The deterministic development bridge inserts the duplicate after the source and
 deep-copies devices, clips, sends, and observable track state. The Python Remote
 Script calls Ableton's real `duplicate_track` API when present and returns `501`
-if the running Live version does not expose duplication or does not report a new
-track.
+if the running Live version does not expose duplication, callable `Song.undo`,
+or exactly one new track. The destination is always resolved as
+`sourceTrackIndex + 1`; the bridge then rereads the full track-name sequence and
+verifies the requested rename without comparing Python proxy identity. A failed
+post-mutation check invokes bounded undo compensation and verifies restoration
+before returning an error.
+
+Both track creation and duplication consult the capability snapshot returned by
+`GET /status`. At a verified Lite or Intro audio/MIDI track limit, they return
+HTTP `409` with `errorCode: "edition_track_capacity_reached"`, `operation`, and
+`editionCapabilities` before calling Live's mutation API. Standard, Suite, and
+unknown editions are not assigned a finite bridge limit. Detection provenance,
+official source date, and unknown behavior are documented in
+[Ableton edition capabilities](ableton-editions.md).
 
 ### `POST /tracks/freeze`
 
@@ -1337,30 +1367,66 @@ The Python Remote Script uses `song.set_or_delete_cue` and `song.cue_points`
 when those APIs are available. If Live does not expose cue creation or updating,
 the endpoint returns `501`.
 
+### `GET /arrangement/insertion-capabilities`
+
+With `trackIndex=N`, reports target identity plus `callable`, `applicable`, and
+`executable` for `create_midi_clip`, `duplicate_clip_to_arrangement`, and
+`create_audio_clip` on that exact track. The response is read-only and includes
+the complete observable Arrangement fingerprint. Executability requires both
+the correct track kind and callable `Song.undo`.
+
 ### `POST /arrangement/insert`
 
-Places an existing clip or audio/MIDI reference on the arrangement timeline.
+Places exactly one verified clip on the Arrangement timeline. The request must
+use one explicit mode; legacy payloads without `mode` are rejected.
 
 ```json
 {
+  "mode": "midi_notes",
   "trackIndex": 0,
-  "clipSlotIndex": 0,
   "startBeat": 16,
   "lengthBeats": 8,
-  "name": "Verse Piano"
+  "name": "Verse Piano",
+  "notes": [{ "pitch": 60, "start": 0, "duration": 1, "velocity": 96 }]
 }
 ```
 
-`trackIndex` and `startBeat` are required. The source must be one of
-`clipSlotIndex`/`sourceClipSlotIndex`, `sourcePath`, or `sourceRef`. When a
-session clip slot is used, the bridge validates that the clip exists. When
-`lengthBeats` is omitted, session clip insertion uses the source clip length;
-file/reference insertion requires an explicit length.
+`midi_notes` requires `lengthBeats` and non-empty `notes`; `session_clip`
+requires same-track `sourceTrackIndex` and `sourceClipSlotIndex`; `audio_file`
+requires a readable `.wav`, `.aif`, `.aiff`, `.flac`, or `.mp3` path and an
+audio track. MIDI prefers callable `add_new_notes` and uses `set_notes` only
+when the modern method is unavailable. Success requires one exact observable
+clip delta. Any post-mutation no-op, ambiguity, wrong target/timing, note-count
+mismatch, or readback failure invokes bounded `Song.undo` and verifies the full
+pre-state fingerprint; otherwise the bridge returns `rollback_failed`. Responses
+redact absolute audio paths.
 
-The deterministic development bridge records the timeline reference in memory.
-The current Python Remote Script returns `501` for insertion because Ableton's
-Remote Script API does not expose a reliable arrangement clip insertion method
-through this bridge surface.
+### `GET /capabilities`
+
+Returns the bridge mode and a normalized support assertion for every mapped
+route without reading or mutating the Live Set:
+
+```json
+{
+  "ok": true,
+  "schemaVersion": "1.0.0",
+  "mode": "ableton-remote-script",
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/render/export",
+      "status": "unsupported",
+      "reason": "Remote Script render export is not supported"
+    }
+  ]
+}
+```
+
+Route identities are uppercase HTTP method plus normalized absolute path.
+Duplicate, missing, extra, reasonless, unknown-status, and wrong-mode responses
+are invalid. The MCP caches a successful view briefly, never serves expired
+success after refresh failure, and fails closed to MCP-local tools when the
+handshake cannot be verified.
 
 ### `GET /production/report`
 

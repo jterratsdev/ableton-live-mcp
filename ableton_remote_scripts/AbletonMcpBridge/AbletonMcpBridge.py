@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function
 
+import os
 import threading
 
 try:
@@ -25,9 +26,10 @@ except ImportError:
             pass
 
 from .http_bridge import BridgeHttpError, start_http_server, stop_http_server
+from .live_core import parse_non_negative_integer
 from .live_meter_cache import LiveMeterCache
-from .live_observability import endpoint_support_summary
-from .live_project import save_project
+from .live_observability import capability_document, endpoint_support_summary
+from .live_editions import edition_capabilities, require_audio_midi_track_capacity
 from .live_plugin_routing import apply_plugin_output_routing, plan_plugin_output_routing
 from .live_api import (
     add_locator,
@@ -51,6 +53,7 @@ from .live_api import (
     freeze_track,
     get_clip_notes,
     arrangement_snapshot,
+    arrangement_insertion_capabilities,
     plan_arrangement_clip_deletion,
     get_device_parameters,
     humanize_clip,
@@ -65,6 +68,9 @@ from .live_api import (
     modify_return_track,
     modify_track,
     project_snapshot,
+    parse_scene_index_query,
+    scene_tempo_signature_capabilities,
+    set_scene_tempo_signature_overrides,
     routing_buses,
     reorder_device,
     quantize_clip,
@@ -124,12 +130,26 @@ class AbletonMcpBridge(ControlSurface):
 
     def handle_request(self, method, path, query, payload):
         route = "%s %s" % (method, path)
+        if route == "GET /capabilities":
+            return capability_document()
         if route == "GET /status":
             return self._call_live_thread(self._get_status)
         if route == "GET /project":
             return self._call_live_thread(self._get_project)
         if route == "GET /arrangement":
             return self._call_live_thread(lambda: arrangement_snapshot(self.song()))
+        if route == "GET /scenes/tempo-signature-capabilities":
+            return self._call_live_thread(lambda: scene_tempo_signature_capabilities(
+                self.song(), parse_scene_index_query(query)
+            ))
+        if route == "POST /scenes/tempo-signature-overrides":
+            return self._call_live_thread(lambda: set_scene_tempo_signature_overrides(self.song(), payload))
+        if route == "GET /arrangement/insertion-capabilities":
+            return self._call_live_thread(lambda: arrangement_insertion_capabilities(
+                self.song(), parse_non_negative_integer(
+                    first_query_value(query, "trackIndex"), "trackIndex"
+                )
+            ))
         if route == "GET /arrangement/clips/delete-plan":
             return self._call_live_thread(lambda: plan_arrangement_clip_deletion(self.song()))
         if route == "DELETE /arrangement/clips":
@@ -148,14 +168,12 @@ class AbletonMcpBridge(ControlSurface):
             return self._call_live_thread(lambda: self._set_tempo(payload))
         if route == "POST /automation":
             raise BridgeHttpError("Automation envelope writing is not supported by this Remote Script bridge because the Live Python API does not expose a reliable cross-version envelope mutation surface", 501)
-        if route == "POST /project/save":
-            return self._call_live_thread(lambda: save_project(self.song(), self.application(), payload))
         if route == "POST /signature":
             return self._call_live_thread(lambda: self._set_signature(payload))
         if route == "POST /tracks/midi":
             return self._call_live_thread(lambda: self._create_midi_track(payload))
         if route == "POST /tracks/duplicate":
-            return self._call_live_thread(lambda: duplicate_track(self.song(), payload))
+            return self._call_live_thread(lambda: duplicate_track(self.song(), payload, os.path.realpath(__file__)))
         if route == "POST /tracks/freeze":
             return self._call_live_thread(lambda: freeze_track(self.song(), payload))
         if route == "POST /tracks/flatten":
@@ -284,6 +302,7 @@ class AbletonMcpBridge(ControlSurface):
             "ok": True,
             "tempo": song.tempo,
             "playing": song.is_playing,
+            "editionCapabilities": edition_capabilities(song, os.path.realpath(__file__)),
             "tracks": [track_summary(index, track) for index, track in enumerate(song.tracks)]
         }
 
@@ -427,6 +446,7 @@ class AbletonMcpBridge(ControlSurface):
         name = payload.get("name") or "MIDI"
         if not isinstance(name, str):
             raise BridgeHttpError("name must be a string")
+        require_audio_midi_track_capacity(self.song(), os.path.realpath(__file__), "create_midi_track")
         before = len(list(self.song().tracks))
         self.song().create_midi_track(before)
         track = list(self.song().tracks)[before]

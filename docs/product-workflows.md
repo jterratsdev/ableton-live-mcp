@@ -38,8 +38,7 @@ Open user sets should be treated as production data.
   explicitly approved the exact operation, target, and rollback plan.
 - Always take `ableton_create_snapshot` before broad writes. Remote Script
   rollback is partial; it is not a complete `.als` backup.
-- Treat `ableton_save_project`, `ableton_rollback_snapshot`,
-  `ableton_flatten_track`, `ableton_delete_clip`,
+- Treat `ableton_rollback_snapshot`, `ableton_flatten_track`, `ableton_delete_clip`,
   `ableton_delete_return_track`, `ableton_delete_device`, and
   `ableton_consolidate_clip` as destructive.
 - Treat `ableton_export_render`, `ableton_bounce_tracks`, and

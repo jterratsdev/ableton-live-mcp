@@ -14,17 +14,25 @@ export function createBridgeServer(adapter) {
   });
 }
 
-async function routeRequest(req, adapter) {
+export async function routeRequest(req, adapter) {
   const url = new URL(req.url, "http://127.0.0.1");
   const route = `${req.method} ${url.pathname}`;
 
   switch (route) {
+    case "GET /capabilities":
+      return adapter.getCapabilities();
     case "GET /status":
       return adapter.getStatus();
     case "GET /project":
       return adapter.getProject();
     case "GET /arrangement":
       return adapter.getArrangement();
+    case "GET /scenes/tempo-signature-capabilities":
+      return adapter.getSceneTempoSignatureCapabilities(parseExactSceneIndex(url.searchParams));
+    case "POST /scenes/tempo-signature-overrides":
+      return adapter.setSceneTempoSignatureOverrides(await readJsonBody(req));
+    case "GET /arrangement/insertion-capabilities":
+      return adapter.getArrangementInsertionCapabilities(Number.parseInt(url.searchParams.get("trackIndex") ?? "", 10));
     case "GET /arrangement/clips/delete-plan":
       return adapter.planArrangementClipDeletion();
     case "DELETE /arrangement/clips":
@@ -47,8 +55,6 @@ async function routeRequest(req, adapter) {
       return adapter.setTempo(await readJsonBody(req));
     case "POST /automation":
       return adapter.setAutomation(await readJsonBody(req));
-    case "POST /project/save":
-      return adapter.saveProject(await readJsonBody(req));
     case "POST /signature":
       return adapter.setSignature(await readJsonBody(req));
     case "POST /tracks/midi":
@@ -132,6 +138,15 @@ async function routeRequest(req, adapter) {
   }
 }
 
+function parseExactSceneIndex(searchParams) {
+  const keys = [...searchParams.keys()];
+  const values = searchParams.getAll("sceneIndex");
+  if (keys.length !== 1 || keys[0] !== "sceneIndex" || values.length !== 1 || !/^(0|[1-9]\d*)$/.test(values[0])) {
+    throw new BridgeRequestError("sceneIndex must be exactly one non-negative decimal integer", 400, { errorCode: "invalid_request" });
+  }
+  return Number(values[0]);
+}
+
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let body = "";
@@ -190,6 +205,7 @@ function sendError(res, error) {
   const statusCode = error.statusCode ?? 500;
   sendJson(res, statusCode, {
     ok: false,
-    error: statusCode === 500 ? "Internal bridge error" : error.message
+    error: statusCode === 500 ? "Internal bridge error" : error.message,
+    ...(error.details ?? {})
   });
 }

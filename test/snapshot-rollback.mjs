@@ -67,11 +67,11 @@ await adapter.createMidiClip({
   notes: [{ pitch: 60, start: 0, duration: 1, velocity: 100 }]
 });
 await adapter.insertArrangementClip({
+  mode: "session_clip",
   trackIndex: 0,
-  clipSlotIndex: 0,
+  sourceTrackIndex: 0,
+  sourceClipSlotIndex: 0,
   startBeat: 16,
-  lengthBeats: 8,
-  name: "Rollback Candidate"
 });
 await adapter.addLocator({ beat: 16, name: "Rollback Marker" });
 

@@ -12,6 +12,10 @@ Every generated step includes:
 - `argsTemplate`: deterministic placeholders for the caller to fill.
 - `riskTier` and `risk`: metadata derived from the canonical risk policy.
 - `summary`: the musical reason for that tool call.
+- `availability`: `supported`, `conditional`, or `blocked` for the active bridge.
+- `executable`: `false` when the required bridge route is unsupported.
+- `capabilityReason` and `capabilityProbe`: the exact bridge reason and optional
+  read-only target probe.
 
 ## Operating Rules
 
@@ -23,6 +27,9 @@ Every generated step includes:
 - Stop for explicit approval before `export` or `destructive` steps.
 - Treat unsupported bridge responses as product output. Do not retry by
   broadening the mutation.
+- Never execute a step whose capability projection says `executable: false`.
+  Remote Script plans block render, bounce, automation, device reorder, and
+  consolidation rather than recommending them as executable actions.
 - Re-read MCP state after each batch of changes and compare it to the plan.
 
 ## Workflow Catalog
@@ -84,8 +91,8 @@ Plan shape:
 5. Adjust master headroom.
 6. Re-read meters and production diagnostics.
 
-The default plan avoids `ableton_save_project`, `ableton_flatten_track`, and
-other destructive commit steps.
+The default plan avoids `ableton_flatten_track` and other destructive commit
+steps.
 
 ## Reverb Cleanup
 

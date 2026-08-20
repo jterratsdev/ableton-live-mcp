@@ -356,15 +356,16 @@ async function mutatesDevelopmentArrangementState() {
   const adapter = new DevelopmentAbletonAdapter();
 
   const inserted = await adapter.insertArrangementClip({
+    mode: "midi_notes",
     trackIndex: 0,
-    sourcePath: "/tmp/rendered-loop.wav",
     startBeat: 8,
     lengthBeats: 4,
-    kind: "audio"
+    name: "Regression Clip",
+    notes: [{ pitch: 60, start: 0, duration: 1, velocity: 100 }]
   });
   assert.equal(inserted.ok, true);
-  assert.equal(inserted.clip.kind, "audio");
-  assert.equal(inserted.clip.source.path, "/tmp/rendered-loop.wav");
+  assert.equal(inserted.clip.kind, "midi");
+  assert.equal(inserted.noteCount, 1);
 
   const locator = await adapter.addLocator({ beat: 8, name: "Drop" });
   assert.equal(locator.ok, true);
@@ -374,7 +375,7 @@ async function mutatesDevelopmentArrangementState() {
   assert.ok(project.locators.some((candidate) => candidate.name === "Drop" && candidate.beat === 8));
 
   const arrangement = await adapter.getArrangement();
-  assert.equal(arrangement.clips[0].name, "rendered-loop.wav");
+  assert.equal(arrangement.clips[0].name, "Regression Clip");
   assert.ok(arrangement.sections.some((section) => section.name === "Drop"));
 }
 

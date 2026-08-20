@@ -11,6 +11,8 @@ const httpPath = `${scriptDir}/http_bridge.py`;
 const liveApiPath = `${scriptDir}/live_api.py`;
 const liveModulePaths = [
   `${scriptDir}/live_arrangement.py`,
+  `${scriptDir}/live_arrangement_contract.py`,
+  `${scriptDir}/live_arrangement_insert.py`,
   `${scriptDir}/live_arrangement_delete.py`,
   `${scriptDir}/live_browser.py`,
   `${scriptDir}/live_clips.py`,
@@ -18,12 +20,12 @@ const liveModulePaths = [
   `${scriptDir}/live_devices.py`,
   `${scriptDir}/live_meter_cache.py`,
   `${scriptDir}/live_mastering.py`,
-  `${scriptDir}/live_project.py`,
   `${scriptDir}/live_plugin_routing.py`,
   `${scriptDir}/live_plugin_routing_validation.py`,
   `${scriptDir}/live_routing_options.py`,
   `${scriptDir}/live_mixer.py`,
   `${scriptDir}/live_snapshots.py`,
+  `${scriptDir}/live_scene_tempo_signature.py`,
   `${scriptDir}/live_summaries.py`,
   `${scriptDir}/live_track_operations.py`
 ];
@@ -52,6 +54,9 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "GET /status",
   "GET /project",
   "GET /arrangement",
+  "GET /scenes/tempo-signature-capabilities",
+  "POST /scenes/tempo-signature-overrides",
+  "GET /arrangement/insertion-capabilities",
   "GET /arrangement/clips/delete-plan",
   "DELETE /arrangement/clips",
   "POST /project/snapshot",
@@ -59,7 +64,6 @@ const liveTrackOperationsSource = readFileSync(`${scriptDir}/live_track_operatio
   "GET /plugins",
   "POST /tempo",
   "POST /automation",
-  "POST /project/save",
   "GET /browser/search",
   "GET /production/report",
   "POST /signature",
@@ -115,6 +119,12 @@ assert.match(httpSource, /def do_DELETE\(self\):/);
 assert.match(httpSource, /method in \("POST", "DELETE"\)/);
 assert.match(liveApiSource, /from \.live_browser import/);
 assert.match(liveApiSource, /from \.live_arrangement import/);
+assert.match(liveApiSource, /from \.live_scene_tempo_signature import parse_scene_index_query, scene_tempo_signature_capabilities, set_scene_tempo_signature_overrides/);
+const liveSceneTempoSignatureSource = readFileSync(`${scriptDir}/live_scene_tempo_signature.py`, "utf8");
+assert.match(liveSceneTempoSignatureSource, /inspect\.getattr_static/);
+assert.match(liveSceneTempoSignatureSource, /def transaction_error/);
+assert.doesNotMatch(liveSceneTempoSignatureSource, /\.fire\(/);
+assert.match(liveApiSource, /from \.live_arrangement_insert import arrangement_insertion_capabilities, insert_arrangement_clip/);
 assert.match(liveApiSource, /from \.live_mixer import/);
 assert.match(liveApiSource, /from \.live_devices import/);
 assert.match(liveApiSource, /from \.live_track_operations import/);
@@ -171,7 +181,7 @@ assert.match(liveSummariesSource, /"volumeRaw": volume\["raw"\]/);
 assert.match(liveSummariesSource, /"volumeDb": volume\["db"\]/);
 assert.doesNotMatch(liveSummariesSource, /"volumeDb": parameter_value/);
 assert.doesNotMatch(liveSummariesSource, /"cueVolumeDb": parameter_value/);
-assert.match(liveTrackOperationsSource, /def duplicate_track\(song, payload\):/);
+assert.match(liveTrackOperationsSource, /def duplicate_track\(song, payload, runtime_path=None\):/);
 assert.match(liveTrackOperationsSource, /def freeze_track\(song, payload\):/);
 assert.match(liveTrackOperationsSource, /def flatten_track\(song, payload\):/);
 assert.match(liveTrackOperationsSource, /def consolidate_clip\(song, payload\):/);
@@ -205,7 +215,11 @@ const liveArrangementSource = readFileSync(`${scriptDir}/live_arrangement.py`, "
 assert.match(liveArrangementSource, /def arrangement_snapshot\(song\):/);
 assert.match(liveArrangementSource, /def add_locator\(song, payload\):/);
 assert.match(liveArrangementSource, /set_or_delete_cue/);
-assert.match(liveArrangementSource, /Arrangement clip insertion is not supported/);
+assert.doesNotMatch(liveArrangementSource, /Arrangement clip insertion is not supported/);
+const liveArrangementInsertSource = readFileSync(`${scriptDir}/live_arrangement_insert.py`, "utf8");
+assert.match(liveArrangementInsertSource, /add_new_notes/);
+assert.match(liveArrangementInsertSource, /set_notes/);
+assert.match(liveArrangementInsertSource, /rollback_failure/);
 
 const compile = spawnSync("python3", ["-m", "py_compile", initPath, bridgePath, httpPath, liveApiPath, ...liveModulePaths], {
   encoding: "utf8",

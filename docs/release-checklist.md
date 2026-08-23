@@ -9,7 +9,7 @@ This checklist defines the expected bar for publishing `@jterrats/ableton-live-m
 - `npm test`
 - `PYTHONPYCACHEPREFIX=/tmp/ableton-mcp-pycache python3 -m py_compile ableton_remote_scripts/AbletonMcpBridge/*.py`
 - `npm pack --dry-run`
-- `ableton-live-mcp doctor --app-path "/Applications/Ableton Live 12 Lite.app"`
+- `ableton-live-mcp doctor --app-path "<Ableton app path>"`
 
 ## Initial Publication
 
@@ -56,6 +56,32 @@ The publish workflow:
 Do not merge a version bump until the organization token has been validated. A
 version change merged to `main` is the explicit release action; ordinary
 package metadata edits do not publish.
+
+## Rollback Plan
+
+Before publication, rollback means stopping the release: do not push the
+version commit, create a tag, or publish the package. The current public
+`0.1.0` release remains unchanged.
+
+After `0.2.0` is published, npm package contents are immutable. If a release
+blocking regression is confirmed:
+
+1. Deprecate `@jterrats/ableton-live-mcp@0.2.0` with an actionable message and
+   keep `0.1.0` available; do not unpublish either version.
+2. Pin affected MCP clients to `@jterrats/ableton-live-mcp@0.1.0`.
+3. Reinstall the `0.1.0` bundled Remote Script into the exact Ableton app that
+   is running, restart Live, and select `AbletonMcpBridge` again.
+4. Run `doctor` against that app and require a fresh installation, reachable
+   bridge, and `staleRuntime.status=not_detected`; then run the read-only smoke
+   suite before resuming writes.
+5. Publish a forward fix as `0.2.1` after the complete release checklist passes.
+
+There are no database migrations, remote configuration changes, feature flags,
+or background jobs to reverse. The release owner monitors installation
+freshness, bridge reachability, MCP startup/tool listing, and read-only Live
+queries during verification. npm deprecation, version pinning, Remote Script
+reinstallation, tagging, pushing, and publishing remain explicit operator
+actions.
 
 ## Required Live Checks
 

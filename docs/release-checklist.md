@@ -1,6 +1,6 @@
 # Release Checklist
 
-This checklist defines the expected bar for publishing `@jterrats/ableton-live-mcp@0.2.0`.
+This checklist defines the expected bar for publishing `@jterrats/ableton-live-mcp@0.2.1`.
 
 ## Required Local Checks
 
@@ -61,20 +61,20 @@ package metadata edits do not publish.
 
 Before publication, rollback means stopping the release: do not push the
 version commit, create a tag, or publish the package. The current public
-`0.1.0` release remains unchanged.
+`0.2.0` release remains unchanged.
 
-After `0.2.0` is published, npm package contents are immutable. If a release
+After `0.2.1` is published, npm package contents are immutable. If a release
 blocking regression is confirmed:
 
-1. Deprecate `@jterrats/ableton-live-mcp@0.2.0` with an actionable message and
-   keep `0.1.0` available; do not unpublish either version.
-2. Pin affected MCP clients to `@jterrats/ableton-live-mcp@0.1.0`.
-3. Reinstall the `0.1.0` bundled Remote Script into the exact Ableton app that
+1. Deprecate `@jterrats/ableton-live-mcp@0.2.1` with an actionable message and
+   keep `0.2.0` available; do not unpublish either version.
+2. Pin affected MCP clients to `@jterrats/ableton-live-mcp@0.2.0`.
+3. Reinstall the `0.2.0` bundled Remote Script into the exact Ableton app that
    is running, restart Live, and select `AbletonMcpBridge` again.
 4. Run `doctor` against that app and require a fresh installation, reachable
    bridge, and `staleRuntime.status=not_detected`; then run the read-only smoke
    suite before resuming writes.
-5. Publish a forward fix as `0.2.1` after the complete release checklist passes.
+5. Publish a forward fix as `0.2.2` after the complete release checklist passes.
 
 There are no database migrations, remote configuration changes, feature flags,
 or background jobs to reverse. The release owner monitors installation
@@ -92,7 +92,7 @@ actions.
 - Run read-only smoke before write smoke on user projects.
 - Create a snapshot before safe-write, mastering, export, or destructive workflows.
 
-## 0.2.0 Scope
+## 0.2.1 Scope
 
 - Safe Arrangement clip deletion from an exact read-only plan, with verified
   `Song.undo` compensation after partial failure.

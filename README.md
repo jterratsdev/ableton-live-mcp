@@ -3,7 +3,7 @@
 Local MCP stdio server for inspecting and controlling Ableton Live through a
 local bridge.
 
-Current package version: `0.2.0`.
+Current package version: `0.2.1`.
 
 Product site: [ableton-mcp.jterrats.dev](https://ableton-mcp.jterrats.dev)
 

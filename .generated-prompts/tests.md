@@ -55,7 +55,7 @@
 ## SSD5 Plugin Output Routing QA Evidence
 - **Created:** 2026-08-17
 - **Updated:** 2026-08-17
-- **Iterations:** 2
+- **Iterations:** 3
 - **Task:** ableton-ssd-multi-output-workflow-20260817
 - **Role:** qa
 - **Paths:** .agent-workflow/handoffs/ableton-ssd-multi-output-workflow-20260817-wfrun-1787002057777-44ad19-qa-qa-runtime-handoff.md
@@ -242,5 +242,52 @@ Add static coverage for the Ableton Remote Script adapter that proves the files 
 ### Prompt
 ````
 Add deterministic rollback coverage for the snapshot assignment, focusing on observable adapter behavior and Remote Script limitation metadata without requiring Ableton Live.
+````
+---
+
+## Arrangement Insertion Contract Tests
+- **Created:** 2026-08-18
+- **Updated:** 2026-08-18
+- **Iterations:** 2
+- **Task:** ableton-version-gated-arrangement-insertion-20260818
+- **Role:** qa
+- **Paths:** test/live_arrangement_insert_test.py, test/arrangement-insertion.mjs, test/remote-script-static.mjs, .agent-workflow/handoffs/ableton-version-gated-arrangement-insertion-20260818-wfrun-1787088039539-625c87-qa-qa-runtime-handoff.md
+
+### Key decisions
+- Use fresh-proxy fake-Live fixtures for exact MIDI, Session-copy, audio, stale, ambiguous, no-op, partial host failure, and rollback-failure behavior.
+- Prove Live 12 selects `add_new_notes` with zero legacy calls, while the legacy fixture selects only `set_notes`.
+- Keep all tests local and deterministic; never call port 9789 or the running Ableton bridge.
+- Exercise public route boundaries, not only direct service calls: Remote Script query strings must parse to exact indices, and development HTTP must enforce the same discriminated schema as MCP/Python.
+- Keep AC6 explicitly deferred and release-blocking until separately approved evidence exists from the disposable Live Suite Set after install/restart.
+- Independently revalidate QA remediations through the Python route object and an ephemeral Node HTTP server, proving malformed input behavior plus exact fingerprint and complete-state preservation.
+
+### Evidence
+- Focused suites emit `arrangement insertion fake-Live tests ok`, `arrangement insertion contract tests ok`, and `remote script static ok`.
+- `npm test` emits `deterministic test suite ok`.
+- QA reproduced two blockers: valid Remote Script capability query indices are rejected as strings, and a mixed-mode development HTTP payload succeeds instead of failing without mutation.
+- QA remediation revalidation passed: Python accepts `{"trackIndex":["0"]}` and rejects malformed input; ephemeral Node HTTP returns 400 `invalid_request` for mixed modes with unchanged full state and fingerprint; focused/full gates pass.
+
+### Prompt
+````
+Independently verify explicit Arrangement insertion modes, exact readback, target-specific read-only capabilities, note API selection, schema discrimination at every public boundary, path redaction, host failures, ambiguous or stale post-state, and verified bounded undo using only local fake-Live and development fixtures. Treat real disposable-Live proof as AC6's explicit release-blocking deferral and never contact the active bridge or production Set.
+````
+---
+
+## Capability-Aware Tool Contract Tests
+- **Created:** 2026-08-19
+- **Updated:** 2026-08-19
+- **Iterations:** 1
+- **Task:** ableton-capability-aware-tool-exposure-20260819
+- **Role:** developer
+- **Paths:** test/capability-aware-tools.mjs, test/live_capabilities_test.py, test/deterministic.mjs
+
+### Key decisions
+- Compare exact Node and Python Remote Script capability projections.
+- Exercise Remote Script, deterministic-development, malformed, unavailable, expired, and recovered capability views with local fixtures only.
+- Assert hidden tools cannot bypass discovery through direct calls and workflow steps preserve exact blocked reasons.
+
+### Prompt
+````
+Prove dynamic tools/list, direct-call guarding, conditional language, workflow blocking, resolver recovery, and registry parity without contacting the configured active bridge or mutating a Live Set.
 ````
 ---

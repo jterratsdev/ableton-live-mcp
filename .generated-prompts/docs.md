@@ -52,6 +52,25 @@
 ```
 
 <!-- Entries below this line are maintained by agents -->
+## docs/release-checklist.md
+- **Created:** 2026-08-23
+- **Updated:** 2026-08-24
+- **Iterations:** 2
+- **Task:** ableton-release-0-2-0-publish-20260824
+- **Role:** release_manager
+- **Paths:** package.json, package-lock.json, README.md, docs/release-checklist.md
+
+### Key decisions
+- Prompt registry update recorded.
+
+### Evidence
+- Pending verification evidence.
+
+### Prompt
+````
+Advance release metadata and rollback guidance to 0.2.1 because npm 0.2.0 is already immutable from commit 35286c1; keep 0.2.0 as the rollback pin, use 0.2.2 as the forward fix, and preserve explicit operator control for push and publish.
+````
+---
 ## SSD5 Multi-Output Routing Guide And Contracts
 - **Created:** 2026-08-17
 - **Updated:** 2026-08-17
@@ -259,5 +278,68 @@ Create focused snapshot rollback documentation that maps tempo, signature, clips
 ### Prompt
 ````
 Synchronize the bridge contract and Live smoke runbook with the request-size, MIDI-note, preset-inventory, parameter round-trip, and mastering-chain guarantees, preserving explicit safety gates and deferred real Live execution.
+````
+---
+
+## Arrangement Insertion Capability And Safety Contract
+- **Created:** 2026-08-18
+- **Updated:** 2026-08-18
+- **Iterations:** 1
+- **Task:** ableton-version-gated-arrangement-insertion-20260818
+- **Role:** developer
+- **Paths:** docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md, docs/ableton-compatibility.md
+
+### Key decisions
+- Document exact-track capability discovery separately from mutation.
+- Document explicit mode fields, callable Song.undo, one-delta verification, modern/legacy note provenance, and audio-path redaction.
+- Keep real Live proof deferred to a reinstalled/restarted disposable Set with separate approval per mutation.
+
+### Evidence
+- Compatibility matrix and complete deterministic npm suite pass.
+
+### Prompt
+````
+Synchronize bridge and compatibility documentation with the version-gated Arrangement insertion contract while preserving explicit disposable-Set-only runtime validation and no production-Set contact.
+````
+---
+
+## Dynamic Capability Discovery Documentation
+- **Created:** 2026-08-19
+- **Updated:** 2026-08-19
+- **Iterations:** 1
+- **Task:** ableton-capability-aware-tool-exposure-20260819
+- **Role:** developer
+- **Paths:** README.md, docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md, docs/high-level-workflows.md
+
+### Key decisions
+- Document `GET /capabilities` as a read-only, non-Live-thread contract.
+- Explain dynamic tool re-listing, fail-closed fallback, conditional descriptions, and blocked workflow steps.
+- Preserve explicit observable limits for snapshots, inventory, parameters, mastering targets, meters, locators, and Arrangement operations.
+
+### Prompt
+````
+Document capability-aware MCP discovery and workflow materialization without implying unsupported Remote Script writes or target-level guarantees.
+````
+---
+
+## Session Scene Override Contract Documentation
+- **Created:** 2026-08-20
+- **Updated:** 2026-08-20
+- **Iterations:** 1
+- **Task:** ableton-session-scene-tempo-signature-20260820
+- **Role:** developer
+- **Paths:** README.md, docs/ableton-bridge-contract.md, docs/ableton-python-remote-script.md, docs/ableton-compatibility.md
+
+### Key decisions
+- Describe the read-only exact-Scene capability probe separately from atomic mutation.
+- State that overrides take effect only after a later explicit Session Scene launch.
+- Explicitly deny Scene launch side effects, Arrangement tempo envelopes, Arrangement time-signature markers, and global Song fallback writes.
+
+### Evidence
+- Static copy checks and the complete offline validation gate cover canonical routes, tool descriptions, and authoritative docs.
+
+### Prompt
+````
+Document exact-index Session Scene tempo and time-signature override probing and atomic mutation without implying immediate playback, Scene launch, Arrangement automation or markers, or global Song tempo/signature writes.
 ````
 ---

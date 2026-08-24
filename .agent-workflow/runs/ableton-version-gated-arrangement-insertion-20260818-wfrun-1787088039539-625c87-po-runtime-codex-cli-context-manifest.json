@@ -1,0 +1,154 @@
+{
+  "taskId": "ableton-version-gated-arrangement-insertion-20260818",
+  "phase": "po",
+  "role": "product_owner",
+  "generatedAt": "2026-08-18T21:20:39.719Z",
+  "entries": [
+    {
+      "path": ".agent-workflow/playbooks/po.md",
+      "sha256": "0cb898fe6258233aed77ae372cf59a22dc9f8ac0466ca413d89c05ca70fe013f",
+      "loadMode": "full",
+      "source": "phase-playbook",
+      "required": true,
+      "reason": "Required po phase playbook for product_owner runtime work.",
+      "missing": false,
+      "excerpt": "# PO Playbook\n\n- Refine acceptance criteria into testable outcomes.\n- State assumptions, non-goals, ambiguity, competing interpretations, tradeoffs, and concrete success criteria before architecture starts.\n- Check whether the task is functionally oversized: multiple journeys, unrelated outcomes, too many acceptance criteria, or hidden release/support scope.\n- If scope is too large, record a split recommendation with rationale, proposed child stories, dependencies, risks, and owner roles before architecture starts.\n- Confirm backlog item ID, dependencies, assumptions, and edge cases.\n- Clarify what is out of scope before implementation starts."
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "ca348a8005c76d48ca2a6313695f83db573e73d71cc15e12e3054bcf8aa76882",
+      "loadMode": "excerpt",
+      "source": "runtime-instructions",
+      "required": true,
+      "reason": "Required root runtime instructions for project-wide agent behavior.",
+      "missing": false,
+      "excerpt": "<!-- open-orchestra:start block-id=\"runtime-bootstrap\" generator=\"open-orchestra runtime bootstrap\" version=\"2\" target=\"codex\" source-manifest=\"open-orchestra command-manifest,runtime-bootstrap\" content-sha256=\"58bb0cb8693a9ad87704816cf8143e186b8b5617441cbdab34800282e3682aae\" updated-at=\"2026-07-16T05:38:13.653Z\" -->\n# Open Orchestra Runtime Bootstrap\n\nRuntime target: Codex. Reference Open Orchestra from AGENTS.md so local CLI work follows workflow gates.\n\n## Non-Negotiable Runtime Rules\n\nThese rules are non-negotiable. Follow them in every conversation and every work block:\n\n- Use Orchestra for all project work: planning, implementation, fixes, reviews, QA, release, CI, research, and documentation.\n- Do not edit files, run implementation work, or dispatch agents before a matching Orchestra task exists and a workflow run is active.\n- Always run the runtime health preflight, inspect active tasks, and validate pre-run context before work.\n- If a gate is paused, stop and wait for explicit user approval before continuing.\n- Record real evidence: commands, files, outputs, logs, screenshots, traces, or explicit deferred-risk rationale.\n- Never treat simulated handoffs, generated summaries, or workflow state alone as proof of completed QA.\n- Never push, tag, publish, or deploy without explicit user instruction.\n\nUse Open Orchestra as the local control plane when `.agent-workflow/` exists.\nThe active LLM runtime is the parent agent. Orchestra renders spawn requests and records lifecycle; it does not call provider APIs directly.\n\n## Orchestra Workflow — Required for All Work\n\nEvery "
+    }
+  ],
+  "contextPack": {
+    "status": "unavailable",
+    "reason": "context pack requires a fresh context index: context index has not been built"
+  },
+  "preprocessedContext": {
+    "generatedAt": "2026-08-18T21:20:39.719Z",
+    "config": {
+      "maxLinesPerFile": 80,
+      "totalLineBudget": 360
+    },
+    "originalLines": 31,
+    "finalLines": 41,
+    "originalBytes": 2253,
+    "finalBytes": 2978,
+    "omittedContentWarning": "One or more context files were reduced; cite source paths when full files are needed.",
+    "files": [
+      {
+        "path": ".agent-workflow/playbooks/po.md",
+        "reason": "Required po phase playbook for product_owner runtime work.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 8,
+        "finalLines": 8,
+        "originalBytes": 651,
+        "finalBytes": 651,
+        "omittedContentWarning": null,
+        "content": "# PO Playbook\n\n- Refine acceptance criteria into testable outcomes.\n- State assumptions, non-goals, ambiguity, competing interpretations, tradeoffs, and concrete success criteria before architecture starts.\n- Check whether the task is functionally oversized: multiple journeys, unrelated outcomes, too many acceptance criteria, or hidden release/support scope.\n- If scope is too large, record a split recommendation with rationale, proposed child stories, dependencies, risks, and owner roles before architecture starts.\n- Confirm backlog item ID, dependencies, assumptions, and edge cases.\n- Clarify what is out of scope before implementation starts.",
+        "missing": false
+      },
+      {
+        "path": "AGENTS.md",
+        "reason": "Required root runtime instructions for project-wide agent behavior.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 23,
+        "finalLines": 23,
+        "originalBytes": 1602,
+        "finalBytes": 1601,
+        "omittedContentWarning": null,
+        "content": "<!-- open-orchestra:start block-id=\"runtime-bootstrap\" generator=\"open-orchestra runtime bootstrap\" version=\"2\" target=\"codex\" source-manifest=\"open-orchestra command-manifest,runtime-bootstrap\" content-sha256=\"58bb0cb8693a9ad87704816cf8143e186b8b5617441cbdab34800282e3682aae\" updated-at=\"2026-07-16T05:38:13.653Z\" -->\n# Open Orchestra Runtime Bootstrap\n\nRuntime target: Codex. Reference Open Orchestra from AGENTS.md so local CLI work follows workflow gates.\n\n## Non-Negotiable Runtime Rules\n\nThese rules are non-negotiable. Follow them in every conversation and every work block:\n\n- Use Orchestra for all project work: planning, implementation, fixes, reviews, QA, release, CI, research, and documentation.\n- Do not edit files, run implementation work, or dispatch agents before a matching Orchestra task exists and a workflow run is active.\n- Always run the runtime health preflight, inspect active tasks, and validate pre-run context before work.\n- If a gate is paused, stop and wait for explicit user approval before continuing.\n- Record real evidence: commands, files, outputs, logs, screenshots, traces, or explicit deferred-risk rationale.\n- Never treat simulated handoffs, generated summaries, or workflow state alone as proof of completed QA.\n- Never push, tag, publish, or deploy without explicit user instruction.\n\nUse Open Orchestra as the local control plane when `.agent-workflow/` exists.\nThe active LLM runtime is the parent agent. Orchestra renders spawn requests and records lifecycle; it does not call provider APIs directly.\n\n## Orchestra Workflow — Required for All Work\n\nEvery",
+        "missing": false
+      },
+      {
+        "path": "ableton_remote_scripts/AbletonMcpBridge",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 173,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: ableton_remote_scripts/AbletonMcpBridge\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "bridge",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 140,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: bridge\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "src",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 137,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: src\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "test",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 138,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: test\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "docs",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 138,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: docs\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      }
+    ]
+  },
+  "knowledge": {
+    "contract": "open-orchestra.knowledge-selection.v1",
+    "advisoryOnly": true,
+    "request": {
+      "task": "ableton-version-gated-arrangement-insertion-20260818",
+      "phase": "po",
+      "role": "product_owner",
+      "risk": "*",
+      "tokenBudget": 500
+    },
+    "selected": [],
+    "diagnostics": [
+      "catalog_missing_or_invalid"
+    ],
+    "tokenUsage": 0,
+    "catalogVersion": null
+  }
+}

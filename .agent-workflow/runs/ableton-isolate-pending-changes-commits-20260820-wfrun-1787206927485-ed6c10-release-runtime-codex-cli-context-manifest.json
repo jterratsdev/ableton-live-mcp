@@ -1,0 +1,239 @@
+{
+  "taskId": "ableton-isolate-pending-changes-commits-20260820",
+  "phase": "release",
+  "role": "release_manager",
+  "generatedAt": "2026-08-20T06:22:07.693Z",
+  "entries": [
+    {
+      "path": ".agent-workflow/playbooks/release.md",
+      "sha256": "2545963f5d00c88bc7869738278327848892dfd95b1afb7fd82a2d2b887c9af2",
+      "loadMode": "full",
+      "source": "phase-playbook",
+      "required": true,
+      "reason": "Required release phase playbook for release_manager runtime work.",
+      "missing": false,
+      "excerpt": "# Release Playbook\n\n## Deployment Risk Challenge\n\n- Challenge rollout, rollback, config, API, security-boundary, observability, and production-impact complexity before sign-off.\n- Flag smells such as excessive rollout waves for the story size, rollback complexity disproportionate to the change, production-impacting config/API changes, security-boundary changes, and missing observability.\n- If challenge findings exceed the project's risk threshold, record a blocking release review or action-policy approval request instead of approving the runbook.\n- If no challenge findings exist, state `None` explicitly.\n\n- Confirm CI, versioning, release notes, rollback path, and operational risk.\n- Verify published artifacts or deployment evidence before closing the work.\n- Record go/no-go rationale and any follow-up monitoring needs.\n\n## Release Promote\n\n- Validate changelog or release note impact, smoke evidence, rollback evidence, and customer/support readiness.\n- Confirm whether the change ships alone or is batched with adjacent completed tasks.\n- Record promote, hold, or accepted-risk rationale before closing the release phase."
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "ca348a8005c76d48ca2a6313695f83db573e73d71cc15e12e3054bcf8aa76882",
+      "loadMode": "excerpt",
+      "source": "runtime-instructions",
+      "required": true,
+      "reason": "Required root runtime instructions for project-wide agent behavior.",
+      "missing": false,
+      "excerpt": "<!-- open-orchestra:start block-id=\"runtime-bootstrap\" generator=\"open-orchestra runtime bootstrap\" version=\"2\" target=\"codex\" source-manifest=\"open-orchestra command-manifest,runtime-bootstrap\" content-sha256=\"58bb0cb8693a9ad87704816cf8143e186b8b5617441cbdab34800282e3682aae\" updated-at=\"2026-07-16T05:38:13.653Z\" -->\n# Open Orchestra Runtime Bootstrap\n\nRuntime target: Codex. Reference Open Orchestra from AGENTS.md so local CLI work follows workflow gates.\n\n## Non-Negotiable Runtime Rules\n\nThese rules are non-negotiable. Follow them in every conversation and every work block:\n\n- Use Orchestra for all project work: planning, implementation, fixes, reviews, QA, release, CI, research, and documentation.\n- Do not edit files, run implementation work, or dispatch agents before a matching Orchestra task exists and a workflow run is active.\n- Always run the runtime health preflight, inspect active tasks, and validate pre-run context before work.\n- If a gate is paused, stop and wait for explicit user approval before continuing.\n- Record real evidence: commands, files, outputs, logs, screenshots, traces, or explicit deferred-risk rationale.\n- Never treat simulated handoffs, generated summaries, or workflow state alone as proof of completed QA.\n- Never push, tag, publish, or deploy without explicit user instruction.\n\nUse Open Orchestra as the local control plane when `.agent-workflow/` exists.\nThe active LLM runtime is the parent agent. Orchestra renders spawn requests and records lifecycle; it does not call provider APIs directly.\n\n## Orchestra Workflow — Required for All Work\n\nEvery "
+    },
+    {
+      "path": "rules/release-rollback.mdc",
+      "sha256": "c43c1787268566489058587567eb1b1c8f01e5063e38749184503f2a1357ed21",
+      "loadMode": "full",
+      "source": "rule",
+      "required": true,
+      "reason": "Required release_manager rule selected from the neutral rule catalog for role-specific execution quality.",
+      "missing": false,
+      "excerpt": "---\ndescription: Release readiness, rollout, rollback, and post-release monitoring\nalwaysApply: true\n---\n\n# Release & Rollback\n\nEvery release must be deployable, observable, and reversible. A feature is not ready if the team cannot monitor it or recover from it.\n\nFor rollout tooling, synthetic monitoring, SLOs, on-call, and operational reporting categories, see **devops-tooling.mdc**.\n\n## Release Readiness\n- Confirm Definition of Done, QA evidence, security review, migration status, and unresolved risks before release.\n- Identify deployment target, release owner, release window, affected users, and communication needs.\n- List feature flags, configuration changes, migrations, background jobs, and third-party dependencies.\n- Verify observability exists for the changed behavior: logs, metrics, traces, dashboards, and alerts when applicable.\n\n## Rollout Strategy\n- Prefer small, reversible releases over large batches.\n- Use feature flags, canaries, phased rollout, or dark launch for risky user-facing or infrastructure changes.\n- Database changes must be backward compatible when possible and safe across rolling deploys.\n- Long-running migrations must have progress monitoring and an interruption plan.\n\n## Rollback Plan\n- Every release must state how to rollback code, configuration, feature flags, and migrations.\n- If rollback is not possible, document the forward-fix plan and get Product Owner risk acceptance before release.\n- Do not release when rollback depends on manual guesswork or undocumented production console changes.\n\n## Post-Release\n- Monitor agreed signals after release: errors, latency, saturation, conversion, usage, and user-facing failures.\n- Define who watches the release and for how long.\n- Capture incidents, regressions, and follow-up work as backlog items."
+    },
+    {
+      "path": "rules/delivery-quality-gates.mdc",
+      "sha256": "05e5c1ef1d21dd2ac44ca37a91c0edefe86913b151113903660d98386ecae93f",
+      "loadMode": "excerpt",
+      "source": "rule",
+      "required": true,
+      "reason": "Required release_manager rule selected from the neutral rule catalog for role-specific execution quality.",
+      "missing": false,
+      "excerpt": "---\ndescription: Required delivery flow from development through QA automation and evidence\nalwaysApply: true\n---\n\n# Delivery Quality Gates\n\nDevelopment work is not complete when code compiles. Every implementation must move through developer verification, QA review, automation planning, and evidence capture.\n\n## Developer Gate\n\n- Developer delivers code with unit tests for new or changed business logic.\n- Unit tests must cover success paths, failure paths, and relevant boundary cases.\n- Developer must run the focused unit test suite and report the exact command and result.\n- If unit tests are not feasible, Developer must document the technical reason and propose the smallest testable refactor.\n- Developer must address API, data, frontend, performance, concurrency, config, and AI-assisted development rules when the change touches those areas.\n\n## QA Gate\n\n- QA receives the Developer handoff before release approval.\n- Workflow gate approval is not a status shortcut. `po→architect` can be approved only when the issue/task has user-validated scope, non-goals, assumptions, priority, acceptance criteria, and sizing context. `qa→release` can be approved only after real implementation evidence, QA findings, BA/PO acceptance, and Architect review when technical contracts changed.\n- Generated handoffs with `Acceptance Criteria: none` are incomplete for release purposes. Pull the criteria from the linked GitHub issue or Orchestra task, record a review finding, and block release until the criteria/evidence gap is fixed or explicitly risk-accepted by the Product Owner.\n- QA must produc"
+    }
+  ],
+  "contextPack": {
+    "status": "unavailable",
+    "reason": "context pack requires a fresh context index: context index has not been built"
+  },
+  "preprocessedContext": {
+    "generatedAt": "2026-08-20T06:22:07.693Z",
+    "config": {
+      "maxLinesPerFile": 80,
+      "totalLineBudget": 360
+    },
+    "originalLines": 345,
+    "finalLines": 190,
+    "originalBytes": 14734,
+    "finalBytes": 10157,
+    "omittedContentWarning": "One or more context files were reduced; cite source paths when full files are needed.",
+    "files": [
+      {
+        "path": ".agent-workflow/playbooks/release.md",
+        "reason": "Required release phase playbook for release_manager runtime work.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 18,
+        "finalLines": 18,
+        "originalBytes": 1135,
+        "finalBytes": 1135,
+        "omittedContentWarning": null,
+        "content": "# Release Playbook\n\n## Deployment Risk Challenge\n\n- Challenge rollout, rollback, config, API, security-boundary, observability, and production-impact complexity before sign-off.\n- Flag smells such as excessive rollout waves for the story size, rollback complexity disproportionate to the change, production-impacting config/API changes, security-boundary changes, and missing observability.\n- If challenge findings exceed the project's risk threshold, record a blocking release review or action-policy approval request instead of approving the runbook.\n- If no challenge findings exist, state `None` explicitly.\n\n- Confirm CI, versioning, release notes, rollback path, and operational risk.\n- Verify published artifacts or deployment evidence before closing the work.\n- Record go/no-go rationale and any follow-up monitoring needs.\n\n## Release Promote\n\n- Validate changelog or release note impact, smoke evidence, rollback evidence, and customer/support readiness.\n- Confirm whether the change ships alone or is batched with adjacent completed tasks.\n- Record promote, hold, or accepted-risk rationale before closing the release phase.",
+        "missing": false
+      },
+      {
+        "path": "AGENTS.md",
+        "reason": "Required root runtime instructions for project-wide agent behavior.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 23,
+        "finalLines": 23,
+        "originalBytes": 1602,
+        "finalBytes": 1601,
+        "omittedContentWarning": null,
+        "content": "<!-- open-orchestra:start block-id=\"runtime-bootstrap\" generator=\"open-orchestra runtime bootstrap\" version=\"2\" target=\"codex\" source-manifest=\"open-orchestra command-manifest,runtime-bootstrap\" content-sha256=\"58bb0cb8693a9ad87704816cf8143e186b8b5617441cbdab34800282e3682aae\" updated-at=\"2026-07-16T05:38:13.653Z\" -->\n# Open Orchestra Runtime Bootstrap\n\nRuntime target: Codex. Reference Open Orchestra from AGENTS.md so local CLI work follows workflow gates.\n\n## Non-Negotiable Runtime Rules\n\nThese rules are non-negotiable. Follow them in every conversation and every work block:\n\n- Use Orchestra for all project work: planning, implementation, fixes, reviews, QA, release, CI, research, and documentation.\n- Do not edit files, run implementation work, or dispatch agents before a matching Orchestra task exists and a workflow run is active.\n- Always run the runtime health preflight, inspect active tasks, and validate pre-run context before work.\n- If a gate is paused, stop and wait for explicit user approval before continuing.\n- Record real evidence: commands, files, outputs, logs, screenshots, traces, or explicit deferred-risk rationale.\n- Never treat simulated handoffs, generated summaries, or workflow state alone as proof of completed QA.\n- Never push, tag, publish, or deploy without explicit user instruction.\n\nUse Open Orchestra as the local control plane when `.agent-workflow/` exists.\nThe active LLM runtime is the parent agent. Orchestra renders spawn requests and records lifecycle; it does not call provider APIs directly.\n\n## Orchestra Workflow — Required for All Work\n\nEvery",
+        "missing": false
+      },
+      {
+        "path": "rules/release-rollback.mdc",
+        "reason": "Required release_manager rule selected from the neutral rule catalog for role-specific execution quality.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 32,
+        "finalLines": 32,
+        "originalBytes": 1797,
+        "finalBytes": 1797,
+        "omittedContentWarning": null,
+        "content": "---\ndescription: Release readiness, rollout, rollback, and post-release monitoring\nalwaysApply: true\n---\n\n# Release & Rollback\n\nEvery release must be deployable, observable, and reversible. A feature is not ready if the team cannot monitor it or recover from it.\n\nFor rollout tooling, synthetic monitoring, SLOs, on-call, and operational reporting categories, see **devops-tooling.mdc**.\n\n## Release Readiness\n- Confirm Definition of Done, QA evidence, security review, migration status, and unresolved risks before release.\n- Identify deployment target, release owner, release window, affected users, and communication needs.\n- List feature flags, configuration changes, migrations, background jobs, and third-party dependencies.\n- Verify observability exists for the changed behavior: logs, metrics, traces, dashboards, and alerts when applicable.\n\n## Rollout Strategy\n- Prefer small, reversible releases over large batches.\n- Use feature flags, canaries, phased rollout, or dark launch for risky user-facing or infrastructure changes.\n- Database changes must be backward compatible when possible and safe across rolling deploys.\n- Long-running migrations must have progress monitoring and an interruption plan.\n\n## Rollback Plan\n- Every release must state how to rollback code, configuration, feature flags, and migrations.\n- If rollback is not possible, document the forward-fix plan and get Product Owner risk acceptance before release.\n- Do not release when rollback depends on manual guesswork or undocumented production console changes.\n\n## Post-Release\n- Monitor agreed signals after release: errors, latency, saturation, conversion, usage, and user-facing failures.\n- Define who watches the release and for how long.\n- Capture incidents, regressions, and follow-up work as backlog items.",
+        "missing": false
+      },
+      {
+        "path": "rules/delivery-quality-gates.mdc",
+        "reason": "Required release_manager rule selected from the neutral rule catalog for role-specific execution quality.",
+        "required": true,
+        "strategy": "passthrough",
+        "originalLines": 23,
+        "finalLines": 23,
+        "originalBytes": 1604,
+        "finalBytes": 1604,
+        "omittedContentWarning": null,
+        "content": "---\ndescription: Required delivery flow from development through QA automation and evidence\nalwaysApply: true\n---\n\n# Delivery Quality Gates\n\nDevelopment work is not complete when code compiles. Every implementation must move through developer verification, QA review, automation planning, and evidence capture.\n\n## Developer Gate\n\n- Developer delivers code with unit tests for new or changed business logic.\n- Unit tests must cover success paths, failure paths, and relevant boundary cases.\n- Developer must run the focused unit test suite and report the exact command and result.\n- If unit tests are not feasible, Developer must document the technical reason and propose the smallest testable refactor.\n- Developer must address API, data, frontend, performance, concurrency, config, and AI-assisted development rules when the change touches those areas.\n\n## QA Gate\n\n- QA receives the Developer handoff before release approval.\n- Workflow gate approval is not a status shortcut. `po→architect` can be approved only when the issue/task has user-validated scope, non-goals, assumptions, priority, acceptance criteria, and sizing context. `qa→release` can be approved only after real implementation evidence, QA findings, BA/PO acceptance, and Architect review when technical contracts changed.\n- Generated handoffs with `Acceptance Criteria: none` are incomplete for release purposes. Pull the criteria from the linked GitHub issue or Orchestra task, record a review finding, and block release until the criteria/evidence gap is fixed or explicitly risk-accepted by the Product Owner.\n- QA must produc",
+        "missing": false
+      },
+      {
+        "path": "src",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 137,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: src\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "bridge",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 140,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: bridge\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "ableton_remote_scripts",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 156,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: ableton_remote_scripts\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "docs",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 138,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: docs\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "test",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 138,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: test\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": "README.md",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "section-extraction",
+        "originalLines": 249,
+        "finalLines": 80,
+        "originalBytes": 8596,
+        "finalBytes": 3010,
+        "omittedContentWarning": "Reduced from 249 lines using section-extraction; full source remains at README.md.",
+        "content": "# Ableton Live MCP\n\nLocal MCP stdio server for inspecting and controlling Ableton Live through a\nlocal bridge.\n\nCurrent package version: `0.1.0`.\n\nProduct site: [ableton-mcp.jterrats.dev](https://ableton-mcp.jterrats.dev)\n\nThis repo does not assume a specific Ableton integration layer. The MCP server\nspeaks JSON-RPC over stdio to an MCP client, then forwards tool calls to a local\nHTTP bridge that you can implement with Max for Live, Ableton's Extensions SDK,\n## Product Workflows\n\nStart with [docs/product-workflows.md](docs/product-workflows.md) for end-to-end\nsetup, MIDI import, instrument assignment, arrangement, mixing, mastering,\nvalidation, and export workflows. The guide also documents safe operating rules\nfor open user sets, destructive commands, explicit export approval, and\nunsupported bridge operations.\n\n## Tools\n\nThe exact `tools/list` response is capability-aware. It reads the active\nbridge's read-only `GET /capabilities` contract, hides hard-unsupported bridge\nactions, keeps MCP-local analysis/risk/workflow tools, and labels\ntarget-dependent tools `Conditional`. Clients should re-list tools after\nreconnecting or changing bridges. An unavailable or malformed handshake fails\nclosed and does not advertise unverified Live writes.\n\nRead and inspect:\n\n- `ableton_get_status`\n## Production Workflow\n\nFor meaningful LLM control, the recommended sequence is:\n\n1. `ableton_get_status`, `ableton_get_project`,\n   `ableton_get_arrangement`, and `ableton_get_production_report` to inspect\n   transport, tracks, devices, clips, locators, routing, meters, returns, and\n   mixer state.\n2. `ableton_create_snapshot` before broad edits. For real user sets, also save\n   or duplicate the `.als` file before destructive, export, or mastering work.\n3. `ableton_list_plugins` and `ableton_search_browser` so the LLM can choose\n   available instruments, effects, presets, samples, racks, grooves, plugins,\n## Quick Start\n\nFrom npm:\n\n```sh\nnpx -y @jterrats/ableton-live-mcp --help\n```\n\nInstall the bundled Ableton Remote Script:\n\n```sh\nnpx -y @jterrats/ableton-live-mcp install-remote-script --app-path \"/Applications/Ableton Live 12 Lite.app\"\n## MCP Client Config\n\nUse this shape in an MCP client that supports stdio servers:\n\n```json\n{\n  \"mcpServers\": {\n    \"ableton-live\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@jterrats/ableton-live-mcp\"],\n      \"env\": {\n        \"ABLETON_BRIDGE_URL\": \"http://127.0.0.1:9789\"\n## Bridge\n\nThe local bridge must listen on `ABLETON_BRIDGE_URL` and implement the HTTP\ncontract in [docs/ableton-bridge-contract.md](docs/ableton-bridge-contract.md).\n\nThis repo includes a deterministic development bridge for local MCP integration\ntests. It listens on `127.0.0.1:9789` by default, or on `ABLETON_BRIDGE_PORT`\nwhen configured, and implements the product workflow surface without requiring\nAbleton Live.\n\nFor the real Ableton Live adapter, install the Python Remote Script documented\nin [docs/ableton-python-remote-script.md](docs/ableton-python-remote-script.md).",
+        "missing": false
+      },
+      {
+        "path": ".generated-prompts",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 152,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: .generated-prompts\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      },
+      {
+        "path": ".agent-workflow",
+        "reason": "Delegated ownership path; cite this path instead of loading raw file content by default.",
+        "required": false,
+        "strategy": "directory-reference",
+        "originalLines": 0,
+        "finalLines": 2,
+        "originalBytes": 0,
+        "finalBytes": 149,
+        "omittedContentWarning": "Directory source was referenced without reading raw directory contents.",
+        "content": "Directory reference: .agent-workflow\nRaw directory contents were not loaded into runtime context. Inspect targeted files under this path when needed.",
+        "missing": false
+      }
+    ]
+  },
+  "knowledge": {
+    "contract": "open-orchestra.knowledge-selection.v1",
+    "advisoryOnly": true,
+    "request": {
+      "task": "ableton-isolate-pending-changes-commits-20260820",
+      "phase": "release",
+      "role": "release_manager",
+      "risk": "*",
+      "tokenBudget": 500
+    },
+    "selected": [],
+    "diagnostics": [
+      "catalog_missing_or_invalid"
+    ],
+    "tokenUsage": 0,
+    "catalogVersion": null
+  }
+}

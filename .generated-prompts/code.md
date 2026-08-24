@@ -275,3 +275,72 @@ Fix GitHub issues 1-5: correct the numeric MCP schema, make preset recommendatio
 Add compensating Song.undo handling for mid-delete Arrangement clip failures, verify the original observable timeline independently of proxy identity, report rollback failures explicitly, and validate only with local Node/Python fixtures so the user's active Ableton Set is untouched.
 ````
 ---
+
+## Version-Gated Arrangement Insertion
+- **Created:** 2026-08-18
+- **Updated:** 2026-08-18
+- **Iterations:** 1
+- **Task:** ableton-version-gated-arrangement-insertion-20260818
+- **Role:** developer
+- **Paths:** ableton_remote_scripts/AbletonMcpBridge/live_arrangement_contract.py, ableton_remote_scripts/AbletonMcpBridge/live_arrangement_insert.py, bridge/development/arrangement-insert.js, src/arrangement-insertion.js
+
+### Key decisions
+- Require explicit MIDI, Session-copy, or audio-file mode and reject legacy ambiguous payloads.
+- Probe callable methods on the exact track and require callable Song.undo before mutation.
+- Verify one stable observable clip delta and use bounded undo with complete Arrangement fingerprint restoration.
+- Prefer Live 12 `add_new_notes`; use `set_notes` only when the modern method is non-callable.
+
+### Evidence
+- Focused fake-Live Python, Node contract, static wiring, Python compile, and complete deterministic npm tests pass without contacting Live.
+
+### Prompt
+````
+Implement exact-track Arrangement insertion capabilities and three explicit insertion modes with stable observable readback, modern MIDI note writing, legacy capability fallback, audio-path redaction, and fail-closed bounded undo verification.
+````
+---
+
+## Capability-Aware MCP Tool Exposure
+- **Created:** 2026-08-19
+- **Updated:** 2026-08-19
+- **Iterations:** 1
+- **Task:** ableton-capability-aware-tool-exposure-20260819
+- **Role:** developer
+- **Paths:** bridge/observability.js, src/capability-resolver.js, src/tool-capabilities.js, src/mcp-handler.js, src/server.js, src/workflow-plans.js, ableton_remote_scripts/AbletonMcpBridge/live_observability.py
+
+### Key decisions
+- Use one normalized route-capability document for MCP discovery, direct-call guards, and workflow availability.
+- Keep tool ownership and route requirements in a focused registry; keep handshake I/O, TTL, single-flight, and fail-closed recovery in a separate resolver.
+- Preserve MCP-local tools during handshake failures and require supported downstream routes for hybrid tools such as MIDI import.
+
+### Evidence
+- Focused Node/Python contracts compare the Node and Remote Script capability documents and exercise supported, conditional, unsupported, malformed, unavailable, stale, and recovered views.
+
+### Prompt
+````
+Expose only truthful Ableton tools by projecting the active bridge capability contract into tools/list, tools/call, and high-level workflow plans while preserving MCP-local capabilities and failing closed on an unverifiable handshake.
+````
+---
+
+## Session Scene Tempo And Time-Signature Overrides
+- **Created:** 2026-08-20
+- **Updated:** 2026-08-20
+- **Iterations:** 3
+- **Task:** ableton-session-scene-tempo-signature-20260820
+- **Role:** developer
+- **Paths:** src/scene-tempo-signature-tools.js, bridge/development/scene-tempo-signature-observation.js, bridge/development/scene-tempo-signature.js, ableton_remote_scripts/AbletonMcpBridge/live_scene_tempo_signature.py
+
+### Key decisions
+- Treat the zero-based Session Scene index as identity and names as descriptive only.
+- Probe each Live property through static descriptors without test writes, then preflight combined requests as one transaction.
+- Journal before setter invocation, reacquire the exact index, verify fresh readback, and compensate attempted setters in reverse order.
+- Pin the exact preflight-resolved receiver for every forward and compensation setter; fresh index resolution is readback/diagnostics-only so even a same-name, same-shape, unchanged-count replacement receives no writes.
+- Preserve disabled hidden values by writing only enable flags and reporting that retained values are unobservable.
+
+### Evidence
+- Focused deterministic Node, MCP-to-direct-HTTP-handler, and fake-Live Python suites cover validation, capability matrices, exact targeting, ordering, idempotency, sentinels, recreated proxies, readback mismatch, rollback failure, Scene removal/shift, and same-fingerprint replacement between setters with zero replacement writes, without contacting Live.
+
+### Prompt
+````
+Implement capability-gated atomic Session Scene tempo and time-signature overrides with exact-index identity, non-mutating descriptor probes, deterministic writes, fresh readback, reverse compensation, development/Python parity, and no Scene launch, Arrangement, or global Song side effects.
+````
+---

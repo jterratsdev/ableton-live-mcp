@@ -1,0 +1,44 @@
+sequenceDiagram
+    autonumber
+    participant Client as MCP client
+    participant MCP as Scene tool adapter
+    participant Policy as Capability policy
+    participant HTTP as Bridge HTTP adapter
+    participant Service as Scene override service
+    participant Live as song.scenes[index]
+
+    Client->>MCP: tools/list or tools/call
+    MCP->>Policy: Resolve active bridge routes
+    Policy-->>MCP: Supported, conditional, or fail-closed
+
+    alt Read-only capability request
+        MCP->>HTTP: GET /scenes/tempo-signature-capabilities?sceneIndex=N
+        HTTP->>Service: Inspect exact index
+        Service->>Live: Read fields and inspect descriptors
+        Live-->>Service: Fresh observable snapshot
+        Service-->>HTTP: Target, capabilities, normalized and raw observations
+        HTTP-->>MCP: 200 JSON; zero setters
+    else Set or clear request
+        MCP->>MCP: Validate exact tagged actions and bounds
+        MCP->>HTTP: POST /scenes/tempo-signature-overrides
+        HTTP->>Service: Validate again and resolve exact index
+        Service->>Live: Capture complete pre-state and capability matrix
+        Service->>Service: Preflight all requested families
+        loop Ordered non-no-op setters
+            Service->>Service: Journal setter before invocation
+            Service->>Live: Write value before enable
+        end
+        Service->>Live: Reacquire song.scenes[index] and read back
+        alt Exact target and value verification
+            Service-->>HTTP: 200 changed or no-op result
+        else Setter, resolution, readback, or mismatch failure
+            loop Journal entries in reverse order
+                Service->>Live: Reacquire exact index and compensate
+            end
+            Service->>Live: Reacquire and verify full observable pre-state
+            Service-->>HTTP: Structured transaction and rollback error
+        end
+        HTTP-->>MCP: JSON result or preserved error details
+    end
+
+    Note over Service,Live: Never launch a scene or write Song tempo, Arrangement automation, clips, or transport.
